@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load icons money %}
+{% block title %}Importar listas · ProvaPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<span class="current">Importar listas</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Importar listas de pagamento</h1><p>Envie uma ou mais planilhas (.xlsx / .xlsm) no modelo "Relatório de Atividade"</p></div></div>
+<form method="post" enctype="multipart/form-data" class="card" id="upload-form">{% csrf_token %}
+  <label class="dropzone" id="dropzone">
+    <input type="file" name="files" multiple accept=".xlsx,.xlsm" id="file-input">
+    {% icon "file-spreadsheet" 32 css_class="muted" %}
+    <div class="dropzone__title">Clique para selecionar ou arraste os arquivos aqui</div>
+    <div class="dropzone__hint">Segure Ctrl (ou Cmd) para selecionar vários · cada aba da planilha vira um bloco na pré-visualização</div>
+  </label>
+  <div id="file-list" class="mt-16"></div>
+  <div class="form-actions"><button type="submit" class="btn btn--primary" id="upload-button" disabled>{% icon "upload" %} Pré-visualizar</button></div>
+</form>
+<section class="card">
+  <p class="card__title">Importações recentes</p>
+  <div class="table-wrap mt-16">
+    <table class="table">
+      <thead><tr><th>Arquivo</th><th>Quando</th><th>Por</th><th class="num">Lançamentos</th></tr></thead>
+      <tbody>
+        {% for batch in recent_batches %}
+        <tr><td class="strong">{{ batch.file_name }}</td><td class="muted">{{ batch.imported_at|date:"d/m/Y H:i" }}</td><td class="muted">{{ batch.imported_by|default:"—" }}</td><td class="num">{{ batch.entries.count }}</td></tr>
+        {% empty %}<tr><td colspan="4" class="empty">Nenhuma importação ainda.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/upload.js' %}"></script>{% endblock %}

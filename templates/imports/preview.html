@@ -1,0 +1,67 @@
+{% extends "base.html" %}{% load icons money %}
+{% block title %}Pré-visualização · ProvaPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<a href="{% url 'imports:upload' %}">Importar listas</a>{% icon "chevron-right" 14 %}<span class="current">Pré-visualização</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Conferir antes de lançar</h1><p>{{ workbooks|length }} arquivo{{ workbooks|length|pluralize }} · {{ total_rows }} linha{{ total_rows|pluralize }} · ajuste o que precisar e confirme</p></div>
+  <div class="page-header__actions">
+    <form method="post" action="{% url 'imports:discard' %}">{% csrf_token %}<button class="btn btn--ghost">Descartar</button></form>
+    <button type="submit" form="confirm-form" class="btn btn--primary">{% icon "check" %} Confirmar lançamentos</button>
+  </div>
+</div>
+<div class="legend mb-16">
+  <span><i class="dot" style="background:var(--color-green-500)"></i>cadastrado</span>
+  <span><i class="dot" style="background:var(--color-yellow-600)"></i>novo (será criado para revisão)</span>
+  <span><i class="dot" style="background:var(--color-red-500)"></i>possível duplicata (desmarcada)</span>
+</div>
+<form method="post" action="{% url 'imports:confirm' %}" id="confirm-form">{% csrf_token %}
+{% for workbook in workbooks %}
+  <p class="card__title mb-16">{% icon "file-spreadsheet" %} {{ workbook.file_name }} <span class="muted">· {{ workbook.sheets|length }} aba{{ workbook.sheets|length|pluralize }}</span>
+    {% if workbook.skipped_sheets %}<span class="small muted"> · ignoradas: {{ workbook.skipped_sheets|join:", " }}</span>{% endif %}</p>
+  {% for sheet in workbook.sheets %}
+  {% with prefix=sheet.prefix %}
+  <section class="sheet" data-sheet>
+    <div class="sheet__header">
+      <label class="sheet__title"><input type="checkbox" name="{{ prefix }}-include" checked data-sheet-toggle> <span>{{ sheet.sheet_name }}</span>
+        <span class="badge badge--blue">{{ sheet.rows|length }} aplicador{{ sheet.rows|length|pluralize:"es" }}</span></label>
+      <div class="row">
+        {% for warning in sheet.warnings %}<span class="badge badge--yellow" title="{{ warning }}">{% icon "triangle-alert" 12 %} aviso</span>{% endfor %}
+        <button type="button" class="icon-button" data-collapse aria-label="Recolher">{% icon "chevron-down" 16 css_class="chevron" %}</button>
+      </div>
+    </div>
+    <div class="sheet__body">
+      <div class="form-grid mb-16">
+        <div class="field" style="grid-column:span 2"><label>Nome da atividade</label><input name="{{ prefix }}-event_name" value="{{ sheet.event_name }}" required></div>
+        <div class="field"><label>Data</label><input type="date" name="{{ prefix }}-activity_date" value="{{ sheet.activity_date }}" required></div>
+        <div class="field"><label>Unidade</label><select name="{{ prefix }}-unit">{% for unit in units %}<option value="{{ unit.id }}" {% if unit == default_unit %}selected{% endif %}>{{ unit.name }} · {{ unit.paying_company.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Setor solicitante</label><select name="{{ prefix }}-sector">{% for sector in sectors %}<option value="{{ sector.id }}" {% if sector == default_sector %}selected{% endif %}>{{ sector.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label>Horário</label><select name="{{ prefix }}-shift"><option value="">—</option>{% for code, label in shifts %}<option value="{{ code }}" {% if code == sheet.shift %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th></th><th>Nome na lista</th><th>Aplicador</th><th>Função</th><th class="num">Líquido</th><th class="num">Bruto (RPA)</th></tr></thead>
+          <tbody>
+            {% for row in sheet.rows %}
+            {% with row_prefix=row.prefix %}
+            <tr class="{% if row.is_duplicate %}is-duplicate{% endif %}">
+              <td><input type="checkbox" name="{{ row_prefix }}-include" {% if not row.is_duplicate %}checked{% endif %}></td>
+              <td class="muted small">{{ row.name }}</td>
+              <td class="strong"><i class="dot" style="background:{% if row.is_duplicate %}var(--color-red-500){% elif row.is_known %}var(--color-green-500){% else %}var(--color-yellow-600){% endif %}"></i> {{ row.display_name }}{% if row.suffix %} <span class="badge badge--gray">{{ row.suffix }}</span>{% endif %}</td>
+              <td><select name="{{ row_prefix }}-role" class="select" style="padding:4px 24px 4px 8px;font-size:13px"><option value="APLICADOR" {% if row.role == 'APLICADOR' %}selected{% endif %}>Aplicador</option><option value="ORIENTADOR" {% if row.role == 'ORIENTADOR' %}selected{% endif %}>Orientador</option><option value="VOLANTE">Volante</option></select></td>
+              <td class="num"><input name="{{ row_prefix }}-net_amount" value="{{ row.net_amount }}" inputmode="decimal" style="width:90px;text-align:right;border:1px solid var(--border-secondary);border-radius:6px;padding:4px 8px;font:inherit"></td>
+              <td class="num muted">{{ row.gross_amount|brl }}</td>
+            </tr>
+            {% endwith %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  {% endwith %}
+  {% endfor %}
+{% endfor %}
+<div class="form-actions"><button type="submit" class="btn btn--primary">{% icon "check" %} Confirmar lançamentos</button></div>
+</form>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/preview.js' %}"></script>{% endblock %}
