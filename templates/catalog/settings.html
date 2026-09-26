@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% load icons money %}
+{% block title %}Configurações · ProvaPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<span class="current">Configurações</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Configurações</h1><p>Alíquotas do RPA e tabelas de referência</p></div></div>
+
+<form method="post" class="card">{% csrf_token %}<input type="hidden" name="form" value="tax">
+  <div class="card__header"><p class="card__title">Alíquotas</p><span class="muted small">atualizado em {{ tax.updated_at|date:"d/m/Y H:i" }}</span></div>
+  {% if tax_form.non_field_errors %}<div class="alert alert--error">{{ tax_form.non_field_errors.0 }}</div>{% endif %}
+  <div class="form-grid">
+    {% for field in tax_form %}<div class="field {% if field.errors %}field--error{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<span class="field__error">{{ field.errors.0 }}</span>{% endif %}</div>{% endfor %}
+  </div>
+  <p class="muted small mt-16">Exemplo com líquido de {{ example.net_amount|brl }}: bruto {{ example.gross_amount|brl }} · INSS {{ example.inss_amount|brl }} · ISS {{ example.iss_amount|brl }} · IR {{ example.ir_amount|brl }} · líquido a pagar {{ example.net_payable|brl }}. Bruto = líquido ÷ (1 − soma das alíquotas). Lançamentos já gravados mantêm os valores da época.</p>
+  <div class="form-actions"><button class="btn btn--primary">{% icon "check" %} Salvar alíquotas</button></div>
+</form>
+
+<div class="form-grid" style="gap:24px;align-items:start">
+  <section class="card" style="margin:0">
+    <p class="card__title mb-16">Unidades e empresas pagadoras</p>
+    <table class="table">
+      <thead><tr><th>Unidade</th><th>Empresa pagadora</th><th></th></tr></thead>
+      <tbody>{% for unit in units %}<tr><td class="strong">{{ unit.name }}</td><td><span class="badge badge--gray">{{ unit.paying_company.name }}</span></td>
+        <td class="num">{% if unit.is_default %}<span class="badge badge--green">padrão</span>{% else %}<form method="post" action="{% url 'catalog:set_default' 'unit' unit.pk %}">{% csrf_token %}<button class="btn btn--ghost btn--sm">tornar padrão</button></form>{% endif %}</td></tr>{% endfor %}</tbody>
+    </table>
+    <form method="post" class="mt-16">{% csrf_token %}<input type="hidden" name="form" value="unit">
+      <div class="form-grid">
+        <div class="field"><label>Nova unidade</label>{{ unit_form.name }}</div>
+        <div class="field"><label>Empresa pagadora</label>{{ unit_form.paying_company }}</div>
+      </div>
+      {% if unit_form.errors %}<span class="field__error">{{ unit_form.errors }}</span>{% endif %}
+      <div class="form-actions"><button class="btn btn--secondary btn--sm">{% icon "plus" 14 %} Adicionar unidade</button></div>
+    </form>
+  </section>
+  <section class="card" style="margin:0">
+    <p class="card__title mb-16">Setores solicitantes</p>
+    <table class="table">
+      <thead><tr><th>Setor</th><th></th></tr></thead>
+      <tbody>{% for sector in sectors %}<tr><td class="strong">{{ sector.name }}</td>
+        <td class="num">{% if sector.is_default %}<span class="badge badge--green">padrão</span>{% else %}<form method="post" action="{% url 'catalog:set_default' 'sector' sector.pk %}">{% csrf_token %}<button class="btn btn--ghost btn--sm">tornar padrão</button></form>{% endif %}</td></tr>{% endfor %}</tbody>
+    </table>
+    <form method="post" class="mt-16">{% csrf_token %}<input type="hidden" name="form" value="sector">
+      <div class="field"><label>Novo setor</label>{{ sector_form.name }}</div>
+      {% if sector_form.errors %}<span class="field__error">{{ sector_form.errors }}</span>{% endif %}
+      <div class="form-actions"><button class="btn btn--secondary btn--sm">{% icon "plus" 14 %} Adicionar setor</button></div>
+    </form>
+  </section>
+</div>
+<p class="muted small mt-16">Empresas pagadoras cadastradas: {% for company in companies %}{{ company.name }}{% if not forloop.last %}, {% endif %}{% endfor %}. Para adicionar uma empresa use o <a href="/admin/catalog/payingcompany/" style="color:var(--text-link)">painel administrativo</a>.</p>
+{% endblock %}
