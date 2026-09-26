@@ -1,0 +1,119 @@
+/*
+  Design tokens ported from the Maybe design system (maybe-design-system.css).
+  Only the light theme is used. Semantic names follow the original utilities:
+  surface (page), container (cards), primary/secondary/subdued text.
+*/
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../fonts/GeistMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../fonts/GeistMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-white: #ffffff;
+  --color-black: #0b0b0b;
+  --color-gray-25: #fafafa;
+  --color-gray-50: #f7f7f7;
+  --color-gray-100: #f0f0f0;
+  --color-gray-200: #e7e7e7;
+  --color-gray-300: #cfcfcf;
+  --color-gray-400: #9e9e9e;
+  --color-gray-500: #737373;
+  --color-gray-600: #5c5c5c;
+  --color-gray-700: #363636;
+  --color-gray-800: #242424;
+  --color-gray-900: #171717;
+
+  --color-green-50: #ecfdf3;
+  --color-green-100: #d1fadf;
+  --color-green-500: #12b76a;
+  --color-green-600: #10a861;
+  --color-green-700: #078c52;
+  --color-red-50: #fff1f0;
+  --color-red-100: #ffdedb;
+  --color-red-500: #f13636;
+  --color-red-600: #ec2222;
+  --color-red-700: #c91313;
+  --color-yellow-50: #fffaeb;
+  --color-yellow-100: #fef0c7;
+  --color-yellow-600: #dc6803;
+  --color-yellow-700: #b54708;
+  --color-blue-50: #eff8ff;
+  --color-blue-100: #d1e9ff;
+  --color-blue-500: #2e90fa;
+  --color-blue-600: #1570ef;
+  --color-blue-700: #175cd3;
+  --color-indigo-500: #6172f3;
+  --color-violet-500: #875bf7;
+  --color-cyan-500: #06aed4;
+  --color-pink-500: #f23e94;
+  --color-orange-500: #ff4405;
+  --color-fuchsia-500: #d444f1;
+
+  --alpha-black-50: rgba(11, 11, 11, 0.05);
+  --alpha-black-100: rgba(11, 11, 11, 0.08);
+  --alpha-black-200: rgba(11, 11, 11, 0.1);
+  --alpha-black-300: rgba(11, 11, 11, 0.15);
+
+  /* Semantic */
+  --bg-surface: var(--color-gray-50);
+  --bg-surface-hover: var(--color-gray-100);
+  --bg-container: var(--color-white);
+  --bg-container-hover: var(--color-gray-50);
+  --bg-container-inset: var(--color-gray-50);
+  --bg-container-inset-hover: var(--color-gray-100);
+  --bg-inverse: var(--color-gray-800);
+  --bg-inverse-hover: var(--color-gray-700);
+
+  --text-primary: var(--color-gray-900);
+  --text-secondary: var(--color-gray-500);
+  --text-subdued: var(--color-gray-400);
+  --text-inverse: var(--color-white);
+  --text-link: var(--color-blue-600);
+  --text-success: var(--color-green-600);
+  --text-warning: var(--color-yellow-600);
+  --text-destructive: var(--color-red-600);
+
+  --border-primary: var(--alpha-black-300);
+  --border-secondary: var(--alpha-black-200);
+  --border-tertiary: var(--alpha-black-100);
+  --border-subdued: var(--alpha-black-50);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+
+  --shadow-xs: 0 1px 2px 0 rgba(11, 11, 11, 0.06);
+  --shadow-sm: 0 1px 6px 0 rgba(11, 11, 11, 0.06);
+  --shadow-md: 0 4px 8px -2px rgba(11, 11, 11, 0.06);
+  --shadow-border-xs: var(--shadow-xs), 0 0 0 1px var(--alpha-black-50);
+  --shadow-border-sm: var(--shadow-sm), 0 0 0 1px var(--alpha-black-50);
+
+  /* Categorical palette for charts (Maybe account-group colors) */
+  --chart-1: var(--color-violet-500);
+  --chart-2: var(--color-blue-500);
+  --chart-3: var(--color-gray-500);
+  --chart-4: var(--color-cyan-500);
+  --chart-5: var(--color-pink-500);
+  --chart-6: var(--color-green-500);
+  --chart-7: var(--color-orange-500);
+  --chart-8: var(--color-indigo-500);
+}
