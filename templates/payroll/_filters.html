@@ -2,8 +2,8 @@
 {# Shared filter bar for the entry list and the summary. Expects `filters` and the option lists. #}
 <form method="get" class="filters">
   <input type="search" name="q" value="{{ filters.query }}" placeholder="Buscar aplicador, evento…" style="min-width:220px">
-  <select name="unit" class="select"><option value="">Todas as unidades</option>{% for unit in units %}<option value="{{ unit.id }}" {% if unit.id == filters.unit_id %}selected{% endif %}>{{ unit.name }}</option>{% endfor %}</select>
-  <select name="company" class="select"><option value="">Todas as empresas</option>{% for company in companies %}<option value="{{ company.id }}" {% if company.id == filters.company_id %}selected{% endif %}>{{ company.name }}</option>{% endfor %}</select>
+ {# One list: every unit is also its paying company (Lourdes = RRPM Matriz). #}
+  <select name="unit" class="select"><option value="">Todas as unidades</option>{% for unit in units %}<option value="{{ unit.id }}" {% if unit.id == filters.unit_id %}selected{% endif %}>{{ unit.name }} · {{ unit.paying_company.name }}</option>{% endfor %}</select>
   <select name="sector" class="select"><option value="">Todos os setores</option>{% for sector in sectors %}<option value="{{ sector.id }}" {% if sector.id == filters.sector_id %}selected{% endif %}>{{ sector.name }}</option>{% endfor %}</select>
   <select name="payment_date" class="select"><option value="">Todas as datas de pgto</option>{% for day in payment_dates %}<option value="{{ day|date:'Y-m-d' }}" {% if day == filters.payment_date %}selected{% endif %}>Pgto {{ day|date:'d/m/Y' }}</option>{% endfor %}</select>
   <input type="date" name="from" value="{{ filters.date_from|date:'Y-m-d' }}" title="Atividade de">

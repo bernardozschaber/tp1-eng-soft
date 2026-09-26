@@ -25,6 +25,7 @@
           <span class="mono">{{ entry_count }} lançamento{{ entry_count|pluralize }}</span> · {{ applicator_count }} aplicador{{ applicator_count|pluralize:"es" }}
         {% endif %}
       </p>
+       {% if payment_dates %}<p class="small muted">Pagamento{{ payment_dates|length|pluralize }} de {% for day in payment_dates %}{{ day|date:"d/m/Y" }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
     </div>
     <form method="get">
       <select name="period" class="select" onchange="this.form.submit()">
@@ -61,8 +62,7 @@
         <tbody>
           {% for unit in unit_weights %}
           <tr>
-            <td class="strong"><a href="{% url 'payroll:entry_list' %}?q={{ unit.name|urlencode }}">{% icon "chevron-right" 14 css_class="muted" %} {{ unit.name }}</a></td>
-            <td class="num muted">{{ unit.count }}</td>
+            <td class="strong"><a href="{% url 'payroll:entry_list' %}?unit={{ unit.id }}">{% icon "chevron-right" 14 css_class="muted" %} {{ unit.name }}</a> <span class="small muted">{{ unit.company }}</span></td>            <td class="num muted">{{ unit.count }}</td>
             <td class="num"><span class="ticks" data-ticks="{{ unit.weight|floatformat:0 }}" style="--tick-color:var(--chart-{{ unit.color_index }})"></span>{{ unit.weight|floatformat:2 }}%</td>
             <td class="num strong">{{ unit.total|brl }}</td>
           </tr>

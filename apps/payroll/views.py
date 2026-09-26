@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from apps.applicators.models import Applicator
-from apps.catalog.models import PayingCompany, Sector, Unit
+from apps.catalog.models import Sector, Unit
 from apps.payroll.export import build_workbook
 from apps.payroll.filters import EntryFilters
 from apps.payroll.forms import ServiceEntryForm
@@ -23,7 +23,6 @@ PAGE_SIZE = 50
 def _filter_options() -> dict:
     return {
         "units": Unit.objects.select_related("paying_company"),
-        "companies": PayingCompany.objects.all(),
         "sectors": Sector.objects.all(),
         "applicators": Applicator.objects.filter(is_active=True),
         "payment_dates": ServiceEntry.objects.order_by("-payment_date").values_list("payment_date", flat=True).distinct(),
