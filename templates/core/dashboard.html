@@ -1,0 +1,78 @@
+{% extends "base.html" %}{% load icons money humanize %}
+{% block title %}Início · ProvaPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<span class="current">Painel</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Bem-vindo(a) de volta, {{ user.first_name|default:user.username }}{% if user.is_superuser %} (admin){% endif %}</h1>
+    <p>Veja o que está acontecendo com os pagamentos dos aplicadores</p>
+  </div>
+  <div class="page-header__actions">
+    <a href="{% url 'imports:upload' %}" class="btn btn--secondary">{% icon "upload" %} Importar</a>
+    <a href="{% url 'payroll:entry_create' %}" class="btn btn--primary">{% icon "plus" %} Novo</a>
+  </div>
+</div>
+
+<section class="card">
+  <div class="card__header">
+    <div>
+      <p class="stat__label">Total líquido a pagar</p>
+      <p class="stat__value">{{ net_total|brl }}</p>
+      <p class="stat__trend">
+        {% if change_percent is not None %}
+          <span class="mono {% if change >= 0 %}trend-up{% else %}trend-down{% endif %}">{{ change|brl }} ({% if change >= 0 %}↑{% else %}↓{% endif %}{{ change_percent|floatformat:1 }}%)</span> vs. período anterior
+        {% else %}
+          <span class="mono">{{ entry_count }} lançamento{{ entry_count|pluralize }}</span> · {{ applicator_count }} aplicador{{ applicator_count|pluralize:"es" }}
+        {% endif %}
+      </p>
+    </div>
+    <form method="get">
+      <select name="period" class="select" onchange="this.form.submit()">
+        {% for key, label in periods %}<option value="{{ key }}" {% if key == period.key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </form>
+  </div>
+  {% if series %}
+    <div class="chart" data-chart='{{ series_json }}'></div>
+  {% else %}
+    <div class="empty">Nenhum lançamento no período. <a href="{% url 'imports:upload' %}" style="color:var(--text-link)">Importe uma lista de pagamento</a> para começar.</div>
+  {% endif %}
+</section>
+
+<div class="metrics">
+  <div class="metric"><div class="metric__label">Valor bruto (RPA)</div><div class="metric__value tabular">{{ gross_total|brl }}</div></div>
+  <div class="metric"><div class="metric__label">Descontos (INSS + ISS + IR)</div><div class="metric__value tabular">{{ withheld_total|brl }}</div></div>
+  <div class="metric"><div class="metric__label">Lançamentos</div><div class="metric__value">{{ entry_count }}</div></div>
+  <div class="metric"><div class="metric__label">Aplicadores</div><div class="metric__value">{{ applicator_count }}{% if review_count %} <span class="badge badge--yellow" title="cadastros incompletos">{{ review_count }} a revisar</span>{% endif %}</div></div>
+</div>
+
+<section class="card">
+  <p class="card__title">Unidades <span class="muted">· {{ net_total|brl }}</span></p>
+  {% if unit_weights %}
+    <div class="weight-bar">
+      {% for unit in unit_weights %}<span style="flex:{{ unit.weight|floatformat:2 }};background:var(--chart-{{ unit.color_index }})"></span>{% endfor %}
+    </div>
+    <div class="legend">
+      {% for unit in unit_weights %}<span><i class="dot" style="background:var(--chart-{{ unit.color_index }})"></i>{{ unit.name }} <b>{{ unit.weight|floatformat:0 }}%</b></span>{% endfor %}
+    </div>
+    <div class="table-frame">
+      <table class="table">
+        <thead><tr><th>Unidade</th><th class="num">Lançamentos</th><th class="num">Peso</th><th class="num">Valor líquido</th></tr></thead>
+        <tbody>
+          {% for unit in unit_weights %}
+          <tr>
+            <td class="strong"><a href="{% url 'payroll:entry_list' %}?q={{ unit.name|urlencode }}">{% icon "chevron-right" 14 css_class="muted" %} {{ unit.name }}</a></td>
+            <td class="num muted">{{ unit.count }}</td>
+            <td class="num"><span class="ticks" data-ticks="{{ unit.weight|floatformat:0 }}" style="--tick-color:var(--chart-{{ unit.color_index }})"></span>{{ unit.weight|floatformat:2 }}%</td>
+            <td class="num strong">{{ unit.total|brl }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty">Sem dados no período.</div>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/chart.js' %}"></script>{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load icons %}
+{% block title %}Ajuda · ProvaPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<span class="current">Ajuda</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Como usar o ProvaPay</h1><p>Fluxo de fechamento quinzenal dos pagamentos via RPA</p></div></div>
+<section class="card">
+  <ol style="padding-left:20px;line-height:1.8">
+    <li><b>Importar listas</b>: envie um ou mais arquivos .xlsx/.xlsm das listas de pagamento. Cada aba vira um bloco com evento, data, unidade e aplicadores.</li>
+    <li><b>Conferir a pré-visualização</b>: ajuste nome do evento, data, unidade e setor; desmarque abas que não devem entrar.</li>
+    <li><b>Confirmar</b>: os lançamentos são gravados e o bruto, INSS, ISS e IR são calculados a partir do líquido.</li>
+    <li><b>Lançamentos</b>: lance manualmente serviços que não vieram de planilha, edite ou exclua.</li>
+    <li><b>Resumo</b>: veja o consolidado por data de pagamento, aplicador e empresa pagadora, e exporte para Excel.</li>
+  </ol>
+  <p class="muted mt-16">Regra de cálculo: bruto = líquido ÷ (1 − INSS − ISS − IR). Data de pagamento: atividade até o dia 15 é paga no dia 5 do mês seguinte; após o dia 15, no dia 20 do mês seguinte.</p>
+</section>
+{% endblock %}
