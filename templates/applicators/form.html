@@ -1,0 +1,24 @@
+{% extends "base.html" %}{% load icons %}
+{% block title %}{{ title }} · ProvaPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<a href="{% url 'applicators:list' %}">Aplicadores</a>{% icon "chevron-right" 14 %}<span class="current">{{ title }}</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>{{ title }}</h1><p>Dados pessoais, acadêmicos e bancários</p></div></div>
+<form method="post" class="card">{% csrf_token %}
+  <div class="form-grid">
+    {% for field in form %}
+      {% if field.name == 'needs_review' or field.name == 'is_active' %}
+        <label class="row" style="padding:8px 0">{{ field }} {{ field.label }}</label>
+      {% else %}
+        <div class="field {% if field.errors %}field--error{% endif %}" {% if field.name == 'full_name' or field.name == 'notes' %}style="grid-column:1/-1"{% endif %}>
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+          {% if field.errors %}<span class="field__error">{{ field.errors.0 }}</span>{% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div class="form-actions">
+    <a href="{% if applicator %}{% url 'applicators:detail' applicator.pk %}{% else %}{% url 'applicators:list' %}{% endif %}" class="btn btn--ghost">Cancelar</a>
+    <button type="submit" class="btn btn--primary">{% icon "check" %} Salvar</button>
+  </div>
+</form>
+{% endblock %}

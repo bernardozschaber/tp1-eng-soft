@@ -1,0 +1,36 @@
+{% extends "base.html" %}{% load icons money %}
+{% block title %}{{ applicator.full_name }} · ProvaPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<a href="{% url 'applicators:list' %}">Aplicadores</a>{% icon "chevron-right" 14 %}<span class="current">{{ applicator.full_name }}</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>{{ applicator.full_name }}</h1><p>{% if applicator.needs_review %}<span class="badge badge--yellow">cadastro incompleto</span> {% endif %}{{ applicator.course|default:"" }}{% if applicator.institution %} · {{ applicator.institution }}{% endif %}</p></div>
+  <div class="page-header__actions"><a href="{% url 'applicators:update' applicator.pk %}" class="btn btn--secondary">{% icon "pencil" %} Editar</a><a href="{% url 'payroll:entry_create' %}" class="btn btn--primary">{% icon "plus" %} Lançamento</a></div>
+</div>
+<div class="metrics">
+  <div class="metric"><div class="metric__label">Lançamentos</div><div class="metric__value">{{ totals.count }}</div></div>
+  <div class="metric"><div class="metric__label">Total líquido</div><div class="metric__value tabular">{{ totals.net|default:0|brl }}</div></div>
+  <div class="metric"><div class="metric__label">Total bruto (RPA)</div><div class="metric__value tabular">{{ totals.gross|default:0|brl }}</div></div>
+</div>
+<section class="card">
+  <p class="card__title mb-16">Dados</p>
+  <div class="form-grid">
+    <div><p class="small muted">CPF</p><p class="mono">{{ applicator.cpf|default:"—" }}</p></div>
+    <div><p class="small muted">E-mail</p><p>{{ applicator.email|default:"—" }}</p></div>
+    <div><p class="small muted">Telefone</p><p>{{ applicator.phone|default:"—" }}</p></div>
+    <div><p class="small muted">Banco</p><p>{{ applicator.bank_name|default:"—" }} {{ applicator.bank_branch }} {{ applicator.bank_account }}</p></div>
+    <div><p class="small muted">PIX</p><p>{{ applicator.pix_key|default:"—" }}</p></div>
+    <div><p class="small muted">Observações</p><p>{{ applicator.notes|default:"—" }}</p></div>
+  </div>
+</section>
+<section class="card">
+  <div class="card__header"><p class="card__title">Histórico de serviços</p><a href="{% url 'payroll:entry_list' %}?applicator={{ applicator.pk }}" class="btn btn--ghost btn--sm">Ver todos {% icon "chevron-right" 14 %}</a></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Data</th><th>Evento</th><th>Unidade</th><th>Pgto</th><th class="num">Líquido</th><th class="num">Bruto</th></tr></thead>
+    <tbody>
+      {% for entry in entries %}
+      <tr><td class="muted">{{ entry.activity_date|date:"d/m/Y" }}</td><td>{{ entry.event_name }}</td><td><span class="badge badge--gray">{{ entry.unit.name }}</span></td><td class="muted">{{ entry.payment_date|date:"d/m/Y" }}</td><td class="num strong">{{ entry.net_amount|brl }}</td><td class="num">{{ entry.gross_amount|brl }}</td></tr>
+      {% empty %}<tr><td colspan="6" class="empty">Nenhum serviço lançado.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}
