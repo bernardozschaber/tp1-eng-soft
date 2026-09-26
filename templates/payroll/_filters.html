@@ -1,0 +1,14 @@
+{% load icons %}
+{# Shared filter bar for the entry list and the summary. Expects `filters` and the option lists. #}
+<form method="get" class="filters" data-autosubmit>
+  <input type="search" name="q" value="{{ filters.query }}" placeholder="Buscar aplicador, evento…" style="min-width:220px">
+  <select name="unit" class="select"><option value="">Todas as unidades</option>{% for unit in units %}<option value="{{ unit.id }}" {% if unit.id == filters.unit_id %}selected{% endif %}>{{ unit.name }}</option>{% endfor %}</select>
+  <select name="company" class="select"><option value="">Todas as empresas</option>{% for company in companies %}<option value="{{ company.id }}" {% if company.id == filters.company_id %}selected{% endif %}>{{ company.name }}</option>{% endfor %}</select>
+  <select name="sector" class="select"><option value="">Todos os setores</option>{% for sector in sectors %}<option value="{{ sector.id }}" {% if sector.id == filters.sector_id %}selected{% endif %}>{{ sector.name }}</option>{% endfor %}</select>
+  <select name="payment_date" class="select"><option value="">Todas as datas de pgto</option>{% for day in payment_dates %}<option value="{{ day|date:'Y-m-d' }}" {% if day == filters.payment_date %}selected{% endif %}>Pgto {{ day|date:'d/m/Y' }}</option>{% endfor %}</select>
+  <input type="date" name="from" value="{{ filters.date_from|date:'Y-m-d' }}" title="Atividade de">
+  <input type="date" name="to" value="{{ filters.date_to|date:'Y-m-d' }}" title="Atividade até">
+  <label class="row small muted"><input type="checkbox" name="inconsistent" value="1" {% if filters.inconsistent_only %}checked{% endif %}> Só inconsistentes</label>
+  <button type="submit" class="btn btn--secondary btn--sm">{% icon "search" 14 %} Filtrar</button>
+  {% if filters.raw %}<a href="{{ request.path }}" class="btn btn--ghost btn--sm">Limpar</a>{% endif %}
+</form>

@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load icons money %}
+{% block title %}{{ title }} · ProvaPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<a href="{% url 'payroll:entry_list' %}">Lançamentos</a>{% icon "chevron-right" 14 %}<span class="current">{{ title }}</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>{{ title }}</h1><p>O bruto e os descontos são calculados a partir do valor líquido</p></div></div>
+<form method="post" class="card">{% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert--error">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="form-grid">
+    {% for field in form %}
+    <div class="field {% if field.errors %}field--error{% endif %} {% if field.name == 'event_name' or field.name == 'notes' %}" style="grid-column:1/-1{% endif %}">
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% if field.errors %}<span class="field__error">{{ field.errors.0 }}</span>{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <p class="muted small mt-16">Deixe a data de pagamento em branco para calcular pela regra (até dia 15 → dia 5 do mês seguinte; após → dia 20).</p>
+  <div class="form-actions">
+    <a href="{% url 'payroll:entry_list' %}" class="btn btn--ghost">Cancelar</a>
+    <button type="submit" class="btn btn--primary">{% icon "check" %} Salvar</button>
+  </div>
+</form>
+{% endblock %}
