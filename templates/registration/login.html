@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% load static icons %}
+{% block title %}Entrar · ProvaPay{% endblock %}
+{% block body %}
+<div class="login">
+  <form method="post" class="login__card">{% csrf_token %}
+    <img src="{% static 'img/logomark.svg' %}" alt="" width="36" height="36">
+    <h1>Entrar no ProvaPay</h1>
+    <p>Controle de pagamentos RPA dos aplicadores</p>
+    {% if form.errors %}<div class="alert alert--error">Usuário ou senha inválidos.</div>{% endif %}
+    <div class="stack" style="gap:12px">
+      <div class="field"><label for="id_username">Usuário</label><input id="id_username" name="username" autofocus autocomplete="username"></div>
+      <div class="field"><label for="id_password">Senha</label><input id="id_password" name="password" type="password" autocomplete="current-password"></div>
+    </div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <div class="form-actions"><button type="submit" class="btn btn--primary" style="width:100%;justify-content:center">Entrar</button></div>
+  </form>
+</div>
+{% endblock %}
