@@ -1,0 +1,43 @@
+{% load static icons money %}<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}ProvaPay{% endblock %}</title>
+  <link rel="icon" href="{% static 'img/logomark.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+{% block body %}
+<div class="app">
+  {% include "core/_nav.html" %}
+  <aside class="app__sidebar" id="sidebar">
+    {% block sidebar %}{% include "core/_sidebar.html" %}{% endblock %}
+  </aside>
+  <main class="app__main">
+    <div class="app__main-card">
+      <div class="topbar">
+        <div class="breadcrumb">
+          <button type="button" class="icon-button" data-toggle-sidebar aria-label="Alternar barra lateral">{% icon "panel-left" %}</button>
+          <a href="{% url 'dashboard' %}">Início</a>
+          {% block breadcrumb %}{% endblock %}
+        </div>
+        <div class="row">{% block topbar_actions %}{% endblock %}</div>
+      </div>
+      <div class="app__content">
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert alert--{{ message.tags|default:'info' }}">{% icon "info" %} {{ message }}</div>
+          {% endfor %}
+        {% endif %}
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </main>
+</div>
+{% endblock %}
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

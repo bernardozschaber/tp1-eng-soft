@@ -1,0 +1,21 @@
+{% load icons money %}
+{# Default sidebar: totals per unit / paying company for the current payment month #}
+<div class="sidebar__tabs">
+  <a href="?sidebar=units" class="sidebar__tab {% if sidebar.mode != 'companies' %}is-active{% endif %}">Unidades</a>
+  <a href="?sidebar=companies" class="sidebar__tab {% if sidebar.mode == 'companies' %}is-active{% endif %}">Empresas</a>
+</div>
+<a href="{% url 'payroll:entry_create' %}" class="sidebar__action">{% icon "plus" %} Novo lançamento</a>
+<a href="{% url 'imports:upload' %}" class="sidebar__action">{% icon "upload" %} Importar listas</a>
+<div class="mt-16">
+  {% for group in sidebar.groups %}
+  <a href="{{ group.url }}" class="sidebar__group">
+    <span class="sidebar__group-name">{% icon "chevron-right" 14 %} {{ group.name }}</span>
+    <span class="sidebar__group-value">
+      <span class="tabular">{{ group.total|brl }}</span>
+      <span class="mono">{{ group.count }} lançamento{{ group.count|pluralize }}</span>
+    </span>
+  </a>
+  {% empty %}
+  <p class="muted small" style="padding:0 12px">Nenhum lançamento ainda.</p>
+  {% endfor %}
+</div>

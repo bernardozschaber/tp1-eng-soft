@@ -1,0 +1,25 @@
+{% load static icons money %}
+{% with section=request.resolver_match.app_name %}
+<nav class="app__nav">
+  <a href="{% url 'dashboard' %}" class="nav__logo"><img src="{% static 'img/logomark.svg' %}" alt="ProvaPay" width="36" height="36"></a>
+  <ul class="nav__list">
+    {% for item in nav_items %}
+    <li>
+      <a href="{{ item.url }}" class="nav__item {% if item.active %}is-active{% endif %}">
+        <div class="nav__item-row">
+          <span class="nav__indicator"></span>
+          <span class="nav__icon">{% icon item.icon 18 %}</span>
+        </div>
+        <span class="nav__label">{{ item.label }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="nav__footer">
+    <a href="{% url 'help' %}" class="icon-button" title="Ajuda">{% icon "message-circle-question" 18 %}</a>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+      <button type="submit" class="avatar" title="Sair ({{ user.username }})">{{ user.get_full_name|default:user.username|initials }}</button>
+    </form>
+  </div>
+</nav>
+{% endwith %}
