@@ -1,6 +1,6 @@
 {% load icons %}
 {# Shared filter bar for the entry list and the summary. Expects `filters` and the option lists. #}
-<form method="get" class="filters" data-autosubmit>
+<form method="get" class="filters">
   <input type="search" name="q" value="{{ filters.query }}" placeholder="Buscar aplicador, evento…" style="min-width:220px">
   <select name="unit" class="select"><option value="">Todas as unidades</option>{% for unit in units %}<option value="{{ unit.id }}" {% if unit.id == filters.unit_id %}selected{% endif %}>{{ unit.name }}</option>{% endfor %}</select>
   <select name="company" class="select"><option value="">Todas as empresas</option>{% for company in companies %}<option value="{{ company.id }}" {% if company.id == filters.company_id %}selected{% endif %}>{{ company.name }}</option>{% endfor %}</select>
