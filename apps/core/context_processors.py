@@ -32,4 +32,4 @@ def navigation(request):
         {"label": label, "url": reverse(url_name), "icon": icon_name, "active": _is_active(app_name, current_app, view_name)}
         for label, url_name, icon_name, app_name in NAV_ITEMS
     ]
-    return {"nav_items": nav_items, "sidebar": build_sidebar(request.GET.get("sidebar", "units"))}
+    return {"nav_items": nav_items, "sidebar": build_sidebar()}
