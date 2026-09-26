@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+.env
+
+# Reference material (not part of the source tree)
+maybe-main/
+layout.png
+rpa_control_system_v2.html
+
+# Legacy spreadsheets: contain personal data of real people, never commit
+*.xlsm
+*.xlsx
+!docs/samples/*.xlsx
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+*:Zone.Identifier

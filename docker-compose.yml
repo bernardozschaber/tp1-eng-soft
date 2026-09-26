@@ -1,0 +1,16 @@
+# Optional PostgreSQL for local development. Run: docker compose up -d
+# Then export DATABASE_URL=postgres://provapay:provapay@localhost:5432/provapay
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: provapay
+      POSTGRES_PASSWORD: provapay
+      POSTGRES_DB: provapay
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
