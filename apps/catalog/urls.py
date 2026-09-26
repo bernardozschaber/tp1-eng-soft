@@ -1,7 +1,8 @@
 from django.urls import path
-from apps.catalog import views
-app_name = "catalog"
 
+from apps.catalog import views
+
+app_name = "catalog"
 
 urlpatterns = [
     path("", views.settings_page, name="settings"),

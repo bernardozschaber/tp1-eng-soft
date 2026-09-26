@@ -159,6 +159,7 @@ def confirm_import(payload, workbooks: list[dict], user) -> dict:
                 created_entries += 1
     return {"entries": created_entries, "applicators": created_applicators, "skipped": skipped_rows}
 
+
 # --- non-interactive import (used by `manage.py seed --demo`) --------------
 
 def import_with_defaults(file_name: str, content: bytes, user=None) -> dict:

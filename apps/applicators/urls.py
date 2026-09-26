@@ -1,10 +1,8 @@
-from django.http import HttpResponse
 from django.urls import path
 
 from apps.applicators import views
 
 app_name = "applicators"
-urlpatterns = [path("", lambda r: HttpResponse("TODO"), name="list")]
 
 urlpatterns = [
     path("", views.applicator_list, name="list"),

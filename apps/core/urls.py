@@ -1,7 +1,6 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
-urlpatterns: list = []
 from apps.core import views
 
 urlpatterns = [

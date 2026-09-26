@@ -1,10 +1,8 @@
-from django.http import HttpResponse
 from django.urls import path
 
 from apps.imports import views
 
 app_name = "imports"
-urlpatterns = [path("", lambda r: HttpResponse("TODO"), name="upload")]
 
 urlpatterns = [
     path("", views.upload, name="upload"),

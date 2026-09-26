@@ -5,6 +5,7 @@ the default admin user. Safe to run repeatedly (idempotent).
     python manage.py seed
 """
 from pathlib import Path
+
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
@@ -30,6 +31,7 @@ SECTORS = [
 DEFAULT_ADMIN = {"username": "admin", "password": "admin", "first_name": "Demo"}
 SAMPLE_LIST = Path(__file__).resolve().parents[4] / "docs" / "samples" / "lista_pagamento_exemplo.xlsx"
 
+
 class Command(BaseCommand):
     help = "Seeds units, paying companies, sectors, tax rates and the admin user."
 
@@ -50,7 +52,6 @@ class Command(BaseCommand):
         if not user_model.objects.filter(username=DEFAULT_ADMIN["username"]).exists():
             user_model.objects.create_superuser(**DEFAULT_ADMIN)
             self.stdout.write("Admin user created (admin / admin).")
-        self.stdout.write(self.style.SUCCESS("Seed complete."))
         if options["demo"]:
             self._import_demo(user_model.objects.get(username=DEFAULT_ADMIN["username"]))
         self.stdout.write(self.style.SUCCESS("Seed complete."))
