@@ -4,7 +4,6 @@ from datetime import date, timedelta
 from decimal import Decimal
 
 from django.db.models import Count, Sum
-from django.db.models.functions import TruncDate
 
 from apps.payroll.models import ServiceEntry
 
@@ -58,12 +57,12 @@ def _sum(queryset, field: str) -> Decimal:
 
 def cumulative_series(queryset) -> list[dict]:
     """Running total of net amounts per activity day, for the line chart."""
-    rows = queryset.annotate(day=TruncDate("activity_date")).values("day").annotate(total=Sum("net_amount")).order_by("day")
+    rows = queryset.values("activity_date").annotate(total=Sum("net_amount")).order_by("activity_date")
     running = Decimal("0")
     series = []
     for row in rows:
         running += row["total"]
-        series.append({"date": row["day"].isoformat(), "value": float(running)})
+        series.append({"date": row["activity_date"].isoformat(), "value": float(running)})
     return series
 
 
