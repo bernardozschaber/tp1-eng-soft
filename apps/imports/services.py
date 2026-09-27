@@ -440,7 +440,9 @@ def _read_sheet_fields(payload, prefix: str) -> dict:
 @transaction.atomic
 def confirm_import(payload, workbooks: list[dict], user) -> dict:
     """Persists the selected rows. Returns counters for the success message."""
-    created_entries = created_applicators = skipped_rows = 0
+    merges, declined = read_answers(payload, workbooks)
+    merge_cache: dict[str, Applicator] = {}
+    created_entries = created_applicators = skipped_rows = merged_rows = duplicate_rows = 0
     for file_index, workbook in enumerate(workbooks):
         batch = None
         for sheet_index, sheet in enumerate(workbook["sheets"]):
