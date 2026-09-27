@@ -122,7 +122,7 @@ paying company.
 - `README.md` — objective, the eight user stories, the business-rule table, UML.
 - `enunciado do trabalho.md` — the assignment this was built for.
 - `apps/payroll/calculator.py`, `schedule.py` — the gross-up and payment-date rules.
-- `docs/samples/lista_pagamento_exemplo.xlsx` — a representative source workbook.
+- `docs/samples/lista_pagamento_exemplo.xlsx` — a representative source workbook (reference only; no command loads it).
 
 ## Delivery Context
 
