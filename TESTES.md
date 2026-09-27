@@ -363,3 +363,91 @@ deixava passar.
 A atividade entra na forma canônica (`event_key`: maiúsculas, sem acento, espaço
 simples), porque `"Oficina de Redação"`, `"OFICINA DE REDACAO"` e
 `"Oficina de Redação "` são a mesma coisa para quem paga.
+
+### 3.5 Três camadas, e por que são três
+
+| Camada | Onde | O que faz | Por que não bastam as outras |
+|---|---|---|---|
+| Banco | `UniqueConstraint entry_one_service_per_shift` | Recusa o `INSERT` | É a única que vale para script, carga de dados e `bulk_create` — qualquer coisa que não passe por `save()` |
+| Modelo | `ServiceEntry.check_not_duplicate()`, chamada em `save()` | Levanta `DuplicateServiceEntry` **antes** do `INSERT` | O `IntegrityError` do banco chega tarde: dentro de uma transação, ela já está abortada e leva junto tudo o que entrou antes |
+| Aplicação | `confirm_import` e `ServiceEntryForm._post_clean` | Pula a linha (importação) ou vira erro de formulário | Uma exceção não tratada seria página de erro no meio do fechamento |
+
+A camada do meio é a que o defeito pedia. A importação grava dezenas de linhas
+numa transação só (`@transaction.atomic`); se a recusa viesse do banco, a
+primeira duplicata derrubaria o lote inteiro. Recusando antes do `INSERT`, nada
+se perde e a linha seguinte segue normalmente.
+
+A mensagem nomeia o que está em conflito:
+
+```
+Joao Dario Lodi Campolina já tem um lançamento de “Oficina de Redação” em
+08/09/2026, no turno da Tarde, como orientador na unidade Lourdes
+(lançamento #1856). O mesmo serviço não pode ser lançado duas vezes —
+edite o lançamento que já existe.
+```
+
+Na importação a linha repetida não vira erro: ela é contada e reportada em
+separado, porque uma lista com três linhas já lançadas não deve impedir as
+outras quarenta de entrar.
+
+### 3.6 A coluna de turno
+
+`templates/payroll/entry_list.html` ganhou **Turno** entre **Data** e
+**Unidade**:
+
+| Aplicador | Evento | Data | **Turno** | Unidade | Pgto | Líquido | … |
+|---|---|---|---|---|---|---|---|
+
+A coluna é consequência direta de 3.4. Sem ela, duas linhas idênticas na tela
+podem ser uma duplicata ou os dois turnos do mesmo dia, e não há como decidir
+olhando. Com o turno à vista, a conferência é imediata. Lançamento sem turno
+informado mostra `—`, com `title` explicando — não é o mesmo que "manhã".
+
+O **export Excel não mudou.** `export.py` reproduz a planilha legada coluna a
+coluna, para que o arquivo baixado entre na rotina que a contabilidade já tem;
+inserir uma coluna quebraria essa compatibilidade. A consequência é conhecida e
+fica registrada: a planilha exportada continua sem distinguir os turnos, como a
+legada sempre esteve.
+
+### 3.7 O impacto medido
+
+Sobre o banco de desenvolvimento, após importar a pasta `01-09 oficina e pbb/`:
+
+| | Antes | Depois |
+|---|---:|---:|
+| Lançamentos | 194 | **183** |
+| Grupos duplicados | 8 | **0** |
+| Lançamentos a mais | 11 | **0** |
+
+Os 11 removidos pela migration `payroll/0004`, que mantém o mais antigo de cada
+grupo e imprime uma linha por remoção. Por pessoa, no pagamento de 05/10/2026:
+
+| Aplicador | Lançamentos | Líquido |
+|---|---:|---:|
+| Joao Dario Lodi Campolina | 5 | R$ 508,00 |
+| Anna Clara Moreira Faria Guimaraes | 4 | R$ 406,00 |
+| Giovana Giannetti Fontenelle | 3 | R$ 235,00 |
+| Maria Eduarda Flor Lima | 2 | R$ 151,00 |
+| Gabriela Rezende Moura | 2 | R$ 168,00 |
+
+### 3.8 A prova de que a garantia é real
+
+Desligar a checagem da aplicação e rodar a importação de novo:
+
+```
+django.db.utils.IntegrityError: UNIQUE constraint failed:
+  payroll_serviceentry.applicator_id, payroll_serviceentry.activity_date,
+  payroll_serviceentry.event_key, payroll_serviceentry.shift,
+  payroll_serviceentry.role, payroll_serviceentry.unit_id
+```
+
+O banco recusa sozinho. A checagem da aplicação melhora a mensagem e preserva a
+transação; ela não é o que sustenta a garantia.
+
+---
+
+## 4. Suíte de testes automatizados
+
+> Esta seção é o ponto de partida do **TP2**, cujo objetivo é implementar testes
+> para o programa desenvolvido. O que está aqui já roda; o roteiro de 4.4 é o
+> que falta.
