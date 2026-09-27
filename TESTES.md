@@ -283,3 +283,83 @@ Declarado explicitamente para que ninguém confie mais do que deve:
 
 Recomendação: abrir a aplicação e percorrer o fluxo de importação, a gaveta lateral
 e o export antes da apresentação.
+
+---
+
+## 3. Integridade dos valores pagos: o mesmo serviço lançado duas vezes
+
+### 3.1 Como o defeito apareceu
+
+Na conferência do fechamento de 05/10/2026, oito aplicadores apareciam com o
+mesmo serviço repetido — três vezes, em alguns casos:
+
+```
+Joao Dario Lodi Campolina
+Orientador  Oficina de Redação  08/09/2026  Lourdes  05/10/2026  R$87,00  R$103,57 …
+Orientador  Oficina de Redação  08/09/2026  Lourdes  05/10/2026  R$87,00  R$103,57 …
+Orientador  Oficina de Redação  08/09/2026  Lourdes  05/10/2026  R$87,00  R$103,57 …
+```
+
+Nada na tela dizia que aquilo era erro. O resumo apenas somava um total maior.
+
+### 3.2 A causa, medida nos arquivos
+
+A hipótese natural — falha de leitura da planilha — estava errada. As oito
+repetições vieram de **lotes de importação diferentes**: os mesmos serviços
+chegaram em três workbooks distintos.
+
+A operação monta a lista da semana copiando a da semana anterior, e as abas que
+não mudam ficam com a data antiga:
+
+| Arquivo | Aba `Reapl manhã` | Aba `OFICINA MANHÃ` | Aba `OFICINA tarde` |
+|---|---|---|---|
+| `08-09 Reaplicação e Oficinas.xlsx` | 08 de Setembro | 08 de Setembro | 08 de Setembro |
+| `14-09 Reaplicação e Simulados.xlsx` | 14 de Setembro | **08 de Setembro** | **08 de Setembro** |
+| `15-09 Reaplicação e Simulados.xlsx` | 15 de Setembro | 15 de Setembro | **08 de Setembro** |
+
+Os três arquivos têm a mesma lista de abas — são cópias uns dos outros. O parser
+leu exatamente o que estava escrito; o erro chegou correto do arquivo.
+
+### 3.3 O que estava errado no sistema
+
+A pré-visualização **já marcava** a linha como duplicada (`row["is_duplicate"]`),
+mas `confirm_import` gravava assim mesmo. O aviso era decorativo. Pior: a
+comparação incluía o valor líquido, de modo que a mesma oficina relançada com
+valor corrigido nem sequer era marcada.
+
+Havia três caminhos de gravação e **nenhum** deles verificava o que quer que
+fosse antes de inserir: a importação, o formulário manual e qualquer escrita
+direta pelo ORM.
+
+### 3.4 O que define "o mesmo serviço"
+
+A questão não é trivial, e errá-la custa nos dois sentidos: uma chave larga
+demais deixa passar a duplicata, uma chave estreita demais **apaga pagamento
+devido**.
+
+A planilha de controle de referência (`2026 - BH - LD - Planilha de controle e
+conferência de RPAS…`) foi usada como evidência. Ela tem 885 linhas de serviço,
+e em **35 pares** a mesma pessoa aparece com a mesma data, a mesma atividade e a
+mesma função. Em 21 desses pares os valores são diferentes:
+
+```
+Maria Wolff Florencio  93  APLICADOR  2026-05-05  Oficina de Redação  LOURDES
+Maria Wolff Florencio  84  APLICADOR  2026-05-05  Oficina de Redação  LOURDES
+```
+
+Não é duplicata: é a oficina da **manhã** e a da **tarde**, com valores
+diferentes porque os turnos pagam diferente. A planilha legada não tem coluna de
+turno, então ela não consegue distinguir os dois casos — foi por isso que o
+problema sobreviveu tantos anos no processo manual.
+
+Daí a chave adotada, que inclui o turno:
+
+> **aplicador · data da atividade · atividade · turno · função · unidade**
+
+O valor líquido **não** entra: a mesma oficina relançada com valor corrigido
+continua sendo a mesma oficina, e é exatamente o caso que a versão anterior
+deixava passar.
+
+A atividade entra na forma canônica (`event_key`: maiúsculas, sem acento, espaço
+simples), porque `"Oficina de Redação"`, `"OFICINA DE REDACAO"` e
+`"Oficina de Redação "` são a mesma coisa para quem paga.
