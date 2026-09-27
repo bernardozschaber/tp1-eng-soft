@@ -26,3 +26,7 @@ rpa_control_system_v2.html
 .idea/
 .DS_Store
 *:Zone.Identifier
+
+# Impeccable: design system artefacts are committed (.impeccable/design.json),
+# but live-mode state is machine-local (absolute paths, session journals)
+.impeccable/live/

@@ -1,0 +1,641 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-13T00:00:00Z",
+  "title": "Design System: ProvaPay",
+  "extensions": {
+    "colorMeta": {
+      "brand": {
+        "role": "primary",
+        "displayName": "Verde Bernoulli",
+        "canonical": "#009e8e",
+        "tonalRamp": [
+          "#012e2a",
+          "#01463f",
+          "#025c54",
+          "#047569",
+          "#038276",
+          "#009e8e",
+          "#c9e9e6",
+          "#e6f5f4"
+        ]
+      },
+      "brand-ink": {
+        "role": "primary",
+        "displayName": "Verde Ink",
+        "canonical": "#047569",
+        "tonalRamp": [
+          "#012e2a",
+          "#01463f",
+          "#025c54",
+          "#047569",
+          "#038276",
+          "#009e8e",
+          "#c9e9e6",
+          "#e6f5f4"
+        ]
+      },
+      "brand-tint": {
+        "role": "primary",
+        "displayName": "Verde Tint",
+        "canonical": "#e6f5f4",
+        "tonalRamp": [
+          "#012e2a",
+          "#025c54",
+          "#047569",
+          "#009e8e",
+          "#5cc4b9",
+          "#c9e9e6",
+          "#e6f5f4",
+          "#f5fbfa"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Console Ink",
+        "canonical": "#171717",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#171717",
+          "#242424",
+          "#363636",
+          "#5c5c5c",
+          "#737373",
+          "#9e9e9e",
+          "#cfcfcf"
+        ]
+      },
+      "ink-secondary": {
+        "role": "neutral",
+        "displayName": "Secondary Ink",
+        "canonical": "#5c5c5c",
+        "tonalRamp": [
+          "#171717",
+          "#242424",
+          "#363636",
+          "#5c5c5c",
+          "#737373",
+          "#9e9e9e",
+          "#cfcfcf",
+          "#e7e7e7"
+        ]
+      },
+      "ink-subdued": {
+        "role": "neutral",
+        "displayName": "Subdued Ink",
+        "canonical": "#737373",
+        "tonalRamp": [
+          "#171717",
+          "#242424",
+          "#363636",
+          "#5c5c5c",
+          "#737373",
+          "#9e9e9e",
+          "#cfcfcf",
+          "#e7e7e7"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Page Grey",
+        "canonical": "#f7f7f7",
+        "tonalRamp": [
+          "#171717",
+          "#242424",
+          "#363636",
+          "#5c5c5c",
+          "#9e9e9e",
+          "#cfcfcf",
+          "#f0f0f0",
+          "#fafafa"
+        ]
+      },
+      "container": {
+        "role": "neutral",
+        "displayName": "Card White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#171717",
+          "#363636",
+          "#737373",
+          "#9e9e9e",
+          "#cfcfcf",
+          "#f0f0f0",
+          "#f7f7f7",
+          "#ffffff"
+        ]
+      },
+      "container-inset": {
+        "role": "neutral",
+        "displayName": "Inset Grey",
+        "canonical": "#f7f7f7",
+        "tonalRamp": [
+          "#242424",
+          "#363636",
+          "#5c5c5c",
+          "#9e9e9e",
+          "#cfcfcf",
+          "#e7e7e7",
+          "#f0f0f0",
+          "#fafafa"
+        ]
+      },
+      "inverse": {
+        "role": "primary",
+        "displayName": "Inverse Slate",
+        "canonical": "#242424",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#171717",
+          "#242424",
+          "#363636",
+          "#5c5c5c",
+          "#737373",
+          "#9e9e9e",
+          "#cfcfcf"
+        ]
+      },
+      "focus-ring": {
+        "role": "primary",
+        "displayName": "Focus Slate",
+        "canonical": "#363636",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#171717",
+          "#242424",
+          "#363636",
+          "#5c5c5c",
+          "#737373",
+          "#9e9e9e",
+          "#cfcfcf"
+        ]
+      },
+      "destructive": {
+        "role": "secondary",
+        "displayName": "Ledger Red",
+        "canonical": "#c91313",
+        "tonalRamp": [
+          "#8a0d0d",
+          "#c91313",
+          "#ec2222",
+          "#f13636",
+          "#f66a6a",
+          "#fba5a5",
+          "#ffdedb",
+          "#fff1f0"
+        ]
+      },
+      "badge-yellow": {
+        "role": "secondary",
+        "displayName": "Warning Amber",
+        "canonical": "#b54708",
+        "tonalRamp": [
+          "#6b2905",
+          "#b54708",
+          "#dc6803",
+          "#f79009",
+          "#fdb022",
+          "#fec84b",
+          "#fef0c7",
+          "#fffaeb"
+        ]
+      },
+      "badge-blue": {
+        "role": "secondary",
+        "displayName": "Count Blue",
+        "canonical": "#175cd3",
+        "tonalRamp": [
+          "#0d4599",
+          "#175cd3",
+          "#1570ef",
+          "#2e90fa",
+          "#6bb2fc",
+          "#a7d2fd",
+          "#d1e9ff",
+          "#eff8ff"
+        ]
+      },
+      "categorical-1": {
+        "role": "tertiary",
+        "displayName": "Unit Verde",
+        "canonical": "#009e8e",
+        "tonalRamp": [
+          "#012e2a",
+          "#01463f",
+          "#025c54",
+          "#047569",
+          "#009e8e",
+          "#5cc4b9",
+          "#c9e9e6",
+          "#e6f5f4"
+        ]
+      },
+      "categorical-2": {
+        "role": "tertiary",
+        "displayName": "Unit Indigo Blue",
+        "canonical": "#255ebc",
+        "tonalRamp": [
+          "#0b1e3d",
+          "#122e5c",
+          "#19427f",
+          "#255ebc",
+          "#5a8ad4",
+          "#8fb2e4",
+          "#c4d8f2",
+          "#e7effa"
+        ]
+      },
+      "categorical-3": {
+        "role": "tertiary",
+        "displayName": "Unit Umber",
+        "canonical": "#934f00",
+        "tonalRamp": [
+          "#2e1900",
+          "#472600",
+          "#6b3a00",
+          "#934f00",
+          "#c06c14",
+          "#dc9a55",
+          "#eec79b",
+          "#f8e9d7"
+        ]
+      },
+      "categorical-4": {
+        "role": "tertiary",
+        "displayName": "Unit Cornflower",
+        "canonical": "#5f8df3",
+        "tonalRamp": [
+          "#122a5e",
+          "#1c3f88",
+          "#2a5bb8",
+          "#3e74d9",
+          "#5f8df3",
+          "#93b2f7",
+          "#c3d5fb",
+          "#e7eefe"
+        ]
+      },
+      "categorical-5": {
+        "role": "tertiary",
+        "displayName": "Unit Ochre",
+        "canonical": "#ca7500",
+        "tonalRamp": [
+          "#3d2300",
+          "#5e3600",
+          "#8a4f00",
+          "#ca7500",
+          "#e9962c",
+          "#f2b567",
+          "#f8d6a6",
+          "#fdeedb"
+        ]
+      },
+      "categorical-6": {
+        "role": "tertiary",
+        "displayName": "Unit Mulberry",
+        "canonical": "#8a4a71",
+        "tonalRamp": [
+          "#2b1623",
+          "#432335",
+          "#5f3350",
+          "#8a4a71",
+          "#a97396",
+          "#c49db8",
+          "#dfc8d6",
+          "#f2e8ee"
+        ]
+      },
+      "categorical-7": {
+        "role": "tertiary",
+        "displayName": "Unit Steel Blue",
+        "canonical": "#2783b2",
+        "tonalRamp": [
+          "#0c2938",
+          "#133d53",
+          "#1b5877",
+          "#2783b2",
+          "#57a4cb",
+          "#8bc2dd",
+          "#c0dfec",
+          "#e6f2f8"
+        ]
+      },
+      "categorical-8": {
+        "role": "tertiary",
+        "displayName": "Unit Terracotta",
+        "canonical": "#b1614b",
+        "tonalRamp": [
+          "#361d16",
+          "#512c22",
+          "#7b4232",
+          "#b1614b",
+          "#c98873",
+          "#dcac9c",
+          "#ebcec4",
+          "#f7ebe6"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles and the dashboard headline total. One per screen; 22px below 640px."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "The login card title only."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card titles, often with a middot-separated grey context suffix."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "The default for everything: tables, inputs, buttons, breadcrumbs, sidebar."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, metric labels, badge text, small captions."
+      },
+      "column-header": {
+        "displayName": "Column Header",
+        "purpose": "Table th only. Uppercase letter-spaced type appears nowhere else."
+      },
+      "numeric": {
+        "displayName": "Numeric",
+        "purpose": "IBM Plex Mono with tabular figures for currency, percentages and counts."
+      }
+    },
+    "shadows": [
+      {
+        "name": "edge",
+        "value": "0 1px 2px 0 rgba(11,11,11,0.06), 0 0 0 1px rgba(11,11,11,0.05)",
+        "purpose": "Default card treatment: main card, content cards, metric tiles. Reads as an edge, not altitude."
+      },
+      {
+        "name": "edge-lg",
+        "value": "0 1px 6px 0 rgba(11,11,11,0.06), 0 0 0 1px rgba(11,11,11,0.05)",
+        "purpose": "The login card, the one surface floating alone on page grey."
+      },
+      {
+        "name": "control",
+        "value": "0 1px 2px 0 rgba(11,11,11,0.06)",
+        "purpose": "Secondary buttons, form fields and the active nav icon tile; just enough presence to read as interactive."
+      },
+      {
+        "name": "drawer",
+        "value": "0 4px 8px -2px rgba(11,11,11,0.06)",
+        "purpose": "The mobile sidebar overlay, the only genuinely floating element."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-fade",
+        "value": "background .15s",
+        "purpose": "Button and dropzone background tone change on hover."
+      },
+      {
+        "name": "chevron-turn",
+        "value": "transform .2s",
+        "purpose": "Collapse chevron rotating 90deg on the import sheet block. Removed under prefers-reduced-motion."
+      },
+      {
+        "name": "drawer-in",
+        "value": ".22s cubic-bezier(.22, 1, .36, 1)",
+        "purpose": "Sidebar drawer slide-in below 1024px. Removed under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "drawer",
+        "value": "1024px"
+      },
+      {
+        "name": "compact-title",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Logomark",
+      "kind": "custom",
+      "refersTo": "brand",
+      "description": "Supplied ProvaPay artwork, not drawn geometry: a \"PP\" monogram in verde Bernoulli whose two P bowls interlock into a lemniscate, so the school's infinity motif is formed by ProvaPay's doubled P. Ships as static/img/logomark.png (team render provapay-01.png, trimmed, alpha-extracted, ink normalised to #009E8E). Horizontal lockup at 1.435:1 — never redraw it, never force it square. Favicon pads the same artwork onto a square transparent canvas.",
+      "html": "<div class=\"ds-logo-wrap\"><img class=\"ds-logo\" src=\"/static/img/logomark.png\" alt=\"ProvaPay\" width=\"44\" height=\"31\"></div>",
+      "css": ".ds-logo-wrap { padding: 12px; font-family: IBM Plex Sans, system-ui, sans-serif; } .ds-logo { display: block; width: 44px; height: 31px; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single filled control in the system; at most one per screen. Stays dark neutral after the rebrand because white on #009E8E is only 3.34:1.",
+      "html": "<button class=\"ds-btn ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"M12 5v14\"/></svg> Novo lançamento</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; font-family: IBM Plex Sans, system-ui, sans-serif; font-size: 14px; font-weight: 500; border: 1px solid transparent; white-space: nowrap; cursor: pointer; transition: background .15s; } .ds-btn-primary { background: #242424; color: #ffffff; } .ds-btn-primary:hover { background: #363636; } .ds-btn-primary:focus-visible { outline: 2px solid #363636; outline-offset: 2px; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "White, hairline-bordered default for non-committal actions.",
+      "html": "<button class=\"ds-btn2\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"17 8 12 3 7 8\"/><line x1=\"12\" x2=\"12\" y1=\"3\" y2=\"15\"/></svg> Importar</button>",
+      "css": ".ds-btn2 { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; font-family: IBM Plex Sans, system-ui, sans-serif; font-size: 14px; font-weight: 500; background: #ffffff; color: #171717; border: 1px solid rgba(11,11,11,0.1); box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06); cursor: pointer; transition: background .15s; } .ds-btn2:hover { background: #f7f7f7; } .ds-btn2:focus-visible { outline: 2px solid #363636; outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "In-card and in-table navigation; tints and darkens on hover.",
+      "html": "<button class=\"ds-btn3\">Ver lançamentos <svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m9 18 6-6-6-6\"/></svg></button>",
+      "css": ".ds-btn3 { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px; font-family: IBM Plex Sans, system-ui, sans-serif; font-size: 13px; font-weight: 500; background: transparent; color: #5c5c5c; border: 1px solid transparent; cursor: pointer; transition: background .15s; } .ds-btn3:hover { background: #f0f0f0; color: #171717; } .ds-btn3:focus-visible { outline: 2px solid #363636; outline-offset: 2px; }"
+    },
+    {
+      "name": "Labelled Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Bordered box containing its own label; the inner input is chrome-less and the wrapper carries the focus ring. No transition: nothing about it animates.",
+      "html": "<div class=\"ds-field\"><label for=\"ds-f1\">Valor líquido</label><input id=\"ds-f1\" value=\"R$ 180,00\"></div>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 1px solid rgba(11,11,11,0.1); border-radius: 8px; background: #ffffff; box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06); font-family: IBM Plex Sans, system-ui, sans-serif; } .ds-field:focus-within { outline: 2px solid #363636; outline-offset: 2px; } .ds-field label { font-size: 12px; color: #5c5c5c; } .ds-field input { border: 0; outline: 0; padding: 0; font-family: inherit; font-size: 14px; color: #171717; background: transparent; width: 100%; } .ds-field input:focus-visible { outline: none; }"
+    },
+    {
+      "name": "Select",
+      "kind": "input",
+      "refersTo": "select",
+      "description": "Bordered weight-500 control with an inline chevron drawn in subdued ink; native appearance removed.",
+      "html": "<select class=\"ds-select\"><option>Últimos 30 dias</option><option>Este mês</option></select>",
+      "css": ".ds-select { background: #ffffff; border: 1px solid rgba(11,11,11,0.1); font-family: IBM Plex Sans, system-ui, sans-serif; font-weight: 500; border-radius: 8px; padding: 8px 28px 8px 12px; font-size: 14px; color: #171717; appearance: none; background-image: url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23737373' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\"); background-repeat: no-repeat; background-position: right 8px center; } .ds-select:focus-visible { outline: 2px solid #363636; outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "Read-only pill status marker: tint background with its matching 700-step ink. Positive state is the brand pair (brand-50 on brand-700), never the 500.",
+      "html": "<span class=\"ds-badge ds-badge-brand\">OK</span> <span class=\"ds-badge ds-badge-red\">ver</span> <span class=\"ds-badge ds-badge-yellow\">3 a revisar</span> <span class=\"ds-badge ds-badge-blue\">12</span> <span class=\"ds-badge ds-badge-gray\">RRPM Matriz</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-family: IBM Plex Sans, system-ui, sans-serif; font-size: 12px; font-weight: 500; white-space: nowrap; } .ds-badge-gray { background: #f0f0f0; color: #5c5c5c; } .ds-badge-brand { background: #e6f5f4; color: #047569; } .ds-badge-red { background: #fff1f0; color: #c91313; } .ds-badge-yellow { background: #fffaeb; color: #b54708; } .ds-badge-blue { background: #eff8ff; color: #175cd3; }"
+    },
+    {
+      "name": "Success Alert",
+      "kind": "custom",
+      "refersTo": "alert-success",
+      "description": "Page-level confirmation banner; shares the brand tint-and-ink pair with the positive badge.",
+      "html": "<div class=\"ds-alert ds-alert-success\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21.801 10A10 10 0 1 1 17 3.335\"/><path d=\"m9 11 3 3L22 4\"/></svg> 128 lançamentos confirmados.</div>",
+      "css": ".ds-alert { padding: 10px 14px; border-radius: 10px; font-family: IBM Plex Sans, system-ui, sans-serif; font-size: 14px; display: flex; gap: 8px; align-items: center; } .ds-alert-success { background: #e6f5f4; color: #047569; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The default content container: white, 12px radius, edge shadow instead of a border.",
+      "html": "<section class=\"ds-card\"><div class=\"ds-card-head\"><h2 class=\"ds-card-title\">Unidades <span>· R$ 12.430,00</span></h2><a class=\"ds-link\" href=\"#\">Ver lançamentos</a></div><p class=\"ds-card-body\">Consolidado por data de pagamento, aplicador e empresa pagadora.</p></section>",
+      "css": ".ds-card { background: #ffffff; border-radius: 12px; box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06), 0 0 0 1px rgba(11,11,11,0.05); padding: 16px; font-family: IBM Plex Sans, system-ui, sans-serif; } .ds-card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; } .ds-card-title { font-size: 16px; font-weight: 500; color: #171717; margin: 0; } .ds-card-title span { color: #5c5c5c; font-weight: 400; } .ds-card-body { font-size: 14px; line-height: 1.5; color: #5c5c5c; margin: 0; } .ds-link { color: #047569; text-decoration: none; font-size: 14px; } .ds-link:hover { text-decoration: underline; } .ds-link:focus-visible { outline: 2px solid #363636; outline-offset: 2px; }"
+    },
+    {
+      "name": "Metric Tile",
+      "kind": "card",
+      "refersTo": "metric",
+      "description": "Auto-fitting grid tile for a single figure; 12px label over a tabular value.",
+      "html": "<div class=\"ds-metrics\"><div class=\"ds-metric\"><div class=\"ds-metric-label\">Valor bruto (RPA)</div><div class=\"ds-metric-value\">R$ 14.022,47</div></div><div class=\"ds-metric\"><div class=\"ds-metric-label\">Descontos</div><div class=\"ds-metric-value\">R$ 1.592,47</div></div></div>",
+      "css": ".ds-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; font-family: IBM Plex Sans, system-ui, sans-serif; } .ds-metric { background: #ffffff; border-radius: 10px; box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06), 0 0 0 1px rgba(11,11,11,0.05); padding: 12px 16px; } .ds-metric-label { font-size: 12px; color: #5c5c5c; margin-bottom: 4px; } .ds-metric-value { font-size: 20px; font-weight: 500; color: #171717; font-variant-numeric: tabular-nums; }"
+    },
+    {
+      "name": "Icon Rail Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "84px rail: logomark, then 32px rounded icon tiles with 11px labels. Active gains a white tile, the control shadow, and the verde Bernoulli indicator bar at the rail edge.",
+      "html": "<nav class=\"ds-nav\"><svg class=\"ds-nav-logo\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 36 36\" fill=\"none\" role=\"img\" aria-label=\"ProvaPay\"><rect width=\"36\" height=\"36\" rx=\"9\" fill=\"#009E8E\"/><path d=\"M18 18C15.4 14.1 13.2 12.6 10.8 12.6C7.6 12.6 5.8 15.1 5.8 18C5.8 20.9 7.6 23.4 10.8 23.4C13.2 23.4 15.4 21.9 18 18C20.6 14.1 22.8 12.6 25.2 12.6C28.4 12.6 30.2 15.1 30.2 18C30.2 20.9 28.4 23.4 25.2 23.4C22.8 23.4 20.6 21.9 18 18Z\" stroke=\"#FFFFFF\" stroke-width=\"3.1\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><ul><li><a class=\"ds-nav-item ds-active\" href=\"#\"><span class=\"ds-nav-row\"><span class=\"ds-ind\"></span><span class=\"ds-nav-icon\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21.21 15.89A10 10 0 1 1 8 2.83\"/><path d=\"M22 12A10 10 0 0 0 12 2v10z\"/></svg></span></span><span class=\"ds-nav-label\">Painel</span></a></li><li><a class=\"ds-nav-item\" href=\"#\"><span class=\"ds-nav-row\"><span class=\"ds-ind\"></span><span class=\"ds-nav-icon\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 12h.01\"/><path d=\"M3 18h.01\"/><path d=\"M3 6h.01\"/><path d=\"M8 12h13\"/><path d=\"M8 18h13\"/><path d=\"M8 6h13\"/></svg></span></span><span class=\"ds-nav-label\">Lançamentos</span></a></li></ul></nav>",
+      "css": ".ds-nav { width: 84px; background: #f7f7f7; padding: 16px 0; font-family: IBM Plex Sans, system-ui, sans-serif; } .ds-nav-logo { display: block; margin: 0 auto 12px; width: 36px; height: 36px; } .ds-nav ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; } .ds-nav-item { display: block; position: relative; padding-bottom: 4px; text-decoration: none; } .ds-nav-row { display: flex; align-items: center; gap: 4px; } .ds-ind { width: 4px; height: 16px; border-radius: 0 4px 4px 0; display: block; } .ds-nav-item.ds-active .ds-ind { background: #009e8e; } .ds-nav-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto; border-radius: 8px; color: #5c5c5c; } .ds-nav-item:hover .ds-nav-icon { background: #f0f0f0; } .ds-nav-item.ds-active .ds-nav-icon { background: #ffffff; box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06); color: #171717; } .ds-nav-label { display: block; text-align: center; font-size: 11px; font-weight: 500; color: #5c5c5c; padding-left: 8px; } .ds-nav-item.ds-active .ds-nav-label { color: #171717; } .ds-nav-item:focus-visible { outline: 2px solid #363636; outline-offset: 2px; }"
+    },
+    {
+      "name": "Data Table",
+      "kind": "custom",
+      "refersTo": "table-header",
+      "description": "The densest surface in the product: uppercase inset header with rounded outer corners, hairline row rules, right-aligned tabular money, weight-500 footer totals.",
+      "html": "<table class=\"ds-table\"><thead><tr><th scope=\"col\">Aplicador</th><th scope=\"col\">Empresa</th><th class=\"ds-num\" scope=\"col\">Bruto (RPA)</th><th class=\"ds-num\" scope=\"col\">Líquido a pagar</th><th scope=\"col\">Consistência</th></tr></thead><tbody><tr><td class=\"ds-strong\">Ana Clara Novais</td><td><span class=\"ds-badge ds-badge-gray\">RRPM Matriz</span></td><td class=\"ds-num\">R$ 214,29</td><td class=\"ds-num ds-strong\">R$ 180,00</td><td><span class=\"ds-badge ds-badge-brand\">OK</span></td></tr><tr><td class=\"ds-strong\">Lucas Marinho</td><td><span class=\"ds-badge ds-badge-gray\">RRPM CJ</span></td><td class=\"ds-num\">R$ 357,14</td><td class=\"ds-num ds-strong\">R$ 300,00</td><td><span class=\"ds-badge ds-badge-red\">ver</span></td></tr></tbody><tfoot><tr><td colspan=\"2\">Total</td><td class=\"ds-num\">R$ 571,43</td><td class=\"ds-num\">R$ 480,00</td><td></td></tr></tfoot></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-family: IBM Plex Sans, system-ui, sans-serif; font-size: 14px; color: #171717; } .ds-table th { text-align: left; font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: #5c5c5c; padding: 10px 12px; background: #f7f7f7; } .ds-table th:first-child { border-radius: 10px 0 0 10px; } .ds-table th:last-child { border-radius: 0 10px 10px 0; } .ds-table td { padding: 12px; border-bottom: 1px solid rgba(11,11,11,0.08); vertical-align: middle; } .ds-table tbody tr:last-child td { border-bottom: 0; } .ds-table tbody tr:hover td { background: #f7f7f7; } .ds-table .ds-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; } .ds-table .ds-strong { font-weight: 500; } .ds-table tfoot td { font-weight: 500; border-top: 1px solid rgba(11,11,11,0.1); background: #f7f7f7; } .ds-badge { display: inline-flex; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; } .ds-badge-gray { background: #f0f0f0; color: #5c5c5c; } .ds-badge-brand { background: #e6f5f4; color: #047569; } .ds-badge-red { background: #fff1f0; color: #c91313; }"
+    },
+    {
+      "name": "Stat Block with Trend",
+      "kind": "custom",
+      "refersTo": "metric",
+      "description": "The dashboard headline: 30px tabular total with a trend line beneath. Direction is a Lucide arrow icon, never a Unicode glyph, optically nudged with .trend-icon.",
+      "html": "<div class=\"ds-stat\"><div class=\"ds-stat-label\">Líquido a pagar</div><div class=\"ds-stat-value\">R$ 12.430,00</div><p class=\"ds-stat-trend\"><span class=\"ds-mono ds-trend-up\">R$ 1.840,00 (<svg class=\"ds-trend-icon\" width=\"12\" height=\"12\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m5 12 7-7 7 7\"/><path d=\"M12 19V5\"/></svg>17,4%)</span> vs. período anterior</p></div>",
+      "css": ".ds-stat { font-family: IBM Plex Sans, system-ui, sans-serif; } .ds-stat-label { font-size: 14px; font-weight: 500; color: #5c5c5c; } .ds-stat-value { font-size: 30px; font-weight: 500; letter-spacing: -0.01em; color: #171717; margin: 8px 0; font-variant-numeric: tabular-nums; } .ds-stat-trend { font-size: 14px; color: #5c5c5c; margin: 0; } .ds-mono { font-family: \"IBM Plex Mono\", ui-monospace, Menlo, monospace; font-variant-numeric: tabular-nums; font-size: 13px; } .ds-trend-up { color: #047569; } .ds-trend-icon { vertical-align: -1px; }"
+    },
+    {
+      "name": "Upload Dropzone",
+      "kind": "custom",
+      "refersTo": "dropzone",
+      "description": "The only dashed edge in the system; tints to inset grey on hover and on drag-over.",
+      "html": "<label class=\"ds-dropzone\"><svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#5c5c5c\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"17 8 12 3 7 8\"/><line x1=\"12\" x2=\"12\" y1=\"3\" y2=\"15\"/></svg><div class=\"ds-dz-title\">Arraste as listas de atividade aqui</div><div class=\"ds-dz-hint\">.xlsx ou .xlsm no layout \"Relatório de Atividade\"</div></label>",
+      "css": ".ds-dropzone { display: block; border: 1.5px dashed rgba(11,11,11,0.1); border-radius: 12px; padding: 40px 16px; text-align: center; cursor: pointer; font-family: IBM Plex Sans, system-ui, sans-serif; font-size: 14px; color: #171717; transition: background .15s; } .ds-dropzone:hover { background: #f7f7f7; } .ds-dropzone:focus-visible { outline: 2px solid #363636; outline-offset: 2px; } .ds-dz-title { font-weight: 500; margin: 8px 0 4px; } .ds-dz-hint { font-size: 12px; color: #737373; }"
+    },
+    {
+      "name": "Allocation Weight Bar",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Per-unit share as a 4px pill row with a dotted legend. Colours come from the validated categorical set by fixed slot index; slot 1 is verde Bernoulli.",
+      "html": "<div class=\"ds-wrap\"><div class=\"ds-weight-bar\"><span style=\"flex:0.46;background:#009e8e\"></span><span style=\"flex:0.28;background:#255ebc\"></span><span style=\"flex:0.16;background:#934f00\"></span><span style=\"flex:0.10;background:#5f8df3\"></span></div><div class=\"ds-legend\"><span><i class=\"ds-dot\" style=\"background:#009e8e\"></i>Lourdes <b>46%</b></span><span><i class=\"ds-dot\" style=\"background:#255ebc\"></i>Cidade Jardim <b>28%</b></span><span><i class=\"ds-dot\" style=\"background:#934f00\"></i>Santo Antônio <b>16%</b></span><span><i class=\"ds-dot\" style=\"background:#5f8df3\"></i>Vale do Sereno <b>10%</b></span></div></div>",
+      "css": ".ds-wrap { font-family: IBM Plex Sans, system-ui, sans-serif; } .ds-weight-bar { display: flex; gap: 4px; height: 4px; margin: 12px 0 8px; } .ds-weight-bar span { border-radius: 999px; min-width: 4px; } .ds-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: #5c5c5c; } .ds-legend b { color: #171717; font-weight: 500; } .ds-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ledger Signed in Verde",
+    "overview": "ProvaPay is a near-achromatic operations console that carries exactly one colour of its own. The neutral scale, spacing rhythm and shadow structure came from a port of the Maybe design system and remain the working chassis — the token file still says so in its first line, and components still carry donor names in comments (\"Stat block (net worth style)\", \"Weight bar (asset allocation style)\"). The colour identity is no longer borrowed. Every chromatic token in the build is now derived from verde Bernoulli (#009E8E), Colégio Bernoulli's own brand colour, or chosen to sit beside it. The decorative leftovers of the donor palette — violet, cyan, pink, orange, fuchsia, indigo, standalone blue — are deleted from the token file, not merely unused.\n\nThe personality is administrative rather than expressive, and the brand is applied with deliberate restraint: it appears in six places and nowhere else. The logomark, the active navigation indicator, the trend chart's stroke and gradient, positive badges and alerts, legend and status dots, and links. Everything else is grey. Density is high and unapologetically desktop-first — an 84px icon rail, a 280px totals sidebar, and a single full-height white card holding the work. Depth is almost entirely absent: a one-pixel alpha-black hairline plus a barely-there shadow is the whole elevation vocabulary, so hierarchy comes from tonal steps (page grey → card white → inset grey) and from typographic weight, not from lifting things off the page.\n\nOne contrast fact governs the whole palette and is written into the token file itself: #009E8E is 3.34:1 on white. It is a fill, stroke and mark colour and is never text on a light surface. Text that must read as brand uses --color-brand-700 (#047569, 5.59:1 on white and 4.99:1 on the brand-50 tint). That single number is why the primary button did not turn teal at the rebrand and why links, success text and positive badge ink all land on the 700 step rather than the 500.",
+    "keyCharacteristics": [
+      "Light-only; `color-scheme: light` is declared and no dark theme exists.",
+      "Neutral greys carry the whole interface; verde Bernoulli is the only identity colour.",
+      "The brand is a fill/stroke/mark; brand *text* is always the darker 700 step.",
+      "Flat by default — hairline borders and 1px/6%-black shadows, never lifted panels.",
+      "Money and counts are monospaced and tabular-aligned; prose is not.",
+      "Desktop-first density: three fixed columns, breaking to a drawer below 1024px.",
+      "Every icon is inline Lucide SVG rendered by a template tag; there is no icon font and no Unicode glyph stands in for one."
+    ],
+    "rules": [
+      {
+        "name": "The Fill-Not-Text Rule",
+        "body": "Verde Bernoulli at the 500 step is 3.34:1 on white. It may fill a shape, stroke a line, or mark a surface. It may never be a text colour on a light background. Anything that must read as brand *and* as words uses the 700 step. This is the governing constraint of the palette and it is written into `tokens.css` so it cannot be lost.",
+        "section": "colors"
+      },
+      {
+        "name": "The Six Placements Rule",
+        "body": "The brand colour appears in six places: the logomark, the active nav indicator, the chart stroke and gradient, positive badges and alerts, status and legend dots, and links. Adding a seventh placement is a palette decision, not a styling choice. Everything not on that list is grey or a status colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Dark Button Rule",
+        "body": "`inverse` is the only filled control colour in the product, and it survived the rebrand on contrast grounds: white on #009E8E is 3.34:1 and fails button text contrast, so the primary action stays dark neutral. A screen shows at most one dark button; everything else is bordered, ghosted, or a plain link.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tint-and-Ink Pair Rule",
+        "body": "Every coloured badge or alert is a 50-step tint background with its 700-step ink on top (brand 50/700, red 50/700, blue 50/700, yellow 50/700). Never invert the pair, and never put white text on a saturated fill.",
+        "section": "colors"
+      },
+      {
+        "name": "The Fixed-Slot Data Rule",
+        "body": "Categorical colours are assigned in index order and never cycled. A ninth series does not wrap around to slot 1; it means the chart needs rethinking. The validation that earned these eight values only holds for the order they are declared in.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two-Weight Rule",
+        "body": "IBM Plex Sans ships 100–900; this system uses 400 and 500. Emphasis is a step up to 500 or a step darker in ink, never 600+.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Money Rule",
+        "body": "Any rendered currency, percentage or count gets `tabular-nums` — via `.mono` where the figure is secondary metadata, via `.tabular` where it must stay in the body face. Numeric table columns are right-aligned and `white-space: nowrap`.",
+        "section": "typography"
+      },
+      {
+        "name": "The Uppercase-Is-For-Columns Rule",
+        "body": "Uppercase with letter-spacing appears in exactly one place: table column headers. It is not an eyebrow style, not a section kicker, and must not be borrowed for one.",
+        "section": "typography"
+      },
+      {
+        "name": "The Card-Is-The-Page Rule",
+        "body": "The scroll container is the main card, not the document. New screens render inside `app__content`; they do not introduce their own full-height wrappers or page-level scroll.",
+        "section": "layout"
+      },
+      {
+        "name": "The Gutter Variable Rule",
+        "body": "Horizontal padding comes from `var(--gutter)`, never a literal. Anything hard-coding 20px falls out of alignment with the topbar at the tablet breakpoint.",
+        "section": "layout"
+      },
+      {
+        "name": "The Edge-Not-Lift Rule",
+        "body": "Shadows draw edges, not altitude. A surface may gain a hairline ring; it may never gain a visible drop that implies it hovers above the page.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Focus-Is-An-Outline Rule",
+        "body": "Focus is `2px solid var(--focus-ring)` at `2px` offset on `:focus-visible`, applied globally to links, buttons, inputs, selects, textareas, summaries and anything tabbable. It is never a shadow, never a colour shift, never removed. Composite controls carry the ring on the wrapper (`.field:focus-within`) and explicitly suppress it on the inner control so only one ring ever draws. The focus ring stayed neutral slate through the rebrand; it is not a brand surface.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do compose new screens from `page-header` → optional `metrics` grid → `card` sections, inside `app__content`.",
+      "Do use `--color-brand-500` for fills, strokes and marks, and `--color-brand-700` for any brand-coloured text, including links and positive badge ink.",
+      "Do reach for semantic tokens (`--text-secondary`, `--bg-container-inset`, `--border-tertiary`) rather than the raw `--color-gray-*` or `--color-brand-*` primitives where a semantic name exists.",
+      "Do assign categorical colours by fixed slot index, in declaration order.",
+      "Do put every currency, percentage and count in tabular figures, right-aligned in tables.",
+      "Do give every icon-only control an `aria-label` and every table column a `scope=\"col\"` header, using `.sr-only` where a column reads as blank.",
+      "Do render icons with `{% icon \"name\" %}` — inline Lucide SVG at 12/14/16/18px, stroke-only — including directional arrows, which use `arrow-up` / `arrow-down` with `css_class=\"trend-icon\"` for optical alignment.",
+      "Do keep the global focus outline intact; if a composite control needs one ring, put it on the wrapper and suppress the inner one.",
+      "Do grow touch targets at the 1024px breakpoint rather than letting padding collapse."
+    ],
+    "donts": [
+      "Don't set `--color-brand-500` as a text colour on any light surface. It is 3.34:1.",
+      "Don't fill the primary button with verde. White on #009E8E fails button text contrast; the dark neutral button is the deliberate outcome of the rebrand, not an oversight.",
+      "Don't redraw, re-letter or re-proportion the logomark, and don't force the horizontal lockup into a square container. It is supplied artwork; the only permitted transforms are uniform scaling and the transparent padding used for the favicon.",
+      "Don't introduce a dark theme or a second colour scheme; `color-scheme: light` is declared and no dark tokens exist.",
+      "Don't fill a button with brand, red, yellow or blue. Status colour is text-on-tint only.",
+      "Don't reintroduce decorative hues. Violet, cyan, pink, orange, fuchsia and indigo were deleted from the token layer as dead port residue; they are not a reserve palette.",
+      "Don't cycle the categorical palette past slot 8, or reorder it. The validation holds for the declared order only.",
+      "Don't add font weights above 500 or a third font family. Emphasis is weight 500 or darker ink.",
+      "Don't use uppercase letter-spaced type anywhere but table column headers — in particular, not as a kicker or eyebrow above a heading.",
+      "Don't lift surfaces on hover or add a shadow heavier than the Drawer step; hover changes background tone.",
+      "Don't replace the focus outline with a box-shadow or a border-colour change; that treatment was already removed once by audit for failing contrast.",
+      "Don't substitute a Unicode character for an icon. Arrows, chevrons and carets come from the Lucide set through the `icon` tag; `↑`/`↓` were removed from the dashboard for this reason.",
+      "Don't hard-code a hex in a template, a script or a component. Colour comes from the token layer, including in JavaScript (`getComputedStyle` on `:root`)."
+    ]
+  }
+}
