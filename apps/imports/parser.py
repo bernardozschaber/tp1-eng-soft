@@ -43,13 +43,22 @@ LONG_DATE = re.compile(r"(\d{1,2})\s+de\s+([A-Za-zçÇ]+)\s+de\s+(\d{4})", re.IG
 SHORT_DATE = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{4})")
 SHIFT_KEYWORDS = {"manh": "MANHA", "tarde": "TARDE", "noite": "NOITE"}
 
+# --- exportação de formulário (Cidade Jardim, Vale do Sereno) ---------------
+FORMS_HEADER_SCAN_ROWS = 5
+FORMS_NAME_HEADERS = ("nome completo",)
+FORMS_ROLE_HEADERS = ("funcao", "função")
+ROLE_BY_KEYWORD = {"aplicador": "APLICADOR", "orientador": "ORIENTADOR", "volante": "VOLANTE"}
+# "Prova Regular 11-09 Tarde.xlsx" -> dia 11, mês 09 (ano opcional).
+FILE_NAME_DATE = re.compile(r"(?<!\d)(\d{1,2})[-_./](\d{1,2})(?:[-_./](\d{2,4}))?(?!\d)")
+
 
 @dataclass
 class ParsedRow:
     name: str
-    role: str  # "APLICADOR" | "ORIENTADOR"
+    role: str  # "APLICADOR" | "ORIENTADOR" | "VOLANTE"
     net_amount: Decimal
     source_row: int
+    cpf: str = ""
 
 
 @dataclass
