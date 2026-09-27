@@ -95,3 +95,91 @@ class DuplicateEntryTests(TestCase):
         twin.apply_calculations()
         with self.assertRaises(IntegrityError):
             ServiceEntry.objects.bulk_create([twin])
+
+    def test_event_key_is_the_canonical_spelling(self):
+        entry = self.make_entry(event_name="  Oficina   de Redação  ")
+        self.assertEqual(entry.event_name, "Oficina   de Redação")
+        self.assertEqual(entry.event_key, "OFICINA DE REDACAO")
+        self.assertEqual(event_key("oficina de redacao"), entry.event_key)
+
+    # -- o que não é repetição e precisa passar --------------------------
+
+    def test_morning_and_afternoon_of_the_same_activity_are_two_services(self):
+        """O caso que a planilha de controle mostra: dois turnos, dois valores.
+
+        Na "LISTAGEM DE SERVIÇOS PRESTADOS" a mesma pessoa aparece duas vezes na
+        Oficina de Redação do mesmo dia, com valores diferentes — ela trabalhou
+        de manhã e à tarde. Confundir isso com duplicata tiraria meio dia de
+        pagamento de alguém.
+        """
+        self.make_entry(shift=Shift.AFTERNOON, net_amount=Decimal("84.00"))
+        self.make_entry(shift=Shift.MORNING, net_amount=Decimal("93.00"))
+        self.assertEqual(ServiceEntry.objects.count(), 2)
+
+    def test_different_role_unit_date_or_activity_are_separate_services(self):
+        self.make_entry()
+        self.make_entry(role=ServiceRole.APPLICATOR)
+        self.make_entry(unit=self.other_unit)
+        self.make_entry(activity_date=date(2026, 9, 15))
+        self.make_entry(event_name="Prova Regular")
+        self.assertEqual(ServiceEntry.objects.count(), 5)
+
+    # -- o aviso antes da gravação ---------------------------------------
+
+    def test_find_duplicate_points_at_the_existing_entry(self):
+        existing = self.make_entry()
+        found = ServiceEntry.find_duplicate(
+            applicator=self.applicator, activity_date=date(2026, 9, 8),
+            event_name="oficina de redacao", shift=Shift.AFTERNOON,
+            role=ServiceRole.ADVISOR, unit=self.unit,
+        )
+        self.assertEqual(found, existing)
+
+    def test_find_duplicate_lets_an_edit_save_over_itself(self):
+        existing = self.make_entry()
+        self.assertIsNone(ServiceEntry.find_duplicate(
+            applicator=self.applicator, activity_date=existing.activity_date,
+            event_name=existing.event_name, shift=existing.shift,
+            role=existing.role, unit=existing.unit, exclude_pk=existing.pk,
+        ))
+
+    # -- o formulário manual ---------------------------------------------
+
+    def _form_data(self, **overrides):
+        data = {
+            "applicator": self.applicator.pk, "role": ServiceRole.ADVISOR,
+            "activity_date": "2026-09-08", "event_name": "Oficina de Redação",
+            "segment": "", "shift": Shift.AFTERNOON, "sector": self.sector.pk,
+            "unit": self.unit.pk, "net_amount": "87.00", "payment_date": "", "notes": "",
+        }
+        return {**data, **overrides}
+
+    def test_form_refuses_a_repeated_entry_with_a_readable_message(self):
+        existing = self.make_entry()
+        form = ServiceEntryForm(data=self._form_data())
+        self.assertFalse(form.is_valid())
+        message = " ".join(form.errors["__all__"])
+        self.assertIn(f"#{existing.pk}", message)
+        self.assertIn("não pode ser lançado duas vezes", message)
+
+    def test_form_accepts_the_other_shift(self):
+        self.make_entry(shift=Shift.AFTERNOON)
+        form = ServiceEntryForm(data=self._form_data(shift=Shift.MORNING))
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_editing_an_entry_without_changing_it_still_validates(self):
+        existing = self.make_entry()
+        form = ServiceEntryForm(data=self._form_data(net_amount="90.00"), instance=existing)
+        self.assertTrue(form.is_valid(), form.errors)
+
+    def test_model_validation_reports_the_constraint(self):
+        """full_clean também barra, para quem grava fora do formulário."""
+        self.make_entry()
+        twin = ServiceEntry(
+            applicator=self.applicator, role=ServiceRole.ADVISOR, activity_date=date(2026, 9, 8),
+            event_name="Oficina de Redação", shift=Shift.AFTERNOON, sector=self.sector,
+            unit=self.unit, net_amount=Decimal("87.00"),
+        )
+        twin.apply_calculations()
+        with self.assertRaises(ValidationError):
+            twin.validate_constraints()
