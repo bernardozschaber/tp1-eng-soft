@@ -55,6 +55,16 @@ Para usar PostgreSQL, suba o banco com `docker compose up -d` e exporte
 > de autenticação. O volume antigo não é apagado, apenas fica órfão: remova com
 > `docker volume rm pgdata` quando tiver certeza de que não precisa mais dele.
 
+## Testes e medições
+
+As decisões de desempenho e de interface deste projeto estão documentadas em
+[`TESTES.md`](TESTES.md), com os números que as sustentam: benchmarks em volume real
+(52 mil e 208 mil lançamentos), razões de contraste WCAG calculadas, validação da
+paleta categórica e o que explicitamente **não** foi verificado.
+
+Destaques: o Resumo saiu de 35,8s/189 MB para 2,4s/23 MB e o export de 164,0s/534 MB
+para 6,4s/24 MB, e o custo de ambos deixou de crescer com o histórico acumulado.
+
 ## Regras de negócio
 
 |Regra|Implementação|
