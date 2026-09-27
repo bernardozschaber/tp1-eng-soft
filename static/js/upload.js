@@ -4,7 +4,7 @@
   const dropzone = document.getElementById("dropzone");
   const list = document.getElementById("file-list");
   const button = document.getElementById("upload-button");
-  if (!input || !dropzone) return;
+  if (!input || !dropzone || !list || !button) return;
 
   function formatSize(bytes) {
     return bytes > 1024 * 1024 ? (bytes / 1024 / 1024).toFixed(1) + " MB" : Math.round(bytes / 1024) + " KB";
@@ -12,9 +12,20 @@
 
   function renderList() {
     const files = Array.from(input.files);
-    list.innerHTML = files.map((file) =>
-      `<div class="row between" style="padding:6px 0;border-bottom:1px solid var(--border-tertiary)"><span>${file.name}</span><span class="muted small">${formatSize(file.size)}</span></div>`
-    ).join("");
+    list.textContent = "";
+    files.forEach((file) => {
+      // File names are untrusted input: build nodes and set text rather than
+      // interpolating into innerHTML.
+      const row = document.createElement("div");
+      row.className = "row between file-row";
+      const name = document.createElement("span");
+      name.textContent = file.name;
+      const size = document.createElement("span");
+      size.className = "muted small";
+      size.textContent = formatSize(file.size);
+      row.append(name, size);
+      list.appendChild(row);
+    });
     button.disabled = files.length === 0;
   }
 
