@@ -77,6 +77,87 @@
   {% endfor %}
 {% endfor %}
 <div class="form-actions"><button type="submit" class="btn btn--primary">{% icon "check" %} Confirmar lançamentos</button></div>
+
+{% if questions %}
+{% for question in questions %}<input type="hidden" name="{{ question.id }}" value="" data-merge-input>{% endfor %}
+<div class="modal" id="merge-dialog" hidden>
+  <div class="modal__backdrop" data-merge-cancel></div>
+  <div class="modal__card" role="dialog" aria-modal="true" aria-labelledby="merge-title" tabindex="-1">
+    <p class="modal__step"><span data-merge-step>1</span> de {{ questions|length }}</p>
+    <h2 class="modal__title" id="merge-title">É a mesma pessoa?</h2>
+    <p class="modal__lead" data-merge-lead>Os dois nomes abaixo se parecem. Juntar lança tudo num cadastro só; separar mantém dois.</p>
+    {% for question in questions %}
+    {% if question.kind == "create" %}
+    <section class="merge merge--single" data-merge-question data-input="{{ question.id }}"
+             data-title="Criar um novo cadastro para o usuário a seguir: {{ question.variant.display }}?"
+             data-lead="Este nome não é nenhum dos aplicadores cadastrados e não se parece com nenhum deles. Criar abre um cadastro novo, marcado como primeiro pagamento; não criar deixa estes lançamentos de fora."
+             data-yes="Criar cadastro novo" data-no="Não criar (deixar de fora)" data-link="Associar a outro aplicador" hidden>
+      <div class="merge__side">
+        <p class="merge__label">Nome na lista</p>
+        <p class="merge__name">{{ question.variant.display }}</p>
+        <p class="merge__detail">{{ question.variant.detail }} · sem correspondência no cadastro</p>
+        <p class="merge__chosen" data-merge-chosen hidden></p>
+        <ul class="merge__services">
+          {% for service in question.variant.services %}<li>{{ service.date }} · {{ service.event|truncatechars:38 }} · {{ service.amount|brl }}</li>{% endfor %}
+          {% if question.variant.count > question.variant.services|length %}<li class="muted">e mais {{ question.variant.count|add:"-4" }}…</li>{% endif %}
+        </ul>
+      </div>
+    </section>
+    {% else %}
+    <section class="merge" data-merge-question data-input="{{ question.id }}"
+             data-title="É a mesma pessoa?"
+             data-lead="Os dois nomes abaixo se parecem. Juntar lança tudo num cadastro só; separar mantém dois."
+             data-yes="É a mesma pessoa" data-no="São pessoas diferentes" hidden>
+      <div class="merge__side">
+        <p class="merge__label">Nome na lista</p>
+        <p class="merge__name">{{ question.variant.display }}</p>
+        <p class="merge__detail">{{ question.variant.detail }}</p>
+        <ul class="merge__services">
+          {% for service in question.variant.services %}<li>{{ service.date }} · {{ service.event|truncatechars:38 }} · {{ service.amount|brl }}</li>{% endfor %}
+          {% if question.variant.count > question.variant.services|length %}<li class="muted">e mais {{ question.variant.count|add:"-4" }}…</li>{% endif %}
+        </ul>
+      </div>
+      <div class="merge__side merge__side--target">
+        <p class="merge__label">Juntar em</p>
+        <p class="merge__name">{{ question.target.display }}</p>
+        <p class="merge__detail">{{ question.target.detail }}</p>
+        <ul class="merge__services">
+          {% for service in question.target.services %}<li>{{ service.date }} · {{ service.event|truncatechars:38 }} · {{ service.amount|brl }}</li>{% endfor %}
+          {% if question.target.count > question.target.services|length %}<li class="muted">e mais {{ question.target.count|add:"-4" }}…</li>{% endif %}
+        </ul>
+      </div>
+    </section>
+    {% endif %}
+    {% endfor %}
+    {% comment %}
+      Terceira saída: o nome da planilha é alguém que já está cadastrado, só
+      escrito errado. A busca é local — a lista inteira já veio com a página.
+    {% endcomment %}
+    <section class="picker" data-merge-picker hidden>
+      <label class="picker__label" for="picker-search">Lançar no cadastro de</label>
+      <input type="search" id="picker-search" class="picker__search" data-picker-search
+             placeholder="Buscar por nome" autocomplete="off">
+      <ul class="picker__list" data-picker-list>
+        {% for applicator in applicators %}
+        <li><button type="button" class="picker__option" data-picker-option="applicator:{{ applicator.pk }}"
+                    data-name="{{ applicator.full_name }}">
+          <span class="picker__name">{{ applicator.full_name }}</span>
+          <span class="picker__detail">{{ applicator.get_registration_status_display }}{% if applicator.cpf %} · {{ applicator.cpf }}{% endif %}</span>
+        </button></li>
+        {% endfor %}
+      </ul>
+      <p class="picker__empty" data-picker-empty hidden>Nenhum cadastro com esse nome.</p>
+    </section>
+    <div class="modal__actions">
+      <button type="button" class="btn btn--ghost btn--sm" data-merge-back>{% icon "chevron-left" 14 %} Voltar</button>
+      <button type="button" class="btn btn--secondary" data-merge-link hidden>{% icon "search" 14 %} Associar a outro aplicador</button>
+      <button type="button" class="btn btn--secondary" data-merge-answer="nao">São pessoas diferentes</button>
+      <button type="button" class="btn btn--primary" data-merge-answer="sim">É a mesma pessoa</button>
+    </div>
+    <p class="modal__foot muted small">Esc fecha e volta para a conferência sem lançar nada.</p>
+  </div>
+</div>
+{% endif %}
 </form>
 {% endblock %}
-{% block scripts %}{% load static %}<script src="{% static 'js/preview.js' %}"></script>{% endblock %}
+{% block scripts %}{% load assets %}<script src="{% static_v 'js/preview.js' %}"></script>{% endblock %}
