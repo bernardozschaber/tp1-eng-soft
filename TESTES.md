@@ -451,3 +451,93 @@ transação; ela não é o que sustenta a garantia.
 > Esta seção é o ponto de partida do **TP2**, cujo objetivo é implementar testes
 > para o programa desenvolvido. O que está aqui já roda; o roteiro de 4.4 é o
 > que falta.
+
+### 4.1 O que existe
+
+**21 testes**, em `apps/payroll/tests.py`, `apps/imports/tests.py` e
+`apps/core/tests.py`.
+
+| Classe | Testes | Cobre |
+|---|---:|---|
+| `DuplicateEntryTests` | 13 | A regra de unicidade nas três camadas, e o que **não** é duplicata |
+| `ShiftColumnTests` | 3 | A coluna de turno na lista, via `django.test.Client` |
+| `ImportDoesNotDuplicateTests` | 4 | A importação de ponta a ponta, sobre as planilhas reais |
+| `TemplateCommentTests` | 1 | Varre todos os templates atrás de `{# … #}` em mais de uma linha |
+
+Os testes de importação **não usam fixtures sintéticas**: leem os oito arquivos
+de `01-09 oficina e pbb/` e os passam por `stage_uploads → enrich_preview →
+confirm_import`, o mesmo caminho da tela. O teste `test_the_stale_tab_of_the_next_week_does_not_pay_08_09_again` reproduz o
+defeito relatado com o arquivo que o causou, e
+`test_nobody_is_paid_twice_for_the_same_shift_across_the_whole_folder` importa a
+pasta inteira na ordem em que a operação a enviaria.
+
+`TemplateCommentTests` é de outra natureza: não cobre uma tela, varre o
+repositório. `{# … #}` só comenta uma linha — escrito em duas, o Django não o
+reconhece e imprime a nota de implementação na página. Aconteceu duas vezes, na
+coluna de turno e no card de nomes parecidos da importação, onde o texto apareceu
+para o operador no meio da pergunta que ele precisava responder. O defeito é
+invisível em revisão de diff e fácil de repetir em qualquer arquivo, então a
+guarda é uma varredura, não uma asserção por página.
+
+Três testes existem para proteger o **caso vizinho**, que é onde uma correção
+apressada estragaria pagamento:
+
+- `test_morning_and_afternoon_of_the_same_activity_are_two_services`
+- `test_different_role_unit_date_or_activity_are_separate_services`
+- `test_form_accepts_the_other_shift`
+
+### 4.2 Como rodar
+
+```bash
+python manage.py test              # a suíte inteira, ~2,5s
+python manage.py test apps.payroll # só a regra de unicidade e a coluna
+python manage.py test apps.imports # só a importação (lê as planilhas reais)
+python manage.py test apps.core    # só a varredura dos templates
+python manage.py test -v2          # com o nome e a docstring de cada teste
+```
+
+O runner cria um banco descartável; `db.sqlite3` não é tocado. Os testes de
+importação escrevem em `MEDIA_ROOT` temporário, removido no `tearDownClass`.
+
+### 4.3 Convenções adotadas
+
+Para que o TP2 continue no mesmo padrão:
+
+1. **O nome do teste é uma frase que afirma o comportamento.**
+   `test_morning_and_afternoon_of_the_same_activity_are_two_services`, não
+   `test_shift_2`. Lida em `-v2`, a suíte vira a especificação do sistema.
+2. **A docstring explica o custo de falhar**, não o mecanismo. O código já diz o
+   que faz; o teste diz por que importa que continue fazendo.
+3. **Defeito que pode se repetir em qualquer arquivo vira varredura.** Prender a
+   guarda à tela onde o erro apareceu deixa as outras desprotegidas
+   (`TemplateCommentTests`).
+4. **Todo teste de regressão cita o caso real.** O arquivo, a data, a pessoa.
+   Um teste sem origem é apagado no primeiro refactor por parecer arbitrário.
+5. **Para cada regra que barra algo, um teste do que ela deve deixar passar.**
+   Uma regra só de "não" passa verde impedindo o sistema inteiro.
+6. **Dados reais quando existirem.** As planilhas do repositório já contêm os
+   casos difíceis — abas ocultas, nomes escritos de dois jeitos, datas velhas —
+   que ninguém inventaria numa fixture.
+7. **Testar pela borda de fora.** `django.test.Client` e as funções de serviço,
+   não os métodos privados: o que quebra o fechamento é a tela e a importação.
+
+### 4.4 Roteiro para o TP2 — o que ainda não tem teste
+
+Em ordem de risco para o fechamento de pagamento:
+
+| # | Área | O que garantir | Por quê |
+|---|---|---|---|
+| 1 | `payroll/calculator.py` | Bruto, INSS, ISS e IR a partir do líquido, conferidos contra as linhas da planilha de controle | É o cálculo que o sistema existe para fazer, e não tem um único teste |
+| 2 | `payroll/schedule.py` | A regra dia 5 / dia 20 nas viradas de mês e ano | Um erro aqui joga pagamento para o ciclo errado |
+| 3 | `imports/parser.py` | Os dois layouts, abas ocultas ignoradas, data por extenso e curta, valor com `R$` e vírgula | O parser é a porta de entrada de todo dado do sistema |
+| 4 | `imports/services.py` | `merge_questions` e `creation_questions`: nomes parecidos, correntes de junção, resposta ausente | Decide se duas grafias são uma pessoa ou duas — erra e paga em dobro por outro caminho |
+| 5 | `payroll/summary.py` e `export.py` | Totais do resumo iguais à soma dos lançamentos; o workbook abre e tem as abas esperadas | É o número que vai para a contabilidade |
+| 6 | `payroll/filters.py` | Cada filtro isolado e combinado, incluindo `inconsistent_only` | Filtro errado mostra fechamento incompleto sem avisar |
+| 7 | Desempenho | `assertNumQueries` nos tetos medidos na seção 1 | Transforma a medição de 1.5 em regressão detectável |
+| 8 | Acesso | Toda rota exige login; exclusão de lote exige `POST` | Hoje só o `@login_required` no código garante isso; nada verifica que ele continua lá |
+
+Duas lacunas de infraestrutura, herdadas da seção 2.10 e ainda abertas: **nenhum
+teste executa JavaScript** e **nenhum renderiza página em navegador** — não há
+runtime JS nem driver de automação na máquina de desenvolvimento. `ShiftColumnTests`
+inspeciona o HTML que o Django produz, o que é diferente de ver a página.
+Cobrir `upload.js` e `preview.js` no TP2 exige resolver isso primeiro.
