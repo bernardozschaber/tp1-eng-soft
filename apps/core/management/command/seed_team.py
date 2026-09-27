@@ -82,3 +82,45 @@ def pin(phone: str) -> str:
     """Os quatro últimos dígitos do telefone, que é a senha da pessoa."""
     digits = [char for char in phone if char.isdigit()]
     return "".join(digits[-4:])
+
+
+class Command(BaseCommand):
+    help = "Cria os logins da equipe (senha = PIN do telefone) e o perfil do admin."
+
+    def handle(self, *args, **options):
+        User = get_user_model()
+
+        for username, first_name, last_name, email, role, phone, photo, unit_name in TEAM:
+            user, created = User.objects.get_or_create(username=username)
+            user.first_name = first_name
+            user.last_name = last_name
+            user.email = email
+            user.is_active = True
+            user.set_password(pin(phone))
+            user.save()
+            unit = Unit.objects.filter(name=unit_name).first() if unit_name else None
+            Profile.objects.update_or_create(
+                user=user,
+                defaults={"role": role, "email": email, "phone": phone, "photo": photo, "unit": unit},
+            )
+            verb = "criado" if created else "atualizado"
+            self.stdout.write(f"{verb}: {username} (senha {pin(phone)}) — {role}")
+
+        admin = User.objects.filter(username=ADMIN_PROFILE["username"]).first()
+        if admin is None:
+            self.stdout.write(self.style.WARNING("admin não encontrado; rode `python manage.py seed` antes."))
+            return
+        admin.first_name = ADMIN_PROFILE["first_name"]
+        admin.last_name = ADMIN_PROFILE["last_name"]
+        admin.email = ADMIN_PROFILE["email"]
+        admin.save(update_fields=["first_name", "last_name", "email"])
+        Profile.objects.update_or_create(
+            user=admin,
+            defaults={
+                "role": ADMIN_PROFILE["role"],
+                "email": ADMIN_PROFILE["email"],
+                "phone": ADMIN_PROFILE["phone"],
+                "photo": ADMIN_PROFILE["photo"],
+            },
+        )
+        self.stdout.write(self.style.SUCCESS("Equipe pronta. Cada pessoa entra com o PIN do próprio telefone."))
