@@ -27,17 +27,41 @@ h1, h2, h3, p { margin: 0; }
 /* ---- App shell ------------------------------------------------------ */
 .app { display: flex; height: 100%; }
 .app__nav { width: 84px; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 0; margin-right: 8px; }
-.app__sidebar { width: 280px; flex-shrink: 0; padding: 16px 0; overflow-y: auto; transition: width .3s, opacity .3s; }
+.app__sidebar { width: 280px; flex-shrink: 0; padding: 16px 0; overflow-y: auto; }
 .app__sidebar[hidden] { display: none; }
 .app__main { flex: 1; min-width: 0; padding: 12px 12px 12px 0; }
 .app__main-card { --gutter: 20px; background: var(--bg-container); border-radius: var(--radius-xl); box-shadow: var(--shadow-border-xs); height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
 .app__content { width: 100%; padding: 8px var(--gutter) 48px; }
 @media (max-width: 1024px) {
-  .app__sidebar { display: none; }
+  /* The sidebar holds the per-unit totals, which exist nowhere else. It opens
+     as an overlay drawer so the topbar toggle keeps meaning something. */
+  .app__sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 40;
+    width: min(300px, 86vw);
+    background: var(--bg-container);
+    box-shadow: var(--shadow-md);
+    padding: 16px 8px;
+    animation: drawer-in .22s cubic-bezier(.22, 1, .36, 1);
+  }
   .app__nav { width: 64px; margin-right: 4px; }
   .app__main { padding: 8px 8px 8px 0; }
   .app__main-card { --gutter: 14px; }
   .app__content { padding-bottom: 40px; }
+
+  /* Touch targets: 32px icon buttons and 26px small buttons both sit under the
+     24x24 AA floor once padding collapses. */
+  .icon-button { width: 40px; height: 40px; }
+  .btn--sm { padding: 8px 12px; }
+  .table td.actions { gap: 10px; }
+}
+@keyframes drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+.sidebar-backdrop { position: fixed; inset: 0; z-index: 39; background: rgba(11, 11, 11, .4); border: 0; }
+
+/* Reduced motion: kill movement, keep the colour and shadow fades that report
+   state. A blanket 0.01ms would remove the feedback along with the motion. */
+@media (prefers-reduced-motion: reduce) {
+  .app__sidebar { animation: none; }
+  .chevron { transition: none; }
 }
 
 /* Icon navigation */
@@ -138,6 +162,7 @@ h1, h2, h3, p { margin: 0; }
 .table td { padding: 12px; border-bottom: 1px solid var(--border-tertiary); vertical-align: middle; }
 .table tbody tr:last-child td { border-bottom: 0; }
 .table tbody tr:hover td { background: var(--bg-container-hover); }
+.table td.actions { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .table .muted { color: var(--text-secondary); }
 .table .strong { font-weight: 500; }

@@ -36,7 +36,7 @@
           <td class="num muted">−{{ entry.inss_amount|brl_plain }}</td>
           <td class="num muted">−{{ entry.iss_amount|brl_plain }}</td>
           <td class="num muted">−{{ entry.ir_amount|brl_plain }}</td>
-          <td class="num" style="white-space:nowrap">
+          <td class="actions">
             {% if not entry.is_consistent %}<span class="badge badge--red" title="líquido recalculado difere do lançado">ver</span>{% endif %}
             <a href="{% url 'payroll:entry_update' entry.pk %}" class="icon-button" title="Editar" aria-label="Editar lançamento de {{ entry.applicator.full_name }}">{% icon "pencil" 14 %}</a>
             <form method="post" action="{% url 'payroll:entry_delete' entry.pk %}" style="display:inline" onsubmit="return confirm('Excluir este lançamento?')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="icon-button" title="Excluir" aria-label="Excluir lançamento de {{ entry.applicator.full_name }}">{% icon "trash" 14 %}</button></form>
