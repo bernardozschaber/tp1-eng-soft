@@ -39,14 +39,106 @@ O BernoulliPay automatiza o controle de pagamentos via RPA (Recibo de Pagamento 
 ## Como executar
 
 ```bash
-python3 -m venv .venv \\\&\\\& source .venv/bin/activate
+python3 -m venv .venv \\\&\\\& source .venv/bin/activate ## para criar a variável de ambiente do banco // para ativar o banco
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py seed --demo        # cadastros padrão, usuário admin/admin e dados fictícios
+python manage.py seed               # dados de referência (unidades, setores, alíquotas) e usuário admin/admin
+python manage.py seed_team          # equipe de aplicação de provas, com foto, cargo e contato
 python manage.py runserver
 ```
 
 Acesse http://127.0.0.1:8000 e entre com `admin` / `admin`.
+
+### Subindo o live server com o `.venv` já criado
+
+Sequência exata usada para colocar o servidor de desenvolvimento no ar quando o
+ambiente virtual já existe (chamando o Python do `.venv` direto, sem `activate`):
+
+```bash
+cd /home/brnrdzschbr/Debian/prova-pay
+.venv/bin/python manage.py migrate --noinput
+.venv/bin/python manage.py check
+.venv/bin/python manage.py runserver 0.0.0.0:8000
+```
+
+O `0.0.0.0` faz o servidor responder também pelo IP da máquina, o que é útil no
+WSL. Para conferir que subiu, de outro terminal:
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/        # 302 (redireciona para o login)
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/login/  # 200
+```
+
+As planilhas importadas são guardadas em `media/imports/AAAA/MM/` (fora de
+`static/`, e servidas só pela view autenticada `imports:batch_download`). O
+diretório já está no `.gitignore`; um workbook típico tem algumas dezenas de KB.
+
+### A lista de aplicadores é a fonte da verdade
+
+`/aplicadores` guarda os cadastros conferidos, com nome completo, CPF,
+WhatsApp, e-mail e situação. A situação tem dois valores:
+
+* **cadastro novo: primeiro pagamento** — todo cadastro nasce assim, seja
+  criado à mão ou confirmado numa importação;
+* **cadastro ativo: pagamento recorrente** — a pessoa aparece numa segunda
+  data de pagamento (ou veio da lista conferida, que é histórico de quem já
+  recebeu). A promoção é automática, no momento em que o lançamento é salvo,
+  e não volta atrás.
+
+A coluna **Ficha** abre o cartão da pessoa; o **WhatsApp** é um ícone que leva
+direto à conversa, montado a partir do celular da ficha (quando há dois
+números, o fixo é descartado). A ficha tem o botão de excluir o cadastro, que
+recusa quem já tem lançamento — nesse caso o caminho é marcar como inativo.
+
+A lista conferida entra pelo comando `roster`, que lê as duas planilhas do
+setor:
+
+```bash
+python manage.py roster \
+  --payments "2026 - BH - LD - Planilha de controle e conferência de RPAS - Aplicadores.xlsm" \
+  --profiles "10 - Planilha - Agendamento aplicadores - Outubro (Lourdes).xlsm" \
+  --replace                                   # --replace apaga os cadastros atuais
+
+python manage.py roster nomes.txt             # ou uma lista simples, um nome por linha
+```
+
+Cada planilha tem um papel:
+
+* `--payments`, aba **RESUMO DE PGTO POR APLICADOR**, coluna **APLICADOR**: diz
+  **quem** entra no cadastro — quem já recebeu em alguma quinzena;
+* `--profiles`, aba **Aplicadores**: diz **o que se sabe** de cada pessoa
+  (identidade, nascimento, bairro, curso, banco, PIX, PIS/NIT, indicação) e só
+  completa quem a primeira trouxe; não cria ninguém.
+
+O casamento entre as duas é por nome, com uma regra apertada
+(`applicators/names.py:is_same_person`): o nome curto tem que caber inteiro no
+longo, palavra por palavra e na ordem, tolerando abreviação
+(“B. Luisa S. M. de Assis”) e uma letra trocada (“Linfgren”/“Lindgren”). Nome
+que casa com duas fichas não recebe nenhuma e sai no relatório do comando.
+Quando duas grafias casam com a mesma ficha, elas viram um cadastro só, com o
+nome da ficha.
+
+A ficha completa fica em `/aplicadores/<id>/ficha/` — um cartão no meio da
+tela, com espaço para a foto 3x4 — e abre ao clicar no nome na lista. A lista
+continua mostrando só nome, CPF, WhatsApp, e-mail e situação.
+
+Na importação, cada nome da planilha é comparado com essa lista. Nome igual
+cai no cadastro existente; nome parecido (“Carolina Mattos” ao lado de
+“Carolina Mattos Lindgren Alves”) vira a pergunta “é a mesma pessoa?”; nome que
+não se parece com ninguém vira a pergunta “criar um novo cadastro para o
+usuário a seguir: X?”. Só o “sim” dessa última cria o cadastro, marcado como
+primeiro pagamento; o “não” deixa as linhas daquele nome de fora do lote.
+
+`seed_team` cria os logins da equipe. A senha de cada pessoa é o PIN de quatro
+dígitos no fim do próprio telefone:
+
+| Login | Pessoa | Cargo | PIN |
+|---|---|---|---|
+| `jessica.moreira` | Jessica Souza Moreira | ♾️ Supervisor - Aplicação de Prova | `2433` |
+| `fernanda` | Fernanda | Aplicação de Provas (Vale do Sereno) | `1387` |
+| `felipe` | Felipe | Aplicação de Provas (Lourdes) | `5424` |
+| `ana.julia` | Ana Júlia | Aplicação de Provas (Cidade Jardim) | `0089` |
+| `suzana.godoy` | Suzana Godoy | Coordenadora de Operações | `3608` |
 
 Para usar PostgreSQL, suba o banco com `docker compose up -d` e exporte
 `DATABASE\\\_URL=postgres://bernoullipay:bernoullipay@localhost:5432/bernoullipay` antes de rodar
@@ -80,7 +172,7 @@ para 6,4s/24 MB, e o custo de ambos deixou de crescer com o histórico acumulado
 |Empresa pagadora|derivada da unidade (Lourdes → RRPM Matriz, Cidade Jardim → RRPM CJ, Santo Antônio → RRPM GO, Vale do Sereno → RRPM VSE)|
 |Consistência|`|
 |Resumo por aplicador|agrupa por (data de pagamento, aplicador, empresa pagadora), como a aba RESUMO DE PGTO POR APLICADOR|
-|Importação|lê todas as abas no layout "Relatório de Atividade"; cria aplicadores desconhecidos marcados como *cadastro incompleto*; sinaliza possíveis duplicatas|
+|Importação|dois formatos: **"Relatório de Atividade"** (Lourdes), com o valor na planilha; e **exportação de formulário** (Cidade Jardim e Vale do Sereno), com nome completo, CPF e função por resposta — nesse caso a prova, o dia e o turno saem do nome do arquivo ("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na pré-visualização. Casa o aplicador por CPF e, na falta dele, por nome; cria desconhecidos marcados como *cadastro incompleto*; sinaliza possíveis duplicatas|
 
 ## Arquitetura
 
@@ -99,7 +191,7 @@ apps/
   api/             serializers e viewsets DRF (/api/)
 templates/         páginas por app
 static/            tokens de design (Geist, paleta), CSS de componentes, JS sem frameworks
-docs/samples/      lista de pagamento de exemplo com nomes fictícios
+docs/samples/      lista de pagamento de exemplo, só como referência do parser
 ```
 
 ### Diagrama de classes (domínio)
