@@ -460,16 +460,54 @@ def confirm_import(payload, workbooks: list[dict], user) -> dict:
                 if payload.get(f"{row_prefix}-include") != "on":
                     skipped_rows += 1
                     continue
-                net_amount = Decimal(payload.get(f"{row_prefix}-net_amount", row["net_amount"]).replace(",", "."))
+                net_amount = _amount_from(payload.get(f"{row_prefix}-net_amount"), fallback=_amount_from(row["net_amount"]))
+                if net_amount <= 0:
+                    net_amount = fields["default_amount"]
+                if net_amount <= 0:
+                    raise ValueError(
+                        f"Aba '{sheet['sheet_name']}' de {workbook['file_name']}: informe o valor por pessoa "
+                        f"(a lista de formulário não traz valor)."
+                    )
                 role = payload.get(f"{row_prefix}-role", row["role"])
                 base_name, suffix = split_suffix(row["name"])
-                applicator, was_created = _get_or_create_applicator(base_name, suffix)
+                if normalize_name(base_name) in declined:
+                    # O operador respondeu que não é para criar este cadastro:
+                    # a linha fica de fora em vez de virar um aplicador solto.
+                    skipped_rows += 1
+                    continue
+                target = merges.get(normalize_name(base_name))
+                if target:
+                    applicator, was_created = _resolve_merge_target(target, merge_cache)
+                    merged_rows += 1
+                else:
+                    applicator, was_created = _get_or_create_applicator(base_name, suffix, row.get("cpf", ""))
                 created_applicators += int(was_created)
+                role = role if role in ServiceRole.values else ServiceRole.APPLICATOR
+                if ServiceEntry.find_duplicate(
+                    applicator=applicator, activity_date=activity_date, event_name=fields["event_name"],
+                    shift=fields["shift"], role=role, unit=unit,
+                ):
+                    # Este serviço já está lançado. A lista chegou duas vezes —
+                    # normalmente porque a planilha da semana é cópia da
+                    # anterior e uma aba ficou com a data antiga. Gravar de novo
+                    # pagaria a pessoa duas vezes pelo mesmo turno, então a
+                    # linha fica de fora e entra na contagem que a mensagem de
+                    # sucesso mostra. A consulta enxerga o que esta mesma
+                    # importação acabou de gravar: tudo corre numa transação só.
+                    #
+                    # `ServiceEntry.save` recusaria a gravação de todo jeito,
+                    # com `DuplicateServiceEntry`. A pergunta é feita aqui antes
+                    # porque uma importação em que toda linha já existe não deve
+                    # deixar para trás um lote vazio: o lote só nasce quando há
+                    # o que gravar nele.
+                    duplicate_rows += 1
+                    continue
                 if batch is None:
                     batch = ImportBatch.objects.create(file_name=workbook["file_name"], imported_by=user)
+                    _attach_source_file(batch, workbook["file_name"], workbook.get("staged_path"))
                 ServiceEntry.objects.create(
                     applicator=applicator,
-                    role=role if role in ServiceRole.values else ServiceRole.APPLICATOR,
+                    role=role,
                     activity_date=activity_date,
                     event_name=fields["event_name"],
                     shift=fields["shift"],
