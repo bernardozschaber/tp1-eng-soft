@@ -19,3 +19,8 @@ def dashboard(request):
 @login_required
 def help_page(request):
     return render(request, "core/help.html")
+
+
+@login_required
+def profile(request):
+    return render(request, "core/profile.html")
