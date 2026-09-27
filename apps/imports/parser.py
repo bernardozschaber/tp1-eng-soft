@@ -240,6 +240,100 @@ def _find_forms_header(rows: list[tuple]) -> tuple[int, dict[str, int]] | None:
     return None
 
 
+def parse_forms_sheet(sheet_name: str, rows: list[tuple], file_name: str) -> ParsedSheet | None:
+    """Uma resposta de formulário por linha: nome completo, CPF e função."""
+    found = _find_forms_header(rows)
+    if found is None:
+        return None
+    header_index, columns = found
+    name_column = next(columns[header] for header in FORMS_NAME_HEADERS if header in columns)
+    role_column = next(columns[_header_key(header)] for header in FORMS_ROLE_HEADERS if _header_key(header) in columns)
+    cpf_column = columns.get("cpf")
+    date_column = columns.get("data")
+
+    event_name, activity_date, shift = parse_file_name_meta(file_name)
+    sheet = ParsedSheet(
+        sheet_name=sheet_name, event_name=event_name, activity_date=activity_date, shift=shift,
+        layout="forms", needs_amount=True,
+    )
+    if not event_name:
+        sheet.warnings.append("Nome da prova não veio no nome do arquivo; informe manualmente.")
+    if shift == "":
+        sheet.warnings.append("Turno não veio no nome do arquivo; informe manualmente.")
+    sheet.warnings.append("Lista de formulário: informe o valor por pessoa e confirme a unidade (CJ ou Vale do Sereno).")
+
+    for offset, row in enumerate(rows[header_index + 1 :], start=header_index + 2):
+        name = str(_cell(row, name_column) or "").strip()
+        if len(name) < MIN_NAME_LENGTH:
+            continue
+        if date_column is not None and sheet.activity_date is None:
+            sheet.activity_date = parse_date(_cell(row, date_column))
+        row_date = parse_date(_cell(row, date_column)) if date_column is not None else None
+        if row_date and sheet.activity_date and row_date.year != sheet.activity_date.year:
+            # O nome do arquivo não traz o ano; a resposta traz.
+            sheet.activity_date = sheet.activity_date.replace(year=row_date.year)
+        sheet.rows.append(ParsedRow(
+            name=name,
+            role=parse_role(_cell(row, role_column)),
+            net_amount=Decimal("0"),
+            source_row=offset,
+            cpf=format_cpf(_cell(row, cpf_column)) if cpf_column is not None else "",
+        ))
+    if sheet.activity_date is None:
+        sheet.warnings.append("Data não reconhecida; informe manualmente.")
+    return sheet
+
+
+# --- o que está oculto não é lido ------------------------------------------
+#
+# A visibilidade de linha e coluna não existe no modo read_only do openpyxl, e
+# abrir a planilha no modo completo não é opção: uma aba que declara o intervalo
+# inteiro (1.048.576 linhas) faz o openpyxl materializar a grade toda — medimos
+# 7 GB de RAM num arquivo de 4 MB. O .xlsx é um zip de XML, então essa
+# informação é lida direto da parte da aba, em streaming, sem montar grade.
+
+SHEET_NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+DOC_REL_NS = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+XML_TRUE = {"1", "true", "True"}
+
+
+def _sheet_parts(archive: ZipFile) -> dict[str, str]:
+    """Nome da aba -> caminho do XML dela dentro do zip."""
+    targets = {}
+    with archive.open("xl/_rels/workbook.xml.rels") as handle:
+        for relationship in ElementTree.parse(handle).getroot():
+            targets[relationship.get("Id")] = relationship.get("Target") or ""
+    parts = {}
+    with archive.open("xl/workbook.xml") as handle:
+        for sheet in ElementTree.parse(handle).getroot().iter(f"{SHEET_NS}sheet"):
+            target = targets.get(sheet.get(f"{DOC_REL_NS}id"), "")
+            if not target:
+                continue
+            path = target[1:] if target.startswith("/") else posixpath.join("xl", target)
+            parts[sheet.get("name")] = posixpath.normpath(path)
+    return parts
+
+
+def _hidden_in_part(archive: ZipFile, part: str) -> tuple[set[int], set[int]]:
+    """(linhas ocultas, base 1; colunas ocultas, base 0) da parte de uma aba.
+
+    Pega também o que o Excel escondeu por filtro ou agrupamento: os dois casos
+    gravam hidden="1" na própria linha.
+    """
+    rows, columns = set(), set()
+    with archive.open(part) as handle:
+        for _, element in ElementTree.iterparse(handle, ("end",)):
+            if element.tag == f"{SHEET_NS}col":
+                if element.get("hidden") in XML_TRUE:
+                    columns.update(range(int(element.get("min", 1)) - 1, int(element.get("max", 0))))
+                element.clear()
+            elif element.tag == f"{SHEET_NS}row":
+                if element.get("hidden") in XML_TRUE and element.get("r"):
+                    rows.add(int(element.get("r")))
+                element.clear()
+    return rows, columns
+
+
 def parse_workbook(file_name: str, content: bytes) -> ParsedWorkbook:
     workbook = load_workbook(BytesIO(content), read_only=True, data_only=False)
     result = ParsedWorkbook(file_name=file_name)
