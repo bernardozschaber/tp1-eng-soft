@@ -4,8 +4,9 @@
   "verde Bernoulli" (#009E8E), Colégio Bernoulli's brand colour, and every
   chromatic token below is derived from it or chosen to sit beside it.
 
-  Light theme only (see color-scheme). Semantic names: surface (page),
-  container (cards), primary/secondary/subdued text.
+  Semantic names: surface (page), container (cards),
+  primary/secondary/subdued text. The dark theme at the bottom of this file
+  re-points the same semantic names; components never name a theme.
 
   #009E8E is 3.34:1 on white: it is a FILL, STROKE and MARK colour, never text
   on a light surface. Text uses --color-brand-700 (5.59:1).
@@ -164,4 +165,81 @@
   --chart-6: #8a4a71;
   --chart-7: #2783b2;
   --chart-8: #b1614b;
+}
+
+/*
+  Dark theme. Applied by an explicit [data-theme="dark"] on <html>, written
+  before first paint by the inline script in base.html, so there is no flash
+  and no second copy of this block under prefers-color-scheme.
+
+  Same identity, inverted ground: verde Bernoulli stays the only accent, the
+  surface/container/inset trio keeps its three-step separation, and the
+  hairline that separates cards from the page moves from black alpha to white
+  alpha (a black hairline is invisible on a dark ground). Shadows deepen
+  because a 6% black shadow does not read on #121212.
+
+  The chromatic scale flips role, not meaning: the -50 tints become deep
+  desaturated grounds and the -700 text tokens become light hues, each
+  verified at >= 4.5:1 against the tint it sits on.
+*/
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Neutrals used directly by components (badges, avatar, ticks, checkbox). */
+  --color-gray-100: #262626;
+  --color-gray-200: #2e2e2e;
+  --color-gray-800: #d8d8d8;
+
+  /* verde Bernoulli, lifted just enough to hold its own on a dark ground. */
+  --color-brand-50: #0d2b28;
+  --color-brand-500: #00b8a5;
+  --color-brand-700: #4dd6c5;   /* 8.4:1 on --color-brand-50 */
+  --color-red-50: #331715;
+  --color-red-500: #ff6b62;
+  --color-red-700: #ff9a94;
+  --color-yellow-50: #332510;
+  --color-yellow-600: #f0b04a;
+  --color-yellow-700: #f7c46b;
+  --color-blue-50: #14243a;
+  --color-blue-700: #8ec1ff;
+
+  --alpha-black-50: rgba(255, 255, 255, 0.06);
+  --alpha-black-100: rgba(255, 255, 255, 0.09);
+  --alpha-black-200: rgba(255, 255, 255, 0.12);
+  --alpha-black-300: rgba(255, 255, 255, 0.18);
+
+  --bg-surface: #121212;
+  --bg-surface-hover: #1c1c1c;
+  --bg-container: #1b1b1b;
+  --bg-container-hover: #232323;
+  --bg-container-inset: #151515;
+  --bg-container-inset-hover: #1f1f1f;
+  --bg-inverse: #ededed;
+  --bg-inverse-hover: #dcdcdc;
+
+  --text-primary: #ededed;      /* 13.1:1 on --bg-container */
+  --text-secondary: #a6a6a6;    /*  7.1:1 */
+  --text-subdued: #8f8f8f;      /*  5.9:1 */
+  --text-inverse: #121212;
+  --text-link: #35c9b8;         /*  8.4:1 */
+  --text-success: #35c9b8;
+  --text-warning: #f0b04a;
+  --text-destructive: #ff8078;  /*  7.1:1 */
+
+  --focus-ring: #cfcfcf;
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 1px 6px 0 rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.5);
+
+  /* Same farthest-point ordering, re-lightened for a #1b1b1b container:
+     the light ramp's #934f00 and #255ebc read as mud on a dark ground. */
+  --chart-1: #00b8a5;
+  --chart-2: #6f9bf0;
+  --chart-3: #d08a2e;
+  --chart-4: #a9c3f7;
+  --chart-5: #eaa63f;
+  --chart-6: #c68bb0;
+  --chart-7: #5cb3dc;
+  --chart-8: #dd9280;
 }
