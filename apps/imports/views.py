@@ -209,3 +209,34 @@ def batch_delete(request, pk: int):
     entry_count = _delete_batches([batch])
     messages.success(request, f"Importação \u201c{file_name}\u201d removida: {entry_count} lançamento(s) excluído(s).")
     return redirect("imports:upload")
+
+
+@login_required
+@require_POST
+def batch_bulk_delete(request):
+    """O mesmo, para as importações marcadas na tabela.
+
+    Os lotes saem numa transação só: ou a seleção inteira desaparece, ou nada
+    desaparece. Meia exclusão deixaria o operador sem saber o que ainda existe.
+    """
+    # Só dígitos: um "batches" adulterado não pode chegar ao ORM e virar 500.
+    selected = [value for value in request.POST.getlist("batches") if value.isdigit()]
+    batches = list(ImportBatch.objects.filter(pk__in=selected))
+    if not batches:
+        messages.error(request, "Selecione ao menos uma importação para excluir.")
+        return redirect("imports:upload")
+    entry_count = _delete_batches(batches)
+    messages.success(
+        request,
+        f"{len(batches)} importação(ões) removida(s): {entry_count} lançamento(s) excluído(s).",
+    )
+    return redirect("imports:upload")
+
+
+@login_required
+def batch_download(request, pk: int):
+    """Entrega a planilha original. Passa pela sessão: é dado de pagamento."""
+    batch = get_object_or_404(ImportBatch, pk=pk)
+    if not batch.source_file:
+        raise Http404("Planilha original não guardada para esta importação.")
+    return FileResponse(batch.source_file.open("rb"), as_attachment=True, filename=batch.file_name)
