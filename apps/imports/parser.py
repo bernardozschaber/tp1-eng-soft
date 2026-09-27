@@ -176,6 +176,70 @@ def parse_sheet(sheet_name: str, rows: list[tuple]) -> ParsedSheet | None:
     return sheet
 
 
+# --- exportação de formulário ----------------------------------------------
+
+def _strip_accents(text: str) -> str:
+    return "".join(char for char in unicodedata.normalize("NFD", text) if unicodedata.category(char) != "Mn")
+
+
+def _header_key(value) -> str:
+    return _strip_accents(str(value or "")).strip().lower()
+
+
+def format_cpf(value) -> str:
+    """Normaliza o CPF para XXX.XXX.XXX-XX; devolve o texto cru se não tiver 11 dígitos."""
+    text = str(value or "").strip()
+    digits = "".join(char for char in text if char.isdigit())
+    if len(digits) == 11:
+        return f"{digits[:3]}.{digits[3:6]}.{digits[6:9]}-{digits[9:]}"
+    return text[:14]
+
+
+def parse_role(value) -> str:
+    key = _header_key(value)
+    for keyword, role in ROLE_BY_KEYWORD.items():
+        if keyword in key:
+            return role
+    return "APLICADOR"
+
+
+def parse_file_name_meta(file_name: str) -> tuple[str, date | None, str]:
+    """Tira prova, dia e turno do nome do arquivo do formulário.
+
+    "Prova Regular 11-09 Tarde.xlsx" -> ("Prova Regular", 11/09, "TARDE"). O ano
+    raramente aparece no nome; quem completa é a coluna "Data" de cada resposta.
+    """
+    stem = file_name.rsplit(".", 1)[0]
+    shift = parse_shift(stem)
+    activity_date, leftover = None, stem
+    match = FILE_NAME_DATE.search(stem)
+    if match:
+        day, month = int(match.group(1)), int(match.group(2))
+        year = match.group(3)
+        if year:
+            year = int(year)
+            year += 2000 if year < 100 else 0
+        try:
+            activity_date = date(year or date.today().year, month, day)
+        except ValueError:
+            activity_date = None
+        leftover = stem[: match.start()] + " " + stem[match.end() :]
+    for keyword in SHIFT_KEYWORDS:
+        leftover = re.sub(keyword + r"[a-zçã]*", " ", leftover, flags=re.IGNORECASE)
+    event_name = re.sub(r"[\s_-]+", " ", leftover).strip(" -_")
+    return event_name, activity_date, shift
+
+
+def _find_forms_header(rows: list[tuple]) -> tuple[int, dict[str, int]] | None:
+    for index, row in enumerate(rows[:FORMS_HEADER_SCAN_ROWS]):
+        columns = {_header_key(value): position for position, value in enumerate(row) if value not in (None, "")}
+        has_name = any(header in columns for header in FORMS_NAME_HEADERS)
+        has_role = any(_header_key(header) in columns for header in FORMS_ROLE_HEADERS)
+        if has_name and has_role:
+            return index, columns
+    return None
+
+
 def parse_workbook(file_name: str, content: bytes) -> ParsedWorkbook:
     workbook = load_workbook(BytesIO(content), read_only=True, data_only=False)
     result = ParsedWorkbook(file_name=file_name)
