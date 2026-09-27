@@ -135,3 +135,4 @@ def is_same_person(one: str, other: str) -> bool:
             return False
         position += 1
     return True
+    
