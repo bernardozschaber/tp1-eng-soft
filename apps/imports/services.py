@@ -104,11 +104,22 @@ def _current_rates() -> TaxRates:
     return TaxRates.from_percentages(tax.inss_rate, tax.iss_rate, tax.ir_rate)
 
 
-def _is_duplicate(applicator: Applicator | None, activity_date: str, event_name: str, net_amount: Decimal) -> bool:
+def _is_duplicate(applicator: Applicator | None, activity_date: str, event_name: str, shift: str, role: str) -> bool:
+    """Aviso da prévia: esta pessoa já tem este serviço lançado?
+
+    Olha os mesmos campos da restrição do banco menos a unidade, que ainda não
+    foi escolhida — quem escolhe é o operador, nesta tela. Marcar a linha é o
+    aviso; quem garante que a duplicata não entra é a restrição, e a
+    confirmação pula a linha antes de tentar gravá-la.
+    """
     if applicator is None or not activity_date:
         return False
     return ServiceEntry.objects.filter(
-        applicator=applicator, activity_date=activity_date, event_name__iexact=event_name.strip(), net_amount=net_amount
+        applicator=applicator,
+        activity_date=activity_date,
+        event_key=event_key(event_name),
+        shift=shift or "",
+        role=role,
     ).exists()
 
 
