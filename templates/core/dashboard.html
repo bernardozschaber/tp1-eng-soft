@@ -45,7 +45,7 @@
   <div class="metric"><div class="metric__label">Valor bruto (RPA)</div><div class="metric__value tabular">{{ gross_total|brl }}</div></div>
   <div class="metric"><div class="metric__label">Descontos (INSS + ISS + IR)</div><div class="metric__value tabular">{{ withheld_total|brl }}</div></div>
   <div class="metric"><div class="metric__label">Lançamentos</div><div class="metric__value">{{ entry_count }}</div></div>
-  <div class="metric"><div class="metric__label">Aplicadores</div><div class="metric__value">{{ applicator_count }}{% if review_count %} <span class="badge badge--yellow" title="cadastros incompletos">{{ review_count }} a revisar</span>{% endif %}</div></div>
+  <div class="metric"><div class="metric__label">Aplicadores</div><div class="metric__value">{{ applicator_count }}{% if review_count %} <span class="badge badge--yellow" title="cadastros novos: primeiro pagamento">{{ review_count }} no primeiro pagamento</span>{% endif %}</div></div>
 </div>
 
 <section class="card">
@@ -77,4 +77,4 @@
   {% endif %}
 </section>
 {% endblock %}
-{% block scripts %}{% load static %}<script src="{% static 'js/chart.js' %}"></script>{% endblock %}
+{% block scripts %}{% load assets %}<script src="{% static_v 'js/chart.js' %}"></script>{% endblock %}

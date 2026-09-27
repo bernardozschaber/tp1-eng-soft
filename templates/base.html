@@ -1,4 +1,4 @@
-{% load static icons money %}<!DOCTYPE html>
+{% load static icons money assets %}<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -6,21 +6,31 @@
   <title>{% block title %}BernoulliPay{% endblock %}</title>
   <link rel="icon" href="{% static 'img/favicon.png' %}" type="image/png">
   <link rel="preload" as="font" type="font/woff2" crossorigin href="{% static 'fonts/IBMPlexSans-Variable-latin.woff2' %}">
-  <link rel="stylesheet" href="{% static 'css/tokens.css' %}">
-  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% comment %}
+    Theme is resolved before the first stylesheet so the page never paints
+    light and then flips. Stored choice wins; otherwise the OS setting.
+  {% endcomment %}
+  <script>
+    (function () {
+      var t;
+      try { t = localStorage.getItem("bernoullipay.theme"); } catch (e) { t = null; }
+      if (t !== "dark" && t !== "light") {
+        t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      document.documentElement.setAttribute("data-theme", t);
+    })();
+  </script>
+  <link rel="stylesheet" href="{% static_v 'css/tokens.css' %}">
+  <link rel="stylesheet" href="{% static_v 'css/app.css' %}">
 </head>
 <body>
 {% block body %}
 <div class="app">
   {% include "core/_nav.html" %}
-  <aside class="app__sidebar" id="sidebar">
-    {% block sidebar %}{% include "core/_sidebar.html" %}{% endblock %}
-  </aside>
   <main class="app__main">
     <div class="app__main-card">
       <div class="topbar">
         <div class="breadcrumb">
-          <button type="button" class="icon-button" data-toggle-sidebar aria-controls="sidebar" aria-expanded="true" aria-label="Alternar barra lateral">{% icon "panel-left" %}</button>
           <a href="{% url 'dashboard' %}">Início</a>
           {% block breadcrumb %}{% endblock %}
         </div>
@@ -38,7 +48,7 @@
   </main>
 </div>
 {% endblock %}
-<script src="{% static 'js/app.js' %}"></script>
+<script src="{% static_v 'js/app.js' %}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
