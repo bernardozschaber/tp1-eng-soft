@@ -43,14 +43,31 @@ def _workbook_to_dict(workbook: ParsedWorkbook) -> dict:
     return data
 
 
+def _stage_file(file_name: str, content: bytes) -> str:
+    """Guarda os bytes enviados até a confirmação e devolve o caminho no storage.
+
+    A sessão não carrega o arquivo (ela é serializada a cada request); carrega
+    só o caminho. O que não for confirmado é apagado por `clear_preview`.
+    """
+    suffix = file_name[file_name.rfind(".") :] if "." in file_name else ""
+    return default_storage.save(f"{STAGING_DIR}/{uuid.uuid4().hex}{suffix}", ContentFile(content))
+
+
 def stage_uploads(session, uploaded_files) -> list[dict]:
     """Parses the files and stores the preview in the session. Returns per-file errors."""
+    # Uma prévia nova substitui a anterior; sem apagar a antiga primeiro, os
+    # arquivos dela ficariam órfãos em media/imports/_staging para sempre.
+    clear_preview(session)
     workbooks, errors = [], []
     for uploaded in uploaded_files:
+        content = uploaded.read()
         try:
-            workbooks.append(_workbook_to_dict(parse_workbook(uploaded.name, uploaded.read())))
+            workbook = _workbook_to_dict(parse_workbook(uploaded.name, content))
         except Exception as error:  # noqa: BLE001 - surface any parser failure to the user
             errors.append({"file_name": uploaded.name, "message": str(error)})
+            continue
+        workbook["staged_path"] = _stage_file(uploaded.name, content)
+        workbooks.append(workbook)
     session[SESSION_KEY] = workbooks
     return errors
 
