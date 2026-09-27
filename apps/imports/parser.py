@@ -334,16 +334,78 @@ def _hidden_in_part(archive: ZipFile, part: str) -> tuple[set[int], set[int]]:
     return rows, columns
 
 
+def _hidden_cells(content: bytes) -> dict[str, tuple[set[int], set[int]]]:
+    """O que está oculto em cada aba. Um arquivo ilegível devolve nada e a
+    importação segue pelo caminho normal do openpyxl."""
+    hidden = {}
+    try:
+        with ZipFile(BytesIO(content)) as archive:
+            for title, part in _sheet_parts(archive).items():
+                try:
+                    hidden[title] = _hidden_in_part(archive, part)
+                except (KeyError, ElementTree.ParseError):
+                    continue
+    except (BadZipFile, KeyError, ElementTree.ParseError):
+        return {}
+    return hidden
+
+
+def _visible_rows(worksheet, hidden: tuple[set[int], set[int]]) -> tuple[list[tuple], int]:
+    """As linhas da aba com o que está oculto apagado. Devolve também quantas linhas caíram.
+
+    Linha oculta vira linha vazia em vez de sair da lista: as posições são o que
+    dá o "Linha 37" dos avisos, e renumerar apontaria o operador para a linha
+    errada do Excel. Coluna oculta vira célula vazia, pela mesma razão — o
+    layout "Relatório de Atividade" lê D, F, G e H por posição fixa.
+    """
+    hidden_rows, hidden_columns = hidden
+    if not hidden_rows and not hidden_columns:
+        # Nada oculto: devolve as linhas como vieram, sem reconstruir tupla nenhuma.
+        return list(worksheet.iter_rows(values_only=True)), 0
+    rows, dropped = [], 0
+    for number, row in enumerate(worksheet.iter_rows(values_only=True), start=1):
+        if number in hidden_rows:
+            rows.append(())
+            dropped += any(value not in (None, "") for value in row)
+            continue
+        rows.append(tuple(None if index in hidden_columns else value for index, value in enumerate(row)))
+    return rows, dropped
+
+
 def parse_workbook(file_name: str, content: bytes) -> ParsedWorkbook:
+    """Lê o que a planilha mostra: abas, linhas e colunas ocultas ficam de fora.
+
+    A operação monta a lista de cada dia copiando a do dia anterior e ocultando
+    o que não vale mais. O conteúdo continua no arquivo, com nomes, valores e a
+    data antiga na célula "Data:" — uma lista de agosto carrega abas de maio e
+    junho escondidas, e uma aba pode esconder a linha de quem faltou. Importar
+    isso lança pagamentos de quinzenas já fechadas, e quem confere no Excel não
+    vê o que não está à vista. A regra é única e vale para os dois layouts: o
+    que está oculto não existe para o parser. Abas ocultas são reportadas em
+    `skipped_sheets` e linhas ocultas em `ParsedSheet.warnings`, para a
+    pré-visualização mostrar o que foi deixado de fora.
+    """
     workbook = load_workbook(BytesIO(content), read_only=True, data_only=False)
+    hidden_cells = _hidden_cells(content)
     result = ParsedWorkbook(file_name=file_name)
-    for worksheet in workbook.worksheets:
-        rows = list(worksheet.iter_rows(values_only=True))
-        parsed = parse_sheet(worksheet.title, rows)
-        if parsed is None:
-            result.skipped_sheets.append(worksheet.title)
-        elif parsed.rows:
-            result.sheets.append(parsed)
-        else:
-            result.skipped_sheets.append(f"{worksheet.title} (sem aplicadores)")
+    try:
+        for worksheet in workbook.worksheets:
+            if worksheet.sheet_state != "visible":
+                result.skipped_sheets.append(f"{worksheet.title} (oculta na planilha)")
+                continue
+            rows, hidden_row_count = _visible_rows(worksheet, hidden_cells.get(worksheet.title, (set(), set())))
+            parsed = parse_sheet(worksheet.title, rows) or parse_forms_sheet(worksheet.title, rows, file_name)
+            if parsed is None:
+                result.skipped_sheets.append(worksheet.title)
+                continue
+            if hidden_row_count:
+                parsed.warnings.append(
+                    f"{hidden_row_count} linha(s) oculta(s) na planilha, ignorada(s) na importação."
+                )
+            if parsed.rows:
+                result.sheets.append(parsed)
+            else:
+                result.skipped_sheets.append(f"{worksheet.title} (sem aplicadores)")
+    finally:
+        workbook.close()
     return result
