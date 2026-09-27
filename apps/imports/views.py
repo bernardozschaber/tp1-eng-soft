@@ -38,8 +38,29 @@ def upload(request):
         for error in stage_uploads(request.session, files):
             messages.error(request, f"{error['file_name']}: {error['message']}")
         return redirect("imports:preview")
-    recent_batches = ImportBatch.objects.select_related("imported_by").prefetch_related("entries")[:10]
-    return render(request, "imports/upload.html", {"recent_batches": recent_batches})
+    return render(request, "imports/upload.html", {"recent_batches": _recent_batches()})
+
+
+def _recent_batches(limit: int = 10):
+    """Os últimos lotes com o que a linha mostra: unidades, total e contagem.
+
+    Os lançamentos já vêm no prefetch, então unidades, soma e contagem saem em
+    memória — sem uma consulta por linha da tabela.
+    """
+    batches = list(
+        ImportBatch.objects.select_related("imported_by__profile").prefetch_related(
+            Prefetch("entries", queryset=ServiceEntry.objects.select_related("unit__paying_company"))
+        )[:limit]
+    )
+    for batch in batches:
+        entries = list(batch.entries.all())
+        batch.entry_count = len(entries)
+        batch.net_total = sum((entry.net_amount for entry in entries), Decimal("0"))
+        codes = {}
+        for entry in entries:
+            codes.setdefault(entry.unit.short_name, None)
+        batch.unit_codes = list(codes)
+    return batches
 
 
 @login_required
