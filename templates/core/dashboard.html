@@ -16,7 +16,7 @@
 <section class="card">
   <div class="card__header">
     <div>
-      <p class="stat__label">Total líquido a pagar</p>
+      <h2 class="stat__label">Total líquido a pagar</h2>
       <p class="stat__value">{{ net_total|brl }}</p>
       <p class="stat__trend">
         {% if change_percent is not None %}
@@ -25,7 +25,7 @@
           <span class="mono">{{ entry_count }} lançamento{{ entry_count|pluralize }}</span> · {{ applicator_count }} aplicador{{ applicator_count|pluralize:"es" }}
         {% endif %}
       </p>
-       {% if payment_dates %}<p class="small muted">Pagamento{{ payment_dates|length|pluralize }} de {% for day in payment_dates %}{{ day|date:"d/m/Y" }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+      {% if payment_dates %}<p class="small muted">Pagamento{{ payment_dates|length|pluralize }} de {% for day in payment_dates %}{{ day|date:"d/m/Y" }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
     </div>
     <form method="get">
       <select name="period" class="select" onchange="this.form.submit()">
@@ -48,7 +48,7 @@
 </div>
 
 <section class="card">
-  <p class="card__title">Unidades <span class="muted">· {{ net_total|brl }}</span></p>
+  <h2 class="card__title">Unidades <span class="muted">· {{ net_total|brl }}</span></h2>
   {% if unit_weights %}
     <div class="weight-bar">
       {% for unit in unit_weights %}<span style="flex:{{ unit.weight|floatformat:2 }};background:var(--chart-{{ unit.color_index }})"></span>{% endfor %}
@@ -58,11 +58,12 @@
     </div>
     <div class="table-frame">
       <table class="table">
-        <thead><tr><th>Unidade</th><th class="num">Lançamentos</th><th class="num">Peso</th><th class="num">Valor líquido</th></tr></thead>
+        <thead><tr><th scope="col">Unidade</th><th class="num" scope="col">Lançamentos</th><th class="num" scope="col">Peso</th><th class="num" scope="col">Valor líquido</th></tr></thead>
         <tbody>
           {% for unit in unit_weights %}
           <tr>
-            <td class="strong"><a href="{% url 'payroll:entry_list' %}?unit={{ unit.id }}">{% icon "chevron-right" 14 css_class="muted" %} {{ unit.name }}</a> <span class="small muted">{{ unit.company }}</span></td>            <td class="num muted">{{ unit.count }}</td>
+            <td class="strong"><a href="{% url 'payroll:entry_list' %}?unit={{ unit.id }}">{% icon "chevron-right" 14 css_class="muted" %} {{ unit.name }}</a> <span class="small muted">{{ unit.company }}</span></td>
+            <td class="num muted">{{ unit.count }}</td>
             <td class="num"><span class="ticks" data-ticks="{{ unit.weight|floatformat:0 }}" style="--tick-color:var(--chart-{{ unit.color_index }})"></span>{{ unit.weight|floatformat:2 }}%</td>
             <td class="num strong">{{ unit.total|brl }}</td>
           </tr>

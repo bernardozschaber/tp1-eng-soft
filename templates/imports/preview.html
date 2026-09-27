@@ -16,8 +16,8 @@
 </div>
 <form method="post" action="{% url 'imports:confirm' %}" id="confirm-form">{% csrf_token %}
 {% for workbook in workbooks %}
-  <p class="card__title mb-16">{% icon "file-spreadsheet" %} {{ workbook.file_name }} <span class="muted">· {{ workbook.sheets|length }} aba{{ workbook.sheets|length|pluralize }}</span>
-    {% if workbook.skipped_sheets %}<span class="small muted"> · ignoradas: {{ workbook.skipped_sheets|join:", " }}</span>{% endif %}</p>
+  <h2 class="card__title mb-16">{% icon "file-spreadsheet" %} {{ workbook.file_name }} <span class="muted">· {{ workbook.sheets|length }} aba{{ workbook.sheets|length|pluralize }}</span>
+    {% if workbook.skipped_sheets %}<span class="small muted"> · ignoradas: {{ workbook.skipped_sheets|join:", " }}</span>{% endif %}</h2>
   {% for sheet in workbook.sheets %}
   {% with prefix=sheet.prefix %}
   <section class="sheet" data-sheet>
@@ -39,7 +39,7 @@
       </div>
       <div class="table-wrap">
         <table class="table">
-          <thead><tr><th></th><th>Nome na lista</th><th>Aplicador</th><th>Função</th><th class="num">Líquido</th><th class="num">Bruto (RPA)</th></tr></thead>
+          <thead><tr><th scope="col"><span class="sr-only">Incluir</span></th><th scope="col">Nome na lista</th><th scope="col">Aplicador</th><th scope="col">Função</th><th class="num" scope="col">Líquido</th><th class="num" scope="col">Bruto (RPA)</th></tr></thead>
           <tbody>
             {% for row in sheet.rows %}
             {% with row_prefix=row.prefix %}

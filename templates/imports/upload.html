@@ -14,10 +14,10 @@
   <div class="form-actions"><button type="submit" class="btn btn--primary" id="upload-button" disabled>{% icon "upload" %} Pré-visualizar</button></div>
 </form>
 <section class="card">
-  <p class="card__title">Importações recentes</p>
+  <h2 class="card__title">Importações recentes</h2>
   <div class="table-wrap mt-16">
     <table class="table">
-      <thead><tr><th>Arquivo</th><th>Quando</th><th>Por</th><th class="num">Lançamentos</th></tr></thead>
+      <thead><tr><th scope="col">Arquivo</th><th scope="col">Quando</th><th scope="col">Por</th><th class="num" scope="col">Lançamentos</th></tr></thead>
       <tbody>
         {% for batch in recent_batches %}
         <tr><td class="strong">{{ batch.file_name }}</td><td class="muted">{{ batch.imported_at|date:"d/m/Y H:i" }}</td><td class="muted">{{ batch.imported_by|default:"—" }}</td><td class="num">{{ batch.entries.count }}</td></tr>

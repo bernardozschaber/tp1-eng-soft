@@ -15,11 +15,11 @@
 </div>
 {% for group in groups %}
 <section class="card">
-  <div class="card__header"><p class="card__title">Pagamento {{ group.payment_date|date:"d/m/Y" }} <span class="muted">· {{ group.rows|length }} aplicador{{ group.rows|length|pluralize:"es" }}</span></p>
+  <div class="card__header"><h2 class="card__title">Pagamento {{ group.payment_date|date:"d/m/Y" }} <span class="muted">· {{ group.rows|length }} aplicador{{ group.rows|length|pluralize:"es" }}</span></h2>
     <a href="{% url 'payroll:entry_list' %}?payment_date={{ group.payment_date|date:'Y-m-d' }}" class="btn btn--ghost btn--sm">Ver lançamentos {% icon "chevron-right" 14 %}</a></div>
   <div class="table-wrap">
     <table class="table">
-      <thead><tr><th>Aplicador</th><th>Empresa</th><th class="num">Bruto (RPA)</th><th class="num">INSS</th><th class="num">ISS</th><th class="num">IR</th><th class="num">Líquido a pagar</th><th class="num">Atividades</th><th>Consistência</th></tr></thead>
+      <thead><tr><th scope="col">Aplicador</th><th scope="col">Empresa</th><th class="num" scope="col">Bruto (RPA)</th><th class="num" scope="col">INSS</th><th class="num" scope="col">ISS</th><th class="num" scope="col">IR</th><th class="num" scope="col">Líquido a pagar</th><th class="num" scope="col">Atividades</th><th scope="col">Consistência</th></tr></thead>
       <tbody>
         {% for row in group.rows %}
         <tr>
