@@ -86,8 +86,19 @@ class SummaryGroup:
 
 
 def build_summary(queryset) -> list[SummaryGroup]:
+    """Aggregate a queryset. Re-orders in the database, so it refetches."""
+    return build_summary_from(queryset.order_by("payment_date", "applicator__full_name"))
+
+
+def build_summary_from(entries) -> list[SummaryGroup]:
+    """Aggregate an already-materialised sequence of entries.
+
+    The export needs both sheets from the same rows; going through
+    build_summary() there would re-query the database for the same data just to
+    re-order it. Sorting in Python instead keeps it to one fetch.
+    """
     rows: dict[tuple, SummaryRow] = {}
-    for entry in queryset.order_by("payment_date", "applicator__full_name"):
+    for entry in sorted(entries, key=lambda e: (e.payment_date, e.applicator.full_name)):
         key = (entry.payment_date, entry.applicator_id, entry.paying_company_id)
         if key not in rows:
             rows[key] = SummaryRow(

@@ -3,9 +3,20 @@
 {% block breadcrumb %}{% icon "chevron-right" 14 %}<span class="current">Resumo por aplicador</span>{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div><h1>Resumo de pagamento por aplicador</h1><p>Consolidado por data de pagamento, aplicador e empresa pagadora</p></div>
+  <div>
+    <h1>Resumo de pagamento por aplicador</h1>
+    <p>Consolidado por data de pagamento, aplicador e empresa pagadora</p>
+  </div>
   <div class="page-header__actions"><a href="{% url 'payroll:export' %}?{{ filters.querystring }}" class="btn btn--primary">{% icon "download" %} Exportar Excel</a></div>
 </div>
+{% if filters.payment_date %}
+<div class="alert alert--info">{% icon "calendar" %}
+  <span>
+    Mostrando o pagamento de <b>{{ filters.payment_date|date:"d/m/Y" }}</b>{% if filters.payment_date_defaulted %} — o mais recente{% endif %}.
+    O resumo e a exportação trabalham sempre sobre um único fechamento; troque a data no filtro abaixo para ver outro.
+  </span>
+</div>
+{% endif %}
 {% include "payroll/_filters.html" %}
 <div class="metrics">
   <div class="metric"><div class="metric__label">Aplicadores</div><div class="metric__value">{{ totals.applicators }}</div></div>

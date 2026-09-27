@@ -15,7 +15,7 @@ from apps.payroll.export import build_workbook
 from apps.payroll.filters import EntryFilters
 from apps.payroll.forms import ServiceEntryForm
 from apps.payroll.models import ServiceEntry
-from apps.payroll.summary import build_summary, grand_totals
+from apps.payroll.summary import build_summary, build_summary_from, grand_totals
 
 PAGE_SIZE = 50
 
@@ -76,7 +76,7 @@ def entry_delete(request, pk: int):
 
 @login_required
 def summary(request):
-    filters = EntryFilters.from_request(request.GET)
+    filters = EntryFilters.from_request(request.GET).scope_to_payment_run()
     groups = build_summary(filters.apply())
     if filters.inconsistent_only:
         for group in groups:
@@ -88,9 +88,12 @@ def summary(request):
 
 @login_required
 def export_excel(request):
-    filters = EntryFilters.from_request(request.GET)
-    entries = filters.apply().order_by("activity_date", "applicator__full_name")
-    content = build_workbook(entries, build_summary(entries))
+    filters = EntryFilters.from_request(request.GET).scope_to_payment_run()
+    # One evaluation, reused by both sheets: build_summary re-orders internally,
+    # which would otherwise issue a second full fetch of the same rows.
+    entries = list(filters.apply().order_by("activity_date", "applicator__full_name"))
+    content = build_workbook(entries, build_summary_from(entries))
     response = HttpResponse(content, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = f'attachment; filename="BernoulliPay_{date.today():%Y-%m-%d}.xlsx"'
+    stamp = filters.payment_date or date.today()
+    response["Content-Disposition"] = f'attachment; filename="BernoulliPay_pgto_{stamp:%Y-%m-%d}.xlsx"'
     return response

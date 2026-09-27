@@ -44,7 +44,7 @@ class ServiceEntry(models.Model):
 
     applicator = models.ForeignKey(Applicator, on_delete=models.PROTECT, related_name="entries", verbose_name="aplicador")
     role = models.CharField("função", max_length=12, choices=ServiceRole.choices, default=ServiceRole.APPLICATOR)
-    activity_date = models.DateField("data da atividade")
+    activity_date = models.DateField("data da atividade", db_index=True)
     event_name = models.CharField("prova/evento", max_length=150)
     segment = models.CharField("segmento", max_length=80, blank=True)
     shift = models.CharField("horário", max_length=6, choices=Shift.choices, blank=True)
@@ -52,7 +52,7 @@ class ServiceEntry(models.Model):
     unit = models.ForeignKey(Unit, on_delete=models.PROTECT, verbose_name="unidade")
     # Snapshot of unit.paying_company at save time so history survives catalog edits.
     paying_company = models.ForeignKey(PayingCompany, on_delete=models.PROTECT, verbose_name="empresa pagadora")
-    payment_date = models.DateField("data de pagamento")
+    payment_date = models.DateField("data de pagamento", db_index=True)
 
     net_amount = models.DecimalField("valor líquido", **MONEY)
     gross_amount = models.DecimalField("valor bruto (RPA)", **MONEY, editable=False)
@@ -70,6 +70,12 @@ class ServiceEntry(models.Model):
         ordering = ["-activity_date", "applicator__full_name"]
         verbose_name = "lançamento"
         verbose_name_plural = "lançamentos"
+        indexes = [
+            # The summary and the export group by (payment_date, applicator) and
+            # read in that order; a composite index serves both the grouping and
+            # the ordering without a sort step.
+            models.Index(fields=["payment_date", "applicator"], name="entry_paydate_applicator"),
+        ]
 
     def __str__(self) -> str:
         return f"{self.applicator} · {self.event_name} · {self.activity_date:%d/%m/%Y}"
