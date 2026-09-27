@@ -23,6 +23,7 @@
   font-weight: 100 700;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: "IBM Plex Sans";
@@ -36,7 +37,9 @@
   font-family: "IBM Plex Mono";
   src: url("../fonts/IBMPlexMono-Regular-latin.woff2") format("woff2");
   font-weight: 400;
+  font-style: normal;
   font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 @font-face {
   font-family: "IBM Plex Mono";
@@ -44,8 +47,8 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
-
 :root {
   color-scheme: light;
 
@@ -115,25 +118,6 @@
   --border-tertiary: var(--alpha-black-100);
   --border-subdued: var(--alpha-black-50);
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
-
-  --shadow-xs: 0 1px 2px 0 rgba(11, 11, 11, 0.06);
-  --shadow-sm: 0 1px 6px 0 rgba(11, 11, 11, 0.06);
-  --shadow-md: 0 4px 8px -2px rgba(11, 11, 11, 0.06);
-  --shadow-border-xs: var(--shadow-xs), 0 0 0 1px var(--alpha-black-50);
-  --shadow-border-sm: var(--shadow-sm), 0 0 0 1px var(--alpha-black-50);
-
-  /* Categorical palette for the per-unit weight bar and legend.
-     Derived by farthest-point search in OKLCH inside a muted chroma band, then
-     validated with the data-viz palette validator (light, surface #ffffff):
-     all five checks PASS on the adjacent pairlist (the stacked-bar rule), and
-     the first four slots — the four real school units — also clear the
-     stricter all-pairs gate. Assign in fixed order; never cycle. */
-  --chart-1: #009e8e;
-  --chart-2: #255ebc;
   --focus-ring: var(--color-gray-700);
 
   /* Type scale. Expressed in rem so a reader's browser font-size preference is
@@ -155,6 +139,25 @@
   --leading-body: 1.5;
   --measure: 68ch;           /* prose cap; tables and data are exempt */
 
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+
+  --shadow-xs: 0 1px 2px 0 rgba(11, 11, 11, 0.06);
+  --shadow-sm: 0 1px 6px 0 rgba(11, 11, 11, 0.06);
+  --shadow-md: 0 4px 8px -2px rgba(11, 11, 11, 0.06);
+  --shadow-border-xs: var(--shadow-xs), 0 0 0 1px var(--alpha-black-50);
+  --shadow-border-sm: var(--shadow-sm), 0 0 0 1px var(--alpha-black-50);
+
+  /* Categorical palette for the per-unit weight bar and legend.
+     Derived by farthest-point search in OKLCH inside a muted chroma band, then
+     validated with the data-viz palette validator (light, surface #ffffff):
+     all five checks PASS on the adjacent pairlist (the stacked-bar rule), and
+     the first four slots — the four real school units — also clear the
+     stricter all-pairs gate. Assign in fixed order; never cycle. */
+  --chart-1: #009e8e;
+  --chart-2: #255ebc;
   --chart-3: #934f00;
   --chart-4: #5f8df3;
   --chart-5: #ca7500;
