@@ -393,18 +393,42 @@ def _resolve_merge_target(value: str, cache: dict[str, Applicator]) -> tuple[App
 
 # --- confirmation ----------------------------------------------------------
 
+def _get_or_create_applicator(raw_name: str, suffix: str, cpf: str = "") -> tuple[Applicator, bool]:
+    """Acha a pessoa pelo CPF primeiro, pelo nome depois; cria se não existir.
+
+    A lista de formulário traz CPF, então ela identifica melhor do que a lista
+    de Lourdes: um CPF conhecido casa mesmo com o nome escrito de outro jeito.
+    """
+    cpf = format_cpf(cpf) if cpf else ""
+    applicator = Applicator.find_by_cpf(cpf) or Applicator.find_by_name(raw_name)
     if applicator:
+        if cpf and not applicator.cpf:
+            applicator.cpf = cpf
+            applicator.save(update_fields=["cpf", "updated_at"])
         return applicator, False
     applicator = Applicator.objects.create(
         full_name=to_display_name(raw_name),
-        needs_review=True,
+        cpf=cpf,
+        registration_status=RegistrationStatus.NEW,
         notes=f"Criado automaticamente pela importação. Sufixo na lista: {suffix}" if suffix else "Criado automaticamente pela importação.",
     )
     return applicator, True
 
 
+def _amount_from(raw, fallback: Decimal = Decimal("0")) -> Decimal:
+    """Lê um valor digitado ("85", "85,50", "R$ 85,50"); vazio ou inválido vira o padrão."""
+    text = str(raw or "").strip().replace("R$", "").replace(" ", "")
+    if not text:
+        return fallback
+    try:
+        return Decimal(text.replace(".", "").replace(",", ".") if "," in text else text)
+    except (ArithmeticError, ValueError):
+        return fallback
+
+
 def _read_sheet_fields(payload, prefix: str) -> dict:
     return {
+        "default_amount": _amount_from(payload.get(f"{prefix}-default_amount")),
         "event_name": payload.get(f"{prefix}-event_name", "").strip(),
         "activity_date": payload.get(f"{prefix}-activity_date", ""),
         "unit_id": payload.get(f"{prefix}-unit"),
