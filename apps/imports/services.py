@@ -300,10 +300,99 @@ def all_questions(workbooks: list[dict]) -> list[dict]:
     return merges + creation_questions(workbooks, merges)
 
 
+def read_answers(payload, workbooks: list[dict]) -> tuple[dict[str, str], set[str]]:
+    """Devolve (junções confirmadas, nomes cuja criação foi recusada)."""
+    merges = merge_questions(workbooks)
+    answers = _read_merge_answers(payload, merges)
+    declined = set()
+    for question in creation_questions(workbooks, merges):
+        answer = payload.get(question["id"], "")
+        name = question["variant"]["display"]
+        normalized = question["variant"]["normalized"]
+        if answer.startswith(APPLICATOR_ANSWER):
+            answers[normalized] = _validated_applicator_answer(answer, name)
+            continue
+        if answer not in MERGE_ANSWERS:
+            raise ValueError(
+                "Há cadastros novos para confirmar antes de lançar: responda a pergunta de "
+                f"\u201c{name}\u201d."
+            )
+        if answer == "nao":
+            declined.add(normalized)
+    return answers, declined
+
+
+def _validated_applicator_answer(answer: str, name: str) -> str:
+    """Confere que o cadastro escolhido existe antes de lançar qualquer coisa nele.
+
+    A resposta vem de um campo do formulário, então ela pode chegar com um id
+    que não existe mais — alguém excluiu a ficha enquanto a prévia estava
+    aberta — e o certo é parar a importação inteira e perguntar de novo, não
+    estourar no meio da gravação.
+    """
+    _, _, pk = answer.partition(":")
+    if not pk.isdigit() or not Applicator.objects.filter(pk=int(pk)).exists():
+        raise ValueError(
+            f"O cadastro escolhido para \u201c{name}\u201d não existe mais. Confira a resposta e tente de novo."
+        )
+    return answer
+
+
+def _read_merge_answers(payload, questions: list[dict]) -> dict[str, str]:
+    """Respostas do operador, validadas contra as perguntas que a prévia fez.
+
+    Pergunta sem resposta interrompe a importação: o pedido é confirmar uma a
+    uma, e lançar no escuro é justamente o que se quer evitar.
+    """
+    answers = {}
+    for question in questions:
+        answer = payload.get(question["id"], "")
+        if answer not in MERGE_ANSWERS:
+            raise ValueError(
+                "Há nomes parecidos para confirmar antes de lançar: responda a pergunta de "
+                f"\u201c{question['variant']['display']}\u201d."
+            )
+        if answer == "sim":
+            answers[question["variant"]["normalized"]] = (question["target"]["normalized"], question["target"]["value"])
+    return _follow_chains(answers)
+
+
+def _follow_chains(answers: dict[str, tuple[str, str]]) -> dict[str, str]:
+    """A ponta da corrente manda.
+
+    "Felipe Carneiro" pode juntar em "Felipe Cardoso", que por sua vez juntou em
+    "Felipe Cardoso Oliveira Costa". Sem seguir a corrente, cada resposta iria
+    para um cadastro diferente e o "sim" duplo produziria a duplicata que ele
+    queria desfazer. O contador de saltos corta qualquer ciclo.
+    """
+    merges = {}
+    for variant, (target, value) in answers.items():
+        seen = {variant}
+        for _ in range(len(answers)):
+            if target not in answers or target in seen:
+                break
+            seen.add(target)
+            target, value = answers[target]
+        merges[variant] = value
+    return merges
+
+
+def _resolve_merge_target(value: str, cache: dict[str, Applicator]) -> tuple[Applicator, bool]:
+    """"applicator:12" -> cadastro existente; "name:Larissa Salgado Maia" -> um só cadastro por importação."""
+    if value in cache:
+        return cache[value], False
+    kind, _, rest = value.partition(":")
+    if kind == "applicator":
+        applicator = Applicator.objects.get(pk=int(rest))
+        created = False
+    else:
+        applicator, created = _get_or_create_applicator(rest, "")
+    cache[value] = applicator
+    return applicator, created
+
+
 # --- confirmation ----------------------------------------------------------
 
-def _get_or_create_applicator(raw_name: str, suffix: str) -> tuple[Applicator, bool]:
-    applicator = Applicator.find_by_name(raw_name)
     if applicator:
         return applicator, False
     applicator = Applicator.objects.create(
