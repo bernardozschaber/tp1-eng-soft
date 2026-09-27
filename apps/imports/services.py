@@ -5,23 +5,30 @@ Import workflow:
                         preview in the session (no database writes yet);
   2. `enrich_preview`   attach applicator matches, duplicate flags and the
                         computed gross amount so the preview page can show them;
-  3. `confirm_import`   read the (possibly edited) preview back from the POST
+  3. `merge_questions`  levanta os nomes parecidos entre si e com quem já está
+                        cadastrado, para o operador confirmar um a um;
+  4. `confirm_import`   read the (possibly edited) preview back from the POST
                         payload and persist entries, creating missing applicators.
 """
+import hashlib
+import uuid
 from dataclasses import asdict
 from datetime import date
 from decimal import Decimal
 
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.db import transaction
 
-from apps.applicators.models import Applicator
-from apps.applicators.names import normalize_name, split_suffix, to_display_name
+from apps.applicators.models import Applicator, RegistrationStatus
+from apps.applicators.names import looks_like_same_person, name_tokens, normalize_name, split_suffix, to_display_name
 from apps.catalog.models import Sector, TaxSettings, Unit
-from apps.imports.parser import ParsedWorkbook, parse_workbook
+from apps.imports.parser import ParsedWorkbook, format_cpf, parse_workbook
 from apps.payroll.calculator import TaxRates, compute_breakdown
-from apps.payroll.models import ImportBatch, ServiceEntry, ServiceRole
+from apps.payroll.models import ImportBatch, ServiceEntry, ServiceRole, event_key
 
 SESSION_KEY = "import_preview"
+STAGING_DIR = "imports/_staging"
 
 
 # --- staging ---------------------------------------------------------------
