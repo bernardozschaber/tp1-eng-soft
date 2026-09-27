@@ -70,6 +70,10 @@ def preview(request):
         return redirect("imports:upload")
     context = {
         "workbooks": enrich_preview(workbooks),
+        "questions": all_questions(workbooks),
+        # Para a terceira resposta ("associar a outro cadastro"): a busca é no
+        # navegador, sobre esta lista, porque o card não recarrega a página.
+        "applicators": Applicator.objects.filter(is_active=True).order_by("full_name"),
         "units": Unit.objects.all(),
         "sectors": Sector.objects.all(),
         "shifts": Shift.choices,
