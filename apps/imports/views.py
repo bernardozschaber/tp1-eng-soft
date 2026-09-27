@@ -97,11 +97,22 @@ def confirm(request):
         return redirect("imports:preview")
     clear_preview(request.session)
     summary = f"{result['entries']} lançamento(s) importado(s)"
+    if result["merged"]:
+        summary += f", {result['merged']} lançamento(s) juntado(s) a um cadastro existente"
     if result["applicators"]:
-        summary += f", {result['applicators']} aplicador(es) criado(s) para revisão"
+        summary += f", {result['applicators']} cadastro(s) novo(s) criado(s) (primeiro pagamento)"
     if result["skipped"]:
         summary += f", {result['skipped']} linha(s) ignorada(s)"
     messages.success(request, summary + ".")
+    if result["duplicates"]:
+        # Avulso e em separado: não é detalhe do sucesso, é o operador
+        # precisando saber que a lista trouxe serviço que já estava lançado.
+        messages.warning(
+            request,
+            f"{result['duplicates']} linha(s) já estavam lançadas e não entraram de novo — "
+            "mesma pessoa, mesma atividade, mesmo dia e mesmo turno. Confira se a data das "
+            "abas da planilha está certa.",
+        )
     return redirect("payroll:entry_list")
 
 
