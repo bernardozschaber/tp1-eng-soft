@@ -38,29 +38,8 @@ def upload(request):
         for error in stage_uploads(request.session, files):
             messages.error(request, f"{error['file_name']}: {error['message']}")
         return redirect("imports:preview")
-    return render(request, "imports/upload.html", {"recent_batches": _recent_batches()})
-
-
-def _recent_batches(limit: int = 10):
-    """Os últimos lotes com o que a linha mostra: unidades, total e contagem.
-
-    Os lançamentos já vêm no prefetch, então unidades, soma e contagem saem em
-    memória — sem uma consulta por linha da tabela.
-    """
-    batches = list(
-        ImportBatch.objects.select_related("imported_by__profile").prefetch_related(
-            Prefetch("entries", queryset=ServiceEntry.objects.select_related("unit__paying_company"))
-        )[:limit]
-    )
-    for batch in batches:
-        entries = list(batch.entries.all())
-        batch.entry_count = len(entries)
-        batch.net_total = sum((entry.net_amount for entry in entries), Decimal("0"))
-        codes = {}
-        for entry in entries:
-            codes.setdefault(entry.unit.short_name, None)
-        batch.unit_codes = list(codes)
-    return batches
+    recent_batches = ImportBatch.objects.select_related("imported_by").prefetch_related("entries")[:10]
+    return render(request, "imports/upload.html", {"recent_batches": recent_batches})
 
 
 @login_required
@@ -70,10 +49,6 @@ def preview(request):
         return redirect("imports:upload")
     context = {
         "workbooks": enrich_preview(workbooks),
-        "questions": all_questions(workbooks),
-        # Para a terceira resposta ("associar a outro cadastro"): a busca é no
-        # navegador, sobre esta lista, porque o card não recarrega a página.
-        "applicators": Applicator.objects.filter(is_active=True).order_by("full_name"),
         "units": Unit.objects.all(),
         "sectors": Sector.objects.all(),
         "shifts": Shift.choices,
@@ -97,22 +72,11 @@ def confirm(request):
         return redirect("imports:preview")
     clear_preview(request.session)
     summary = f"{result['entries']} lançamento(s) importado(s)"
-    if result["merged"]:
-        summary += f", {result['merged']} lançamento(s) juntado(s) a um cadastro existente"
     if result["applicators"]:
-        summary += f", {result['applicators']} cadastro(s) novo(s) criado(s) (primeiro pagamento)"
+        summary += f", {result['applicators']} aplicador(es) criado(s) para revisão"
     if result["skipped"]:
         summary += f", {result['skipped']} linha(s) ignorada(s)"
     messages.success(request, summary + ".")
-    if result["duplicates"]:
-        # Avulso e em separado: não é detalhe do sucesso, é o operador
-        # precisando saber que a lista trouxe serviço que já estava lançado.
-        messages.warning(
-            request,
-            f"{result['duplicates']} linha(s) já estavam lançadas e não entraram de novo — "
-            "mesma pessoa, mesma atividade, mesmo dia e mesmo turno. Confira se a data das "
-            "abas da planilha está certa.",
-        )
     return redirect("payroll:entry_list")
 
 
