@@ -99,8 +99,10 @@ paying company.
   - `static/img/favicon.png` pads the mark onto a square transparent canvas — by padding,
     never by cropping.
   Sources are `bernoulli-pay-logo-apenas.png` and `bernoulli-pay-logo-mais-texto.png` at the
-  repository root. The shipped assets are those files trimmed to their alpha bounds, with the
-  ink normalised from `#03958a` to exactly `#009E8E` so the mark matches the token.
+  repository root.
+- **How the mark was arrived at — ideation, the directions explored, the selection and the
+  refinement brief — is recorded in DESIGN.md under `## Identity`**, not here. This file holds
+  what is binding about the brand; DESIGN.md holds the visual world that expresses it.
 - **Constraint that governs every future use of the brand colour:** `#009E8E` is 3.34:1 on
   white. It is a fill, stroke and mark colour — never text on a light surface. Brand text
   uses the darker `#047569`.

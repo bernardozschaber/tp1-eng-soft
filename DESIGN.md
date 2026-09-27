@@ -260,6 +260,109 @@ rather than the 500.
 - Every icon is inline Lucide SVG rendered by a template tag; there is no icon font and no
   Unicode glyph stands in for one.
 
+## Identity
+
+### The institutional anchor
+
+BernoulliPay is an internal tool of Colégio Bernoulli, and the brief was that it must read
+as one. The school's own mark is a filled teal disc carrying a white infinity symbol beside
+the word "Bernoulli", with "Colégio" set below it, also in white. Two things in that mark are
+load-bearing and were treated as given:
+
+- **The colour.** "Verde Bernoulli", `#009E8E`, is the institution's brand colour. It is not a
+  palette choice this product gets to make.
+- **The infinity.** The lemniscate is the school's defining motif — a Bernoulli signature in
+  the mathematical sense as much as the institutional one.
+
+Everything chromatic in this system is derived from that colour or chosen to sit beside it.
+
+### The constraint that shaped the whole system
+
+`#009E8E` measures **3.34:1 against white**. It clears the 3:1 floor for non-text graphics and
+fails the 4.5:1 floor for text. That single number decided more than the logo:
+
+- the mark, the chart stroke, the active nav indicator and the status dots may all be verde;
+- links, positive trend figures and badge ink may not, and resolve to `#047569` instead;
+- the primary button stayed dark neutral rather than turning verde, because white on `#009E8E`
+  would fail button-text contrast.
+
+The rule is written into `tokens.css` itself so it survives the next edit: **verde is a fill,
+a stroke and a mark, never text on a light surface.**
+
+### Ideation
+
+The mark was developed by generating a spread of directions and narrowing, rather than by
+committing to a first idea. The directions explored, as the team recorded them:
+
+| # | Direction |
+|---|---|
+| 1 | Mirrored letterforms resolving into an infinity |
+| 2 | A single continuous stroke or ribbon |
+| 3 | A circular seal, in the spirit of the school crest |
+| 4 | An interlaced monogram |
+| 5 | A reclining infinity |
+| 6 | A duotone treatment |
+| 7 | An app icon working in negative space |
+| 8 | A one-line contour |
+| 9 | A knotted centre |
+| 10 | A Möbius ribbon |
+
+Selection landed on **the seventh**. The refinement brief that followed was specific and
+short: make it solid rather than shaded, close the form so it reads as one whole shape, raise
+the resolution, deliver PNG. A second pass then asked for the mark **without** the words, which
+is what gave the system two lockups instead of one — and that request is the reason the icon
+rail and the login card can differ at all.
+
+### What the mark resolves to
+
+A **"bp" monogram** whose b and p bowls interlock into a lemniscate: the infinity that signs
+the school, drawn by the product's own initials. The school's motif is quoted, not copied.
+
+Two deliberate departures from the institutional mark:
+
+- **It is not a disc.** The school's seal is a filled circle. BernoulliPay is a tool inside the
+  institution, not the institution, and its mark says so by not being the seal. The favicon
+  reaches square by padding, never by cropping the mark into a circle.
+- **It is letters, not a symbol.** Measured against its own reflections, the mark is *not*
+  symmetric — 21.7% of pixels diverge under a horizontal mirror, 19.0% vertical, 21.5% at 180°.
+  It reads symmetric at a glance and measurably is not, because the b's ascender and the p's
+  descender break it. That asymmetry is what keeps it reading as a monogram rather than as a
+  generic infinity glyph.
+
+The wordmark sets "Bernoulli" at a heavier weight than "Pay", so the institution leads and the
+function follows — the same hierarchy the product name states.
+
+### The two lockups
+
+Which one appears is a decision, not a convenience:
+
+- `static/img/logomark.png` — the mark alone, **1.544:1**, displayed 44×28 in the icon rail.
+  The rail is 84px of chrome; it gets the mark and no words.
+- `static/img/wordmark.png` — the mark above the words "BernoulliPay", **0.946:1**, displayed
+  140×148 on the login card. The login screen is the one surface with room for the name and a
+  reason to say it, so it is the one surface that carries the full lockup.
+- `static/img/favicon.png` — the mark padded onto a square transparent canvas.
+
+### Production notes
+
+Both ship from the team's renders (`bernoulli-pay-logo-apenas.png`,
+`bernoulli-pay-logo-mais-texto.png`), trimmed to their alpha bounds and resized to delivery
+size. The ink is then normalised to exactly `#009E8E`.
+
+**The order matters.** Normalising the colour *before* resizing lets the resampling blend the
+flat ink and leaves it a step off the token — measured at `#009d8d` on the first attempt.
+Normalising *after* the resize keeps a single exact ink value, which also compresses better:
+the three assets total 49 KB.
+
+Never redraw the mark, never substitute a drawn approximation, and never force either lockup
+into a square.
+
+### Not recorded here
+
+The verbatim generation brief and the ten candidate renders are not in the repository — only
+the two selected outputs are. If the ideation needs to be reproducible or presented, those
+source images and the prompt text should be added alongside them.
+
 ## Colors
 
 A neutral grey console with a single saturated identity colour, plus a small status set and a
@@ -478,24 +581,7 @@ outer corners (10px on `th:first-child` and `th:last-child`) so a header row rea
 floating inset bar rather than a ruled band. The upload dropzone is the single dashed edge in
 the system (1.5px dashed).
 
-**The logomark** is supplied artwork, not system geometry: a **"bp" monogram** in verde
-Bernoulli whose b and p bowls interlock into a lemniscate, so the infinity motif that signs the
-school is formed by the product's own initials.
-
-It ships in two lockups, and which one appears is a decision, not a convenience:
-
-- `static/img/logomark.png` — the mark alone, **1.544:1**, displayed 44×28 in the icon rail.
-  The rail is 84px of chrome; it gets the mark and no words.
-- `static/img/wordmark.png` — the mark above the words "BernoulliPay", **0.946:1**, displayed
-  140×148 on the login card. The login screen is the one surface with room for the name and a
-  reason to say it, so it is the one surface that carries the full lockup.
-- `favicon.png` reaches square by **padding** the mark onto a transparent canvas, never by
-  cropping it.
-
-Both ship from the team's renders (`bernoulli-pay-logo-apenas.png`,
-`bernoulli-pay-logo-mais-texto.png`) trimmed to their alpha bounds, with the ink normalised
-from `#03958a` to exactly `#009E8E` so the mark matches the token. Never redraw the mark,
-never substitute a drawn approximation, and never force either lockup into a square.
+The logomark is not system geometry and is specified under **Identity**, above.
 
 ## Components
 
