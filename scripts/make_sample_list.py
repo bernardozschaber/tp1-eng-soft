@@ -1,7 +1,7 @@
 """
 Generates docs/samples/lista_pagamento_exemplo.xlsx: a payment list in the
 "Relatório de Atividade" layout with FICTIONAL applicators, used by
-`manage.py seed --demo` and as a reference for the parser.
+referência para o parser (nenhum comando carrega este arquivo no banco).
 
     .venv/bin/python scripts/make_sample_list.py
 """

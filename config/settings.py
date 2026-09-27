@@ -92,6 +92,11 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Planilhas originais das importações. Ficam fora de STATIC de propósito: são
+# dados de pagamento e só saem pela view autenticada, nunca por URL pública.
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "media/"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
@@ -105,3 +110,10 @@ REST_FRAMEWORK = {
 
 # Upload limit for payment-list spreadsheets (10 MB each)
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+
+# The import preview posts the whole confirmation form in one request: about
+# seven fields per sheet plus three per row (include, role, net_amount). A
+# single payment list with a few hundred applicators passes Django's default of
+# 1000 fields and the POST dies in CsrfViewMiddleware with TooManyFieldsSent,
+# before the view ever runs. 25000 covers roughly 8000 rows per confirmation.
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 25_000
