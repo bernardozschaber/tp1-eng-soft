@@ -17,7 +17,7 @@ class SummaryRow:
     applicator_id: int
     applicator_name: str
     company_name: str
-    needs_review: bool
+    is_new_registration: bool
     gross: Decimal = ZERO
     inss: Decimal = ZERO
     iss: Decimal = ZERO
@@ -106,7 +106,7 @@ def build_summary_from(entries) -> list[SummaryGroup]:
                 applicator_id=entry.applicator_id,
                 applicator_name=entry.applicator.full_name,
                 company_name=entry.paying_company.name,
-                needs_review=entry.applicator.needs_review,
+                is_new_registration=entry.applicator.is_new_registration,
             )
         rows[key].add(entry)
 
