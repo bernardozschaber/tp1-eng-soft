@@ -110,14 +110,18 @@
   --shadow-border-xs: var(--shadow-xs), 0 0 0 1px var(--alpha-black-50);
   --shadow-border-sm: var(--shadow-sm), 0 0 0 1px var(--alpha-black-50);
 
-  /* Categorical palette for charts (Maybe account-group colors) */
-  --chart-1: var(--color-violet-500);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-gray-500);
-  --chart-4: var(--color-cyan-500);
-  --chart-5: var(--color-pink-500);
-  --chart-6: var(--color-green-500);
-  --chart-7: var(--color-orange-500);
-  --chart-8: var(--color-indigo-500);
-  --focus-ring: var(--color-gray-700);
+  /* Categorical palette for the per-unit weight bar and legend.
+     Derived by farthest-point search in OKLCH inside a muted chroma band, then
+     validated with the data-viz palette validator (light, surface #ffffff):
+     all five checks PASS on the adjacent pairlist (the stacked-bar rule), and
+     the first four slots — the four real school units — also clear the
+     stricter all-pairs gate. Assign in fixed order; never cycle. */
+  --chart-1: #009e8e;
+  --chart-2: #255ebc;
+  --chart-3: #934f00;
+  --chart-4: #5f8df3;
+  --chart-5: #ca7500;
+  --chart-6: #8a4a71;
+  --chart-7: #2783b2;
+  --chart-8: #b1614b;
 }
