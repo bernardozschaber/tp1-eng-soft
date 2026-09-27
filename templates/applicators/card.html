@@ -1,0 +1,64 @@
+{% extends "base.html" %}{% load static icons %}
+{% block title %}{{ applicator.full_name }} · BernoulliPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<a href="{% url 'applicators:list' %}">Aplicadores</a>{% icon "chevron-right" 14 %}<span class="current">Ficha</span>{% endblock %}
+{% block content %}
+{% comment %}
+  A ficha ocupa a tela inteira, translúcida sobre a página: é uma coisa só
+  para olhar, não uma seção da lista. Esc ou o fundo voltam para a lista.
+{% endcomment %}
+<div class="sheet-overlay" data-card-overlay>
+  <a class="sheet-overlay__backdrop" href="{% url 'applicators:list' %}" aria-label="Voltar para a lista de aplicadores"></a>
+  <article class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="ficha-nome">
+    <header class="sheet-card__head">
+      <div class="sheet-card__photo">
+        {% if applicator.photo %}
+          <img src="{% static applicator.photo %}" alt="Foto de {{ applicator.full_name }}" loading="lazy" decoding="async">
+        {% else %}
+          <span class="sheet-card__initials" aria-hidden="true">{{ applicator.initials }}</span>
+          <span class="sheet-card__photo-hint">foto 3x4</span>
+        {% endif %}
+      </div>
+      <div class="sheet-card__identity">
+        <h1 class="sheet-card__name" id="ficha-nome">{{ applicator.full_name }}</h1>
+        <p class="sheet-card__status">
+          {% if not applicator.is_active %}<span class="badge badge--gray">inativo</span>
+          {% elif applicator.is_new_registration %}<span class="badge badge--yellow">cadastro novo: primeiro pagamento</span>
+          {% else %}<span class="badge badge--brand">cadastro ativo: pagamento recorrente</span>{% endif %}
+        </p>
+        <div class="sheet-card__actions">
+          <a href="{% url 'applicators:detail' applicator.pk %}" class="btn btn--secondary btn--sm">{% icon "list" 14 %} Lançamentos</a>
+          <a href="{% url 'applicators:update' applicator.pk %}" class="btn btn--secondary btn--sm">{% icon "pencil" 14 %} Editar</a>
+          <a href="{% url 'applicators:list' %}" class="btn btn--ghost btn--sm">Fechar</a>
+          <form method="post" action="{% url 'applicators:delete' applicator.pk %}"
+                onsubmit="return confirm('Excluir a ficha de {{ applicator.full_name|escapejs }}? Isso apaga o cadastro e não pode ser desfeito.')">{% csrf_token %}
+            <button type="submit" class="btn btn--danger btn--sm">{% icon "trash" 14 %} Excluir ficha</button>
+          </form>
+        </div>
+      </div>
+    </header>
+
+    <dl class="sheet-card__facts">
+      <div><dt>Nome</dt><dd>{{ applicator.full_name }}</dd></div>
+      <div><dt>Telefone</dt><dd>{% if applicator.phone %}<span class="mono">{{ applicator.phone }}</span>{% if applicator.whatsapp_url %} <a href="{{ applicator.whatsapp_url }}" target="_blank" rel="noopener" class="icon-button icon-button--whatsapp" title="Conversar no WhatsApp ({{ applicator.whatsapp_display }})" aria-label="Conversar com {{ applicator.full_name }} no WhatsApp">{% icon "whatsapp" 14 %}</a>{% endif %}{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+      <div><dt>CPF</dt><dd>{% if applicator.cpf %}<span class="mono">{{ applicator.cpf }}</span>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+      <div><dt>Identidade</dt><dd>{% if applicator.identity_document %}<span class="mono">{{ applicator.identity_document }}</span>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+      <div><dt>Data de nascimento</dt><dd>{% if applicator.birth_date %}<span class="mono">{{ applicator.birth_date|date:"d/m/Y" }}</span>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+      <div><dt>Sexo</dt><dd>{{ applicator.gender|default:"—" }}</dd></div>
+      <div><dt>Bairro</dt><dd>{{ applicator.neighborhood|default:"—" }}</dd></div>
+      <div><dt>VSE</dt><dd>{% if applicator.vse %}<span class="badge badge--blue">sim</span>{% else %}<span class="muted">não</span>{% endif %}</dd></div>
+      <div><dt>E-mail</dt><dd>{% if applicator.email %}<a href="mailto:{{ applicator.email }}">{{ applicator.email }}</a>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+      <div><dt>Curso</dt><dd>{{ applicator.course|default:"—" }}</dd></div>
+      <div><dt>Período</dt><dd>{{ applicator.course_period|default:"—" }}</dd></div>
+      <div><dt>Instituição</dt><dd>{{ applicator.institution|default:"—" }}</dd></div>
+      <div><dt>Dados bancários</dt><dd>{% if applicator.bank_details %}<span class="mono">{{ applicator.bank_details }}</span>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+      <div><dt>Banco</dt><dd>{{ applicator.bank_name|default:"—" }}</dd></div>
+      <div><dt>Tipo de conta</dt><dd>{{ applicator.account_type|default:"—" }}</dd></div>
+      <div><dt>Tipo PIX</dt><dd>{{ applicator.pix_type|default:"—" }}</dd></div>
+      <div><dt>Chave PIX</dt><dd>{% if applicator.pix_key %}<span class="mono">{{ applicator.pix_key }}</span>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+      <div><dt>PIS / NIT</dt><dd>{% if applicator.pis_nit %}<span class="mono">{{ applicator.pis_nit }}</span>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+      <div><dt>Indicação</dt><dd>{{ applicator.referral|default:"—" }}</dd></div>
+    </dl>
+  </article>
+</div>
+{% endblock %}
+{% block scripts %}{% load assets %}<script src="{% static_v 'js/card.js' %}"></script>{% endblock %}

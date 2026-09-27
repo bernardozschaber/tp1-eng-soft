@@ -3,8 +3,8 @@
 {% block breadcrumb %}{% icon "chevron-right" 14 %}<a href="{% url 'applicators:list' %}">Aplicadores</a>{% icon "chevron-right" 14 %}<span class="current">{{ applicator.full_name }}</span>{% endblock %}
 {% block content %}
 <div class="page-header">
-  <div><h1>{{ applicator.full_name }}</h1><p>{% if applicator.needs_review %}<span class="badge badge--yellow">cadastro incompleto</span> {% endif %}{{ applicator.course|default:"" }}{% if applicator.institution %} · {{ applicator.institution }}{% endif %}</p></div>
-  <div class="page-header__actions"><a href="{% url 'applicators:update' applicator.pk %}" class="btn btn--secondary">{% icon "pencil" %} Editar</a><a href="{% url 'payroll:entry_create' %}" class="btn btn--primary">{% icon "plus" %} Lançamento</a></div>
+  <div><h1>{{ applicator.full_name }}</h1><p>{% if applicator.is_new_registration %}<span class="badge badge--yellow">cadastro novo: primeiro pagamento</span> {% else %}<span class="badge badge--brand">cadastro ativo: pagamento recorrente</span> {% endif %}{{ applicator.course|default:"" }}{% if applicator.institution %} · {{ applicator.institution }}{% endif %}</p></div>
+  <div class="page-header__actions"><a href="{% url 'applicators:card' applicator.pk %}" class="btn btn--secondary">{% icon "users" %} Ficha</a><a href="{% url 'applicators:update' applicator.pk %}" class="btn btn--secondary">{% icon "pencil" %} Editar</a><a href="{% url 'payroll:entry_create' %}" class="btn btn--primary">{% icon "plus" %} Lançamento</a></div>
 </div>
 <div class="metrics">
   <div class="metric"><div class="metric__label">Lançamentos</div><div class="metric__value">{{ totals.count }}</div></div>

@@ -6,7 +6,7 @@
 <form method="post" class="card">{% csrf_token %}
   <div class="form-grid">
     {% for field in form %}
-      {% if field.name == 'needs_review' or field.name == 'is_active' %}
+      {% if field.name == 'is_active' or field.name == 'vse' %}
         <label class="row" style="padding:8px 0">{{ field }} {{ field.label }}</label>
       {% else %}
         <div class="field {% if field.errors %}field--error{% endif %}" {% if field.name == 'full_name' or field.name == 'notes' %}style="grid-column:1/-1"{% endif %}>

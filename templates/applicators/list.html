@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load icons money %}
+{% extends "base.html" %}{% load icons %}
 {% block title %}Aplicadores · BernoulliPay{% endblock %}
 {% block breadcrumb %}{% icon "chevron-right" 14 %}<span class="current">Aplicadores</span>{% endblock %}
 {% block content %}
@@ -10,7 +10,8 @@
   <input type="search" name="q" value="{{ query }}" placeholder="Buscar por nome, CPF ou e-mail" style="min-width:260px">
   <select name="status" class="select">
     <option value="">Todos</option>
-    <option value="review" {% if status == 'review' %}selected{% endif %}>Cadastro incompleto ({{ review_count }})</option>
+    <option value="ativo" {% if status == 'ativo' %}selected{% endif %}>Cadastro ativo: pagamento recorrente ({{ active_count }})</option>
+    <option value="novo" {% if status == 'novo' %}selected{% endif %}>Cadastro novo: primeiro pagamento ({{ new_count }})</option>
     <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inativos</option>
   </select>
   <button class="btn btn--secondary btn--sm">{% icon "search" 14 %} Filtrar</button>
@@ -18,27 +19,41 @@
 <section class="card">
   <div class="table-wrap">
     <table class="table">
-      <thead><tr><th scope="col">Nome</th><th scope="col">CPF</th><th scope="col">Contato</th><th scope="col">Situação</th><th class="num" scope="col">Lançamentos</th><th class="num" scope="col">Total líquido</th></tr></thead>
+      <thead><tr><th class="col-ficha" scope="col">Ficha</th><th scope="col">Nome completo</th><th scope="col">CPF</th><th scope="col">WhatsApp</th><th scope="col">E-mail</th><th scope="col">Situação</th></tr></thead>
       <tbody>
         {% for applicator in page.object_list %}
         <tr>
-          <td class="strong"><a href="{% url 'applicators:detail' applicator.pk %}">{{ applicator.full_name }}</a>{% if applicator.course %}<br><span class="small muted">{{ applicator.course }}{% if applicator.institution %} · {{ applicator.institution }}{% endif %}</span>{% endif %}</td>
-          <td class="muted mono">{{ applicator.cpf|default:"—" }}</td>
-          <td class="muted small">{{ applicator.email|default:"" }}{% if applicator.phone %}<br>{{ applicator.phone }}{% endif %}</td>
-          <td>{% if not applicator.is_active %}<span class="badge badge--gray">inativo</span>{% elif applicator.needs_review %}<span class="badge badge--yellow">revisar</span>{% else %}<span class="badge badge--brand">ok</span>{% endif %}</td>
-          <td class="num">{{ applicator.entry_count }}</td>
-          <td class="num">{{ applicator.net_total|default:0|brl }}</td>
+          <td class="col-ficha"><a href="{% url 'applicators:card' applicator.pk %}" class="icon-button" title="Abrir a ficha de {{ applicator.full_name }}" aria-label="Abrir a ficha de {{ applicator.full_name }}">{% icon "id-card" %}</a></td>
+          <td class="strong">{{ applicator.full_name }}</td>
+          <td class="cell-data">{{ applicator.cpf|default:"—" }}</td>
+          <td class="cell-data">
+            {% if applicator.whatsapp_url %}
+              <a href="{{ applicator.whatsapp_url }}" class="icon-button icon-button--whatsapp" target="_blank" rel="noopener"
+                 title="Conversar com {{ applicator.full_name }} no WhatsApp ({{ applicator.whatsapp_display }})"
+                 aria-label="Conversar com {{ applicator.full_name }} no WhatsApp">{% icon "whatsapp" %}</a>
+            {% else %}<span class="muted">—</span>{% endif %}
+          </td>
+          <td class="cell-data">{{ applicator.email|default:"—" }}</td>
+          <td>{% if not applicator.is_active %}<span class="badge badge--gray">inativo</span>{% elif applicator.is_new_registration %}<span class="badge badge--yellow">cadastro novo: primeiro pagamento</span>{% else %}<span class="badge badge--brand">cadastro ativo: pagamento recorrente</span>{% endif %}</td>
         </tr>
         {% empty %}<tr><td colspan="6" class="empty">Nenhum aplicador encontrado.</td></tr>{% endfor %}
       </tbody>
     </table>
   </div>
   {% if page.paginator.num_pages > 1 %}
-  <div class="pagination">
-    {% if page.has_previous %}<a href="?q={{ query }}&status={{ status }}&page={{ page.previous_page_number }}" class="btn btn--ghost btn--sm">Anterior</a>{% endif %}
-    <span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
-    {% if page.has_next %}<a href="?q={{ query }}&status={{ status }}&page={{ page.next_page_number }}" class="btn btn--ghost btn--sm">Próxima</a>{% endif %}
-  </div>
+  {# Ir direto à página: com centenas de cadastros, "próxima" seria dezenas de cliques. #}
+  <form method="get" class="pagination">
+    {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+    <label for="page-select">Página</label>
+    <select name="page" id="page-select" class="select" data-autosubmit>
+      {% for number in page.paginator.page_range %}
+      <option value="{{ number }}" {% if number == page.number %}selected{% endif %}>{{ number }} de {{ page.paginator.num_pages }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn--secondary btn--sm" data-autosubmit-go>Ir</button>
+    <span class="muted small">{{ page.paginator.count }} cadastro{{ page.paginator.count|pluralize }}</span>
+  </form>
   {% endif %}
 </section>
 {% endblock %}

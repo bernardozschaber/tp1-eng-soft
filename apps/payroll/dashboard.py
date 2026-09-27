@@ -5,11 +5,11 @@ from decimal import Decimal
 
 from django.db.models import Count, Sum
 
+from apps.applicators.models import RegistrationStatus
 from apps.payroll.models import ServiceEntry
 
 # The dashboard reasons in payment cycles ("quinzenas"), not in calendar days:
 # every activity is paid on the 5th or the 20th, so a month is two payments.
-
 PERIOD_OPTIONS = [
     ("PGTO", "Último pagamento", 1),
     ("MES", "Último mês", 2),
@@ -17,8 +17,8 @@ PERIOD_OPTIONS = [
     ("6M", "Últimos 6 meses", 12),
     ("1A", "Último ano", 24),
 ]
-
 DEFAULT_PERIOD_KEY = "MES"
+
 
 @dataclass(frozen=True)
 class DashboardPeriod:
@@ -38,10 +38,11 @@ class DashboardPeriod:
     def options(cls) -> list[tuple[str, str]]:
         return [(key, label) for key, label, _ in PERIOD_OPTIONS]
 
-    def payment_cycles() -> list[date]:
-        """Every payment date on record, most recent first."""
-        return list(ServiceEntry.objects.order_by("-payment_date").values_list("payment_date", flat=True).distinct())
-    
+
+def payment_cycles() -> list[date]:
+    """Every payment date on record, most recent first."""
+    return list(ServiceEntry.objects.order_by("-payment_date").values_list("payment_date", flat=True).distinct())
+
 
 def _entries_for(payment_dates: list[date]):
     if not payment_dates:
@@ -111,5 +112,5 @@ def build_dashboard(period: DashboardPeriod) -> dict:
         "change_percent": change_percent,
         "series": cumulative_series(current),
         "unit_weights": unit_weights(current),
-        "review_count": current.filter(applicator__needs_review=True).values("applicator").distinct().count(),
+        "review_count": current.filter(applicator__registration_status=RegistrationStatus.NEW).values("applicator").distinct().count(),
     }

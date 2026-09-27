@@ -8,11 +8,14 @@ class ApplicatorForm(forms.ModelForm):
     class Meta:
         model = Applicator
         fields = [
-            "full_name", "cpf", "email", "phone", "course", "institution",
-            "bank_name", "bank_branch", "bank_account", "pix_key", "notes", "needs_review", "is_active",
+            "full_name", "cpf", "identity_document", "birth_date", "gender", "phone", "email",
+            "neighborhood", "vse", "course", "course_period", "institution",
+            "bank_name", "bank_branch", "bank_account", "account_type", "pix_type", "pix_key",
+            "pis_nit", "referral", "photo", "notes", "registration_status", "is_active",
         ]
         widgets = {
             "cpf": forms.TextInput(attrs={"placeholder": "000.000.000-00"}),
+            "birth_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "notes": forms.Textarea(attrs={"rows": 2}),
         }
 
