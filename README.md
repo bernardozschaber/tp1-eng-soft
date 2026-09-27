@@ -45,8 +45,15 @@ python manage.py runserver
 Acesse http://127.0.0.1:8000 e entre com `admin` / `admin`.
 
 Para usar PostgreSQL, suba o banco com `docker compose up -d` e exporte
-`DATABASE\\\_URL=postgres://provapay:provapay@localhost:5432/provapay` antes de rodar
+`DATABASE\\\_URL=postgres://bernoullipay:bernoullipay@localhost:5432/bernoullipay` antes de rodar
 `migrate` (ver `.env.example`). Sem a variável o projeto usa `db.sqlite3`.
+
+> **Vindo de uma versão anterior?** O banco, o usuário e o volume do Postgres foram
+> renomeados de `provapay` para `bernoullipay` junto com o rebranding. O Postgres só cria
+> o usuário e o banco quando o diretório de dados está vazio, então o volume também mudou
+> de nome (`bernoullipay_pgdata`) — assim um `docker compose up -d` já sobe limpo, sem erro
+> de autenticação. O volume antigo não é apagado, apenas fica órfão: remova com
+> `docker volume rm pgdata` quando tiver certeza de que não precisa mais dele.
 
 ## Regras de negócio
 

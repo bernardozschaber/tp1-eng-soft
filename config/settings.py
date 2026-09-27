@@ -4,7 +4,7 @@ Django settings for BernoulliPay.
 Environment variables (see .env.example):
   DJANGO_SECRET_KEY  secret key; a dev-only default is used when absent
   DJANGO_DEBUG       "1" enables debug mode (default: 1)
-  DATABASE_URL       e.g. postgres://user:pass@localhost:5432/provapay
+  DATABASE_URL       e.g. postgres://user:pass@localhost:5432/bernoullipay
                      When absent the project falls back to a local SQLite file.
   ALLOWED_HOSTS      comma-separated list (default: localhost,127.0.0.1)
 """

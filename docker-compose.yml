@@ -1,16 +1,26 @@
 # Optional PostgreSQL for local development. Run: docker compose up -d
-# Then export DATABASE_URL=postgres://provapay:provapay@localhost:5432/provapay
+# Then export DATABASE_URL=postgres://bernoullipay:bernoullipay@localhost:5432/bernoullipay
+#
+# The volume is named for the brand on purpose. Postgres only creates
+# POSTGRES_USER/POSTGRES_DB when its data directory is empty, so pointing at a
+# fresh volume is what makes the rename actually take effect - editing the
+# credentials alone would leave an existing pgdata volume serving the old
+# `provapay` database and failing to authenticate.
+#
+# Coming from the old volume? The previous data is not destroyed, just
+# orphaned. Recover it with `docker volume ls` / `docker volume rm pgdata`
+# once you are sure you no longer need it.
 services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: provapay
-      POSTGRES_PASSWORD: provapay
-      POSTGRES_DB: provapay
+      POSTGRES_USER: bernoullipay
+      POSTGRES_PASSWORD: bernoullipay
+      POSTGRES_DB: bernoullipay
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - bernoullipay_pgdata:/var/lib/postgresql/data
 
 volumes:
-  pgdata:
+  bernoullipay_pgdata:
