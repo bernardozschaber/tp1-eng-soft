@@ -40,42 +40,83 @@ h1, h2, h3, p { margin: 0; }
      24x24 AA floor once padding collapses. */
   .icon-button { width: 40px; height: 40px; }
   .btn--sm { padding: 8px 12px; }
-  .table td.actions { gap: 10px; }
+  .table td.actions > * + * { margin-left: 10px; }
 }
-@keyframes drawer-in { from { transform: translateX(-100%); } to { transform: translateX(0); } }
-.sidebar-backdrop { position: fixed; inset: 0; z-index: 39; background: rgba(11, 11, 11, .4); border: 0; }
 
 /* Reduced motion: kill movement, keep the colour and shadow fades that report
    state. A blanket 0.01ms would remove the feedback along with the motion. */
 @media (prefers-reduced-motion: reduce) {
-  .app__sidebar { animation: none; }
   .chevron { transition: none; }
+  .theme-toggle__slot > .icon { transition: opacity 180ms ease; }
 }
 
-/* Icon navigation */
-.nav__logo { display: block; margin: 0 auto 12px; width: 44px; height: 28px; }
+/* Icon navigation — Notion-style: icon and label side by side, full column
+   width, active item picked out with a filled row instead of a thin bar. */
+.nav__logo { display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin-bottom: 16px; }
+.nav__logo-text { font-size: var(--text-label); font-weight: 700; color: var(--text-primary); }
 .nav__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.nav__item { display: block; position: relative; padding-bottom: 4px; }
-.nav__item-row { display: flex; align-items: center; gap: 4px; }
-.nav__indicator { width: 4px; height: 16px; border-radius: 0 4px 4px 0; }
-.nav__item.is-active .nav__indicator { background: var(--color-brand-500); }
-.nav__icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto; border-radius: var(--radius-md); color: var(--text-secondary); }
-.nav__item:hover .nav__icon { background: var(--bg-surface-hover); }
-.nav__item.is-active .nav__icon { background: var(--bg-container); box-shadow: var(--shadow-xs); color: var(--text-primary); }
-.nav__label { display: block; text-align: center; font-size: var(--text-micro); font-weight: 500; color: var(--text-secondary); padding-left: 8px; }
-.nav__item.is-active .nav__label { color: var(--text-primary); }
-.nav__footer { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-left: 8px; }
-.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--color-gray-200); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: var(--text-body); font-weight: 500; border: 0; }
+.nav__item { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--radius-md); color: var(--text-secondary); }
+.nav__item:hover { background: var(--bg-surface-hover); }
+.nav__item.is-active { background: var(--bg-container); box-shadow: var(--shadow-xs); color: var(--text-primary); }
+.nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nav__label { font-size: var(--text-body); font-weight: 500; }
+/* O rodapé fica no fim da mesma coluna larga: cabe nome, cargo e unidade por
+   extenso sem precisar fugir da grade, ao contrário do rail estreito de antes. */
+.nav__footer { margin-top: auto; display: flex; flex-direction: column; gap: 4px; padding-top: 8px; }
+.nav__user { display: flex; align-items: center; gap: 8px; min-width: 0; border-radius: var(--radius-md); padding: 6px; }
+.nav__user:hover, .nav__user.is-active { background: var(--bg-surface-hover); }
+.nav__user-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.nav__user-name { font-size: var(--text-label); font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav__user-meta { font-size: var(--text-micro); color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nav__footer-actions { display: flex; align-items: center; gap: 2px; }
+.nav__footer-actions form { display: contents; }
 
-/* Sidebar */
-.sidebar__action { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius-md); font-size: var(--text-body); font-weight: 500; color: var(--text-primary); }
-.sidebar__action:hover { background: var(--bg-surface-hover); }
-.sidebar__group { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-radius: var(--radius-md); }
-.sidebar__group:hover { background: var(--bg-surface-hover); }
-.sidebar__group-name { display: flex; align-items: center; gap: 10px; font-weight: 500; }
-.sidebar__group-company { display: block; font-size: var(--text-micro); font-weight: 400; color: var(--text-secondary); }
-.sidebar__group-value { text-align: right; }
-.sidebar__group-value .mono { display: block; font-size: var(--text-micro); color: var(--text-secondary); }
+/* Rostos. Um círculo em três tamanhos: célula de tabela, barra e cartão de
+   perfil. Sem foto, a peça cai para as iniciais e mantém a mesma silhueta. */
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--color-gray-200); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; font-size: var(--text-body); font-weight: 500; border: 0; flex-shrink: 0; }
+/* A foto é o recorte inteiro: nada de anel cinza em volta do círculo. */
+.avatar--photo { object-fit: cover; background: none; }
+.avatar--sm { width: 20px; height: 20px; font-size: var(--text-micro); }
+.avatar--lg { width: 56px; height: 56px; font-size: var(--text-metric); }
+.avatar--xl { width: 96px; height: 96px; font-size: var(--text-display); }
+
+/* Quem importou: rosto e nome na mesma linha, sem esticar a altura da linha —
+   por isso o rosto tem 20px, a mesma caixa da linha de texto da tabela. */
+.user-cell { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.user-cell > span { font-weight: 400; }
+/* Autoria como selo: o rosto encaixa na pílula e o nome cai para 12px, então a
+   marca de quem importou cabe na mesma caixa de linha da tabela. */
+.user-cell--chip { gap: 6px; padding: 2px 10px 2px 2px; border-radius: 999px; background: var(--bg-container-inset); }
+.user-cell--chip .avatar { width: 16px; height: 16px; }
+.user-cell--chip > span { font-size: var(--text-label); }
+
+/* Importações recentes: a tabela tem a largura do próprio conteúdo em vez de
+   esticar até a borda do card, então o arquivo, a data e os números ficam lado
+   a lado e a leitura da linha não atravessa uma faixa vazia. */
+.table--imports { width: auto; }
+.table--imports th, .table--imports td { white-space: nowrap; }
+.table--imports td.units > * + * { margin-left: 4px; }
+/* A coluna da seleção abre a linha, então ela é a única que alinha à esquerda
+   e encosta no nome do arquivo em vez de ganhar uma calha própria. A caixa e o
+   X ficam lado a lado, com o espaçamento que .table td.actions já dá. */
+.table--imports th.actions--lead, .table--imports td.actions--lead { text-align: left; padding-right: 0; }
+.table--imports th.actions--lead input, .table--imports td.actions--lead input { vertical-align: middle; }
+
+/* Planilha original: uma grade de células, sem hierarquia que o sistema não
+   viu no arquivo. Mono porque é leitura de dados, não de prosa, e a tabela tem
+   a largura do conteúdo — a aba manda, não o card. */
+.table--sheet { width: auto; font-family: var(--font-mono); font-size: var(--text-data); }
+.table--sheet td { border: 1px solid var(--border-tertiary); padding: 6px 10px; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table--sheet tbody tr:hover td { background: var(--bg-container-hover); }
+
+/* Página do perfil. */
+.profile-card__identity { display: flex; align-items: center; gap: 16px; }
+.profile-card__name { margin: 0; font-size: var(--text-headline); font-weight: 500; line-height: var(--leading-snug); }
+.profile-card__role { margin: 4px 0 0; font-size: var(--text-body); color: var(--text-secondary); }
+.profile-card__facts { margin: 16px 0 0; padding-top: 16px; border-top: 1px solid var(--border-tertiary); display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.profile-card__facts dt { font-size: var(--text-label); color: var(--text-secondary); }
+.profile-card__facts dd { margin: 4px 0 0; font-size: var(--text-body); color: var(--text-primary); overflow-wrap: anywhere; }
+.profile-card__facts a { color: var(--text-link); }
 
 /* Breadcrumb / top bar */
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px var(--gutter); }
