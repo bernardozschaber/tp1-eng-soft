@@ -70,6 +70,10 @@ class ParsedSheet:
     company_hint: str = ""
     rows: list[ParsedRow] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    # "atividade" traz o valor na planilha; "forms" não traz e precisa do valor
+    # por pessoa na pré-visualização.
+    layout: str = "atividade"
+    needs_amount: bool = False
 
 
 @dataclass
