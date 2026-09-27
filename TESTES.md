@@ -5,7 +5,9 @@ com os números que sustentam cada decisão. Nada aqui é estimativa: toda afirm
 de desempenho vem de uma execução reproduzível, e toda afirmação de acessibilidade
 vem de um cálculo ou de uma ferramenta, não de impressão visual.
 
-Duas frentes: **desempenho em escala real** e **qualidade de interface**.
+Três frentes: **desempenho em escala real**, **qualidade de interface** e
+**integridade dos valores pagos**. A terceira trouxe junto a primeira suíte de
+testes automatizados do projeto, descrita na seção 4 — é dela que o TP2 parte.
 
 ---
 
