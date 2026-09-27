@@ -25,7 +25,7 @@ big screens rather than compromised for small ones.
 
 ## Product Purpose
 
-ProvaPay replaces a manual, spreadsheet-based process for paying the freelance exam
+BernoulliPay replaces a manual, spreadsheet-based process for paying the freelance exam
 applicators (*aplicadores de prova*) who work for Colégio Bernoulli under RPA
 (Recibo de Pagamento Autônomo). Today the work is split across two uncontrolled Excel
 files — one for applicator registration/scheduling, one for checking entries, amounts and
@@ -39,7 +39,7 @@ reliable, more traceable and faster than the spreadsheet flow it replaces.
 
 ## Positioning
 
-The mechanism a neighbouring payroll tool could not truthfully copy: ProvaPay computes
+The mechanism a neighbouring payroll tool could not truthfully copy: BernoulliPay computes
 **backwards from the net amount**. The operation negotiates and records what the applicator
 actually receives; gross and withholdings are derived (`bruto = líquido ÷ (1 − INSS − ISS − IR)`),
 not entered. It then reproduces the manual cross-check the finance team performed by hand —
@@ -78,7 +78,7 @@ paying company.
 
 ## Brand Commitments
 
-- **Name and voice:** "ProvaPay". Interface copy is Portuguese, plain and operational —
+- **Name and voice:** "BernoulliPay". Interface copy is Portuguese, plain and operational —
   it names the accounting reality directly (*lançamento*, *líquido*, *bruto (RPA)*,
   *empresa pagadora*) rather than softening it into generic product language.
 - **Institutional identity is binding (confirmed).** The interface must read as a
@@ -87,14 +87,20 @@ paying company.
   product's palette (supplied by the team). Colégio Bernoulli's own mark is a filled
   verde circle carrying a white infinity symbol beside the words "Bernoulli" / "Colégio";
   the infinity is the school's defining motif.
-- **ProvaPay has its own supplied mark.** `static/img/logomark.png` is the team's own
-  ProvaPay logo: a "PP" monogram in verde where the two P bowls interlock into a lemniscate,
-  so the infinity that signs the school is formed by the doubled P of ProvaPay. It is
-  artwork supplied by the team, not generated — use it as given. The source render is
-  `provapay-01.png` at the repository root; the shipped asset is that artwork trimmed to
-  its bounds, alpha-extracted, and normalised to exactly `#009E8E`. Aspect is 1.435:1
-  (630×439) — it is a horizontal lockup, never forced into a square.
-  `static/img/favicon.png` is the same artwork centred on a square transparent canvas.
+- **BernoulliPay has its own supplied mark, in two lockups.** Both are artwork supplied by
+  the team, not generated — use them as given, never redrawn.
+  - `static/img/logomark.png` is the mark alone: a **"bp" monogram** in verde whose b and p
+    bowls interlock into a lemniscate, so the infinity that signs the school is formed by the
+    product's own initials. Aspect 1.544:1 — a horizontal mark, never forced into a square.
+    Used in the icon rail at 44×28.
+  - `static/img/wordmark.png` is the full lockup: the same mark above the words
+    "BernoulliPay". Aspect 0.946:1. Used on the login card at 140×148, where there is room
+    for the name and where naming the product matters.
+  - `static/img/favicon.png` pads the mark onto a square transparent canvas — by padding,
+    never by cropping.
+  Sources are `bernoulli-pay-logo-apenas.png` and `bernoulli-pay-logo-mais-texto.png` at the
+  repository root. The shipped assets are those files trimmed to their alpha bounds, with the
+  ink normalised from `#03958a` to exactly `#009E8E` so the mark matches the token.
 - **Constraint that governs every future use of the brand colour:** `#009E8E` is 3.34:1 on
   white. It is a fill, stroke and mark colour — never text on a light surface. Brand text
   uses the darker `#047569`.

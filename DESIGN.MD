@@ -1,5 +1,5 @@
 ---
-name: ProvaPay
+name: BernoulliPay
 description: A light, flat operations console for RPA payroll, cut in neutral grey and signed in verde Bernoulli.
 colors:
   ink: "#171717"
@@ -217,13 +217,13 @@ components:
     padding: "40px 16px"
 ---
 
-# Design System: ProvaPay
+# Design System: BernoulliPay
 
 ## Overview
 
 **Creative North Star: "The Ledger Signed in Verde"**
 
-ProvaPay is a near-achromatic operations console that carries exactly one colour of its own.
+BernoulliPay is a near-achromatic operations console that carries exactly one colour of its own.
 The neutral scale, spacing rhythm and shadow structure came from a port of the Maybe design
 system and remain the working chassis — the token file still says so in its first line, and
 components still carry donor names in comments (*"Stat block (net worth style)"*, *"Weight bar
@@ -478,14 +478,24 @@ outer corners (10px on `th:first-child` and `th:last-child`) so a header row rea
 floating inset bar rather than a ruled band. The upload dropzone is the single dashed edge in
 the system (1.5px dashed).
 
-**The logomark** is supplied artwork, not system geometry: a "PP" monogram in verde Bernoulli
-whose two P bowls interlock into a lemniscate, so the infinity motif that signs the school is
-formed by ProvaPay's own doubled P. It ships as `static/img/logomark.png` — the team's render
-(`provapay-01.png`) trimmed to its ink bounds, alpha-extracted from its white ground, and
-normalised to exactly `#009E8E`. It is a **horizontal lockup at 1.435:1** (630×439 native),
-displayed 44×31 in the icon rail and 52×36 on the login card. Never redraw it, never
-substitute a drawn approximation, and never force it into a square container — the favicon
-(`favicon.png`) reaches square by padding the same artwork, not by cropping or redrawing it.
+**The logomark** is supplied artwork, not system geometry: a **"bp" monogram** in verde
+Bernoulli whose b and p bowls interlock into a lemniscate, so the infinity motif that signs the
+school is formed by the product's own initials.
+
+It ships in two lockups, and which one appears is a decision, not a convenience:
+
+- `static/img/logomark.png` — the mark alone, **1.544:1**, displayed 44×28 in the icon rail.
+  The rail is 84px of chrome; it gets the mark and no words.
+- `static/img/wordmark.png` — the mark above the words "BernoulliPay", **0.946:1**, displayed
+  140×148 on the login card. The login screen is the one surface with room for the name and a
+  reason to say it, so it is the one surface that carries the full lockup.
+- `favicon.png` reaches square by **padding** the mark onto a transparent canvas, never by
+  cropping it.
+
+Both ship from the team's renders (`bernoulli-pay-logo-apenas.png`,
+`bernoulli-pay-logo-mais-texto.png`) trimmed to their alpha bounds, with the ink normalised
+from `#03958a` to exactly `#009E8E` so the mark matches the token. Never redraw the mark,
+never substitute a drawn approximation, and never force either lockup into a square.
 
 ## Components
 
