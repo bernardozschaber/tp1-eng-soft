@@ -10,7 +10,7 @@
   <div class="form-grid">
     {% for field in tax_form %}<div class="field {% if field.errors %}field--error{% endif %}"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.errors %}<span class="field__error">{{ field.errors.0 }}</span>{% endif %}</div>{% endfor %}
   </div>
-  <p class="muted small mt-16">Exemplo com líquido de {{ example.net_amount|brl }}: bruto {{ example.gross_amount|brl }} · INSS {{ example.inss_amount|brl }} · ISS {{ example.iss_amount|brl }} · IR {{ example.ir_amount|brl }} · líquido a pagar {{ example.net_payable|brl }}. Bruto = líquido ÷ (1 − soma das alíquotas). Lançamentos já gravados mantêm os valores da época.</p>
+  <p class="muted small mt-16 prose">Exemplo com líquido de {{ example.net_amount|brl }}: bruto {{ example.gross_amount|brl }} · INSS {{ example.inss_amount|brl }} · ISS {{ example.iss_amount|brl }} · IR {{ example.ir_amount|brl }} · líquido a pagar {{ example.net_payable|brl }}. Bruto = líquido ÷ (1 − soma das alíquotas). Lançamentos já gravados mantêm os valores da época.</p>
   <div class="form-actions"><button class="btn btn--primary">{% icon "check" %} Salvar alíquotas</button></div>
 </form>
 

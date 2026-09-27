@@ -14,7 +14,7 @@
     </div>
     {% endfor %}
   </div>
-  <p class="muted small mt-16">Deixe a data de pagamento em branco para calcular pela regra (até dia 15 → dia 5 do mês seguinte; após → dia 20).</p>
+  <p class="muted small mt-16 prose">Deixe a data de pagamento em branco para calcular pela regra (até dia 15 → dia 5 do mês seguinte; após → dia 20).</p>
   <div class="form-actions">
     <a href="{% url 'payroll:entry_list' %}" class="btn btn--ghost">Cancelar</a>
     <button type="submit" class="btn btn--primary">{% icon "check" %} Salvar</button>
