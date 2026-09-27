@@ -2,7 +2,7 @@
 from django import forms
 
 from apps.applicators.models import Applicator
-from apps.payroll.models import ServiceEntry
+from apps.payroll.models import DuplicateServiceEntry, ServiceEntry
 
 
 class ServiceEntryForm(forms.ModelForm):
@@ -25,6 +25,22 @@ class ServiceEntryForm(forms.ModelForm):
             "segment": forms.TextInput(attrs={"placeholder": "Ex.: 3ª Série"}),
             "notes": forms.TextInput(attrs={"placeholder": "Opcional"}),
         }
+
+    def _post_clean(self):
+        """Barra o lançamento que repete um serviço já gravado.
+
+        A recusa mora no modelo, que é por onde toda gravação passa; aqui ela só
+        é colhida cedo, para virar erro no formulário em vez de exceção na
+        tela. `_post_clean` é o momento certo: é depois dele que a instância
+        carrega os valores do POST.
+        """
+        super()._post_clean()
+        if self.errors:
+            return
+        try:
+            self.instance.check_not_duplicate()
+        except DuplicateServiceEntry as error:
+            self.add_error(None, error)
 
     def clean_net_amount(self):
         amount = self.cleaned_data["net_amount"]
