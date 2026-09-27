@@ -45,5 +45,5 @@
     </form>
   </section>
 </div>
-<p class="muted small mt-16">Empresas pagadoras cadastradas: {% for company in companies %}{{ company.name }}{% if not forloop.last %}, {% endif %}{% endfor %}. Para adicionar uma empresa use o <a href="/admin/catalog/payingcompany/" style="color:var(--text-link)">painel administrativo</a>.</p>
+<p class="muted small mt-16">Empresas pagadoras cadastradas: {% for company in companies %}{{ company.name }}{% if not forloop.last %}, {% endif %}{% endfor %}. Para adicionar uma empresa use o <a href="/admin/catalog/payingcompany/" class="link">painel administrativo</a>.</p>
 {% endblock %}

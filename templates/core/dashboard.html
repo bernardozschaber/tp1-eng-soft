@@ -20,7 +20,7 @@
       <p class="stat__value">{{ net_total|brl }}</p>
       <p class="stat__trend">
         {% if change_percent is not None %}
-          <span class="mono {% if change >= 0 %}trend-up{% else %}trend-down{% endif %}">{{ change|brl }} ({% if change >= 0 %}↑{% else %}↓{% endif %}{{ change_percent|floatformat:1 }}%)</span> vs. período anterior
+          <span class="mono {% if change >= 0 %}trend-up{% else %}trend-down{% endif %}">{{ change|brl }} ({% if change >= 0 %}{% icon "arrow-up" 12 css_class="trend-icon" %}{% else %}{% icon "arrow-down" 12 css_class="trend-icon" %}{% endif %}{{ change_percent|floatformat:1 }}%)</span> vs. período anterior
         {% else %}
           <span class="mono">{{ entry_count }} lançamento{{ entry_count|pluralize }}</span> · {{ applicator_count }} aplicador{{ applicator_count|pluralize:"es" }}
         {% endif %}

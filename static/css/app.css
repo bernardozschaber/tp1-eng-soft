@@ -230,6 +230,8 @@ h1, h2, h3, p { margin: 0; }
 .between { justify-content: space-between; }
 .wrap { flex-wrap: wrap; }
 .muted { color: var(--text-secondary); }
+.link { color: var(--text-link); }
+.trend-icon { vertical-align: -1px; }
 .small { font-size: 12px; }
 .mt-16 { margin-top: 16px; }
 .mb-16 { margin-bottom: 16px; }
