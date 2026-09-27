@@ -1,7 +1,7 @@
 {% load static icons money %}
 {% with section=request.resolver_match.app_name %}
 <nav class="app__nav">
-  <a href="{% url 'dashboard' %}" class="nav__logo"><img src="{% static 'img/logomark.svg' %}" alt="ProvaPay" width="36" height="36"></a>
+  <a href="{% url 'dashboard' %}" class="nav__logo"><img src="{% static 'img/logomark.png' %}" alt="ProvaPay" width="44" height="31"></a>
   <ul class="nav__list">
     {% for item in nav_items %}
     <li>
