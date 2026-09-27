@@ -31,7 +31,7 @@
           <td class="num muted">−{{ row.ir|brl_plain }}</td>
           <td class="num strong">{{ row.net_payable|brl }}</td>
           <td class="num"><span class="badge badge--blue">{{ row.entry_count }}</span></td>
-          <td>{% if row.is_consistent %}<span class="badge badge--green">OK</span>{% else %}<span class="badge badge--red">ver</span>{% endif %}</td>
+          <td>{% if row.is_consistent %}<span class="badge badge--brand">OK</span>{% else %}<span class="badge badge--red">ver</span>{% endif %}</td>
         </tr>
         {% endfor %}
       </tbody>

@@ -70,7 +70,7 @@ h1, h2, h3, p { margin: 0; }
 .nav__item { display: block; position: relative; padding-bottom: 4px; }
 .nav__item-row { display: flex; align-items: center; gap: 4px; }
 .nav__indicator { width: 4px; height: 16px; border-radius: 0 4px 4px 0; }
-.nav__item.is-active .nav__indicator { background: var(--color-gray-900); }
+.nav__item.is-active .nav__indicator { background: var(--color-brand-500); }
 .nav__icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; margin: 0 auto; border-radius: var(--radius-md); color: var(--text-secondary); }
 .nav__item:hover .nav__icon { background: var(--bg-surface-hover); }
 .nav__item.is-active .nav__icon { background: var(--bg-container); box-shadow: var(--shadow-xs); color: var(--text-primary); }
@@ -174,14 +174,14 @@ h1, h2, h3, p { margin: 0; }
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 500; white-space: nowrap; }
 .badge--gray { background: var(--color-gray-100); color: var(--text-secondary); }
 .badge--blue { background: var(--color-blue-50); color: var(--color-blue-700); }
-.badge--green { background: var(--color-green-50); color: var(--color-green-700); }
+.badge--brand { background: var(--color-brand-50); color: var(--color-brand-700); }
 .badge--red { background: var(--color-red-50); color: var(--color-red-700); }
 .badge--yellow { background: var(--color-yellow-50); color: var(--color-yellow-700); }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 
 /* Alerts */
-.alert { padding: 10px 14px; border-radius: var(--radius-lg); font-size: 14px; margin-bottom: 16px; display: flex; gap: 8px; align-items: center; }
-.alert--success { background: var(--color-green-50); color: var(--color-green-700); }
+.alert { padding: 10px 14px; border-radius: var(--radius-lg); font-size: var(--text-body); margin-bottom: 16px; display: flex; gap: 8px; align-items: center; }
+.alert--success { background: var(--color-brand-50); color: var(--color-brand-700); }
 .alert--error { background: var(--color-red-50); color: var(--color-red-700); }
 .alert--info { background: var(--color-blue-50); color: var(--color-blue-700); }
 .alert--warning { background: var(--color-yellow-50); color: var(--color-yellow-700); }

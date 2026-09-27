@@ -25,7 +25,7 @@
           <td class="strong"><a href="{% url 'applicators:detail' applicator.pk %}">{{ applicator.full_name }}</a>{% if applicator.course %}<br><span class="small muted">{{ applicator.course }}{% if applicator.institution %} · {{ applicator.institution }}{% endif %}</span>{% endif %}</td>
           <td class="muted mono">{{ applicator.cpf|default:"—" }}</td>
           <td class="muted small">{{ applicator.email|default:"" }}{% if applicator.phone %}<br>{{ applicator.phone }}{% endif %}</td>
-          <td>{% if not applicator.is_active %}<span class="badge badge--gray">inativo</span>{% elif applicator.needs_review %}<span class="badge badge--yellow">revisar</span>{% else %}<span class="badge badge--green">ok</span>{% endif %}</td>
+          <td>{% if not applicator.is_active %}<span class="badge badge--gray">inativo</span>{% elif applicator.needs_review %}<span class="badge badge--yellow">revisar</span>{% else %}<span class="badge badge--brand">ok</span>{% endif %}</td>
           <td class="num">{{ applicator.entry_count }}</td>
           <td class="num">{{ applicator.net_total|default:0|brl }}</td>
         </tr>

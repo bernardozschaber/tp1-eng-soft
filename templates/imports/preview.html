@@ -10,7 +10,7 @@
   </div>
 </div>
 <div class="legend mb-16">
-  <span><i class="dot" style="background:var(--color-green-500)"></i>cadastrado</span>
+  <span><i class="dot" style="background:var(--color-brand-500)"></i>cadastrado</span>
   <span><i class="dot" style="background:var(--color-yellow-600)"></i>novo (será criado para revisão)</span>
   <span><i class="dot" style="background:var(--color-red-500)"></i>possível duplicata (desmarcada)</span>
 </div>
@@ -47,8 +47,8 @@
               <td><input type="checkbox" name="{{ row_prefix }}-include" {% if not row.is_duplicate %}checked{% endif %}
                   aria-label="Incluir {{ row.display_name }}{% if row.is_duplicate %} (possível duplicata){% endif %}"></td>
               <td class="muted small">{{ row.name }}</td>
-              <td class="strong"><i class="dot" style="background:{% if row.is_duplicate %}var(--color-red-500){% elif row.is_known %}var(--color-green-500){% else %}var(--color-yellow-600){% endif %}"></i> {{ row.display_name }}{% if row.suffix %} <span class="badge badge--gray">{{ row.suffix }}</span>{% endif %}</td>
-              <td><select name="{{ row_prefix }}-role" class="select" style="padding:4px 24px 4px 8px;font-size:13px"><option value="APLICADOR" {% if row.role == 'APLICADOR' %}selected{% endif %}>Aplicador</option><option value="ORIENTADOR" {% if row.role == 'ORIENTADOR' %}selected{% endif %}>Orientador</option><option value="VOLANTE">Volante</option></select></td>
+              <td class="strong"><i class="dot" style="background:{% if row.is_duplicate %}var(--color-red-500){% elif row.is_known %}var(--color-brand-500){% else %}var(--color-yellow-600){% endif %}"></i> {{ row.display_name }}{% if row.suffix %} <span class="badge badge--gray">{{ row.suffix }}</span>{% endif %}</td>
+              <td><select name="{{ row_prefix }}-role" class="select select--sm"><option value="APLICADOR" {% if row.role == 'APLICADOR' %}selected{% endif %}>Aplicador</option><option value="ORIENTADOR" {% if row.role == 'ORIENTADOR' %}selected{% endif %}>Orientador</option><option value="VOLANTE">Volante</option></select></td>
               <td class="num"><input name="{{ row_prefix }}-net_amount" value="{{ row.net_amount }}" inputmode="decimal" style="width:90px;text-align:right;border:1px solid var(--border-secondary);border-radius:6px;padding:4px 8px;font:inherit"></td>
               <td class="num muted">{{ row.gross_amount|brl }}</td>
             </tr>

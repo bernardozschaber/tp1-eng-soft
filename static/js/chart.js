@@ -2,7 +2,12 @@
 // Maybe net-worth chart. Reads `data-chart='[{"date":"2026-01-05","value":123}]'`.
 (function () {
   const NS = "http://www.w3.org/2000/svg";
-  const GREEN = "#10a861";
+  // Read the stroke from the token layer instead of duplicating the hex, so a
+  // palette change cannot leave the chart on a stale colour. verde Bernoulli
+  // is 3.34:1 on white — fine as a 2px stroke, never as text.
+  const BRAND = getComputedStyle(document.documentElement)
+    .getPropertyValue("--color-brand-500").trim() || "#009e8e";
+  let seq = 0;
 
   function el(name, attrs) {
     const node = document.createElementNS(NS, name);
@@ -16,6 +21,7 @@
   }
 
   function render(container) {
+    const uid = "chart-fill-" + (seq += 1);
     let points;
     try { points = JSON.parse(container.dataset.chart); } catch (_) { return; }
     if (!points || points.length === 0) return;
@@ -30,15 +36,20 @@
     const path = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
     const area = `${path} L${width},${height} L0,${height} Z`;
 
-    const svg = el("svg", { viewBox: `0 0 ${width} ${height}`, preserveAspectRatio: "none" });
+    const svg = el("svg", {
+      viewBox: `0 0 ${width} ${height}`,
+      preserveAspectRatio: "none",
+      role: "img",
+      "aria-label": container.dataset.chartLabel || "Gráfico de evolução do valor líquido",
+    });
     const defs = el("defs");
-    const gradient = el("linearGradient", { id: "chart-fill", x1: 0, y1: 0, x2: 0, y2: 1 });
-    gradient.appendChild(el("stop", { offset: "0%", "stop-color": GREEN, "stop-opacity": 0.12 }));
-    gradient.appendChild(el("stop", { offset: "100%", "stop-color": GREEN, "stop-opacity": 0 }));
+    const gradient = el("linearGradient", { id: uid, x1: 0, y1: 0, x2: 0, y2: 1 });
+    gradient.appendChild(el("stop", { offset: "0%", "stop-color": BRAND, "stop-opacity": 0.12 }));
+    gradient.appendChild(el("stop", { offset: "100%", "stop-color": BRAND, "stop-opacity": 0 }));
     defs.appendChild(gradient);
     svg.appendChild(defs);
-    svg.appendChild(el("path", { d: area, fill: "url(#chart-fill)" }));
-    svg.appendChild(el("path", { d: path, fill: "none", stroke: GREEN, "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
+    svg.appendChild(el("path", { d: area, fill: `url(#${uid})` }));
+    svg.appendChild(el("path", { d: path, fill: "none", stroke: BRAND, "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
     container.appendChild(svg);
 
     const axis = document.createElement("div");
