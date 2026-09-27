@@ -1,0 +1,34 @@
+{% extends "base.html" %}{% load icons avatars %}
+{% block title %}{{ batch.file_name }} · BernoulliPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<a href="{% url 'imports:upload' %}">Importar listas</a>{% icon "chevron-right" 14 %}<span class="current">Planilha original</span>{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ batch.file_name }}</h1>
+    <p>A planilha como ela chegou, antes de qualquer leitura do sistema · importada em {{ batch.imported_at|date:"d/m/Y H:i" }}{% if batch.imported_by %} por {{ batch.imported_by.get_full_name|default:batch.imported_by.username }}{% endif %}</p>
+  </div>
+  <div class="page-header__actions">
+    <a href="{% url 'imports:batch_download' batch.pk %}" class="btn btn--secondary">{% icon "download" %} Baixar original</a>
+  </div>
+</div>
+{% for sheet in sheets %}
+<section class="card">
+  <h2 class="card__title">{{ sheet.name }}{% if sheet.truncated %} <span class="muted">— mostrando as primeiras 200 linhas</span>{% endif %}</h2>
+  <div class="table-wrap mt-16">
+    {% if sheet.rows %}
+    <table class="table table--sheet">
+      <tbody>
+        {% for row in sheet.rows %}
+        <tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="empty">Aba vazia.</p>
+    {% endif %}
+  </div>
+</section>
+{% empty %}
+<section class="card"><p class="empty">A planilha não tem abas legíveis.</p></section>
+{% endfor %}
+{% endblock %}

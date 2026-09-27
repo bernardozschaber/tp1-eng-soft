@@ -38,3 +38,59 @@
     renderList();
   });
 })();
+
+// Importações recentes: seleção múltipla e exclusão em lote. O botão só existe
+// quando há seleção — uma ação destrutiva não fica à espreita numa barra vazia.
+(function () {
+  const form = document.getElementById("batches-form");
+  const all = document.getElementById("batches-all");
+  const button = document.getElementById("bulk-delete");
+  if (!form || !all || !button) return;
+  const boxes = Array.from(form.querySelectorAll("[data-batch]"));
+  const label = button.querySelector("[data-bulk-label]");
+  if (!boxes.length) {
+    all.disabled = true;
+    return;
+  }
+
+  function selected() {
+    return boxes.filter((box) => box.checked);
+  }
+
+  function entriesIn(chosen) {
+    return chosen.reduce((total, box) => total + (Number(box.dataset.entries) || 0), 0);
+  }
+
+  function sync() {
+    const chosen = selected();
+    all.checked = chosen.length === boxes.length;
+    all.indeterminate = chosen.length > 0 && chosen.length < boxes.length;
+    button.hidden = chosen.length === 0;
+    if (chosen.length) {
+      const entries = entriesIn(chosen);
+      label.textContent =
+        "Excluir " + chosen.length + " selecionada" + (chosen.length > 1 ? "s" : "") +
+        " · " + entries + " lançamento" + (entries === 1 ? "" : "s");
+    }
+  }
+
+  all.addEventListener("change", () => {
+    boxes.forEach((box) => { box.checked = all.checked; });
+    sync();
+  });
+  boxes.forEach((box) => box.addEventListener("change", sync));
+
+  form.addEventListener("submit", (event) => {
+    // O X de cada linha tem formaction próprio e já confirmou no clique; esta
+    // confirmação é só da exclusão em lote.
+    if (event.submitter !== button) return;
+    const chosen = selected();
+    const entries = entriesIn(chosen);
+    const question =
+      "Excluir " + chosen.length + " importação(ões) e os " + entries +
+      " lançamento(s) que elas criaram?";
+    if (!confirm(question)) event.preventDefault();
+  });
+
+  sync();
+})();
