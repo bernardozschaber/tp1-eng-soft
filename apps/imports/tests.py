@@ -97,3 +97,48 @@ class ImportDoesNotDuplicateTests(TestCase):
             ServiceEntry.objects.values(*ServiceEntry.IDENTITY_FIELDS)
             .annotate(n=Count("id")).filter(n__gt=1).count()
         )
+
+    # -- os testes --------------------------------------------------------
+
+    def test_the_08_09_list_imports_once(self):
+        result = self._import(OFICINAS_08_09)
+        self.assertGreater(result["entries"], 0)
+        self.assertEqual(result["duplicates"], 0)
+        self.assertEqual(self._duplicate_count(), 0)
+
+    def test_importing_the_same_file_twice_adds_nothing(self):
+        first = self._import(OFICINAS_08_09)
+        total = ServiceEntry.objects.count()
+        second = self._import(OFICINAS_08_09)
+        self.assertEqual(second["entries"], 0)
+        self.assertEqual(second["duplicates"], first["entries"])
+        self.assertEqual(ServiceEntry.objects.count(), total)
+        self.assertEqual(self._duplicate_count(), 0)
+
+    def test_the_stale_tab_of_the_next_week_does_not_pay_08_09_again(self):
+        """O caso relatado: as oficinas de 08/09 voltam na lista de 14/09."""
+        self._import(OFICINAS_08_09)
+        oficinas_08_09 = ServiceEntry.objects.filter(
+            activity_date__year=2026, activity_date__month=9, activity_date__day=8,
+            event_key="OFICINA DE REDACAO",
+        ).count()
+        self.assertGreater(oficinas_08_09, 0)
+
+        result = self._import(OFICINAS_14_09)
+        self.assertGreater(result["duplicates"], 0)
+        self.assertEqual(
+            ServiceEntry.objects.filter(
+                activity_date__year=2026, activity_date__month=9, activity_date__day=8,
+                event_key="OFICINA DE REDACAO",
+            ).count(),
+            oficinas_08_09,
+            "as oficinas de 08/09 foram lançadas de novo pela lista de 14/09",
+        )
+        self.assertEqual(self._duplicate_count(), 0)
+
+    def test_nobody_is_paid_twice_for_the_same_shift_across_the_whole_folder(self):
+        """A pasta inteira, na ordem em que a operação a enviaria."""
+        for name in sorted(path.name for path in SAMPLES.glob("*.xlsx")):
+            self._import(name)
+        self.assertEqual(self._duplicate_count(), 0)
+        self.assertGreater(ServiceEntry.objects.count(), 100)
