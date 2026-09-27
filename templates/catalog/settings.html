@@ -18,7 +18,7 @@
   <section class="card" style="margin:0">
     <p class="card__title mb-16">Unidades e empresas pagadoras</p>
     <table class="table">
-      <thead><tr><th>Unidade</th><th>Empresa pagadora</th><th></th></tr></thead>
+      <thead><tr><th scope="col">Unidade</th><th scope="col">Empresa pagadora</th><th scope="col"><span class="sr-only">Padrão</span></th></tr></thead>
       <tbody>{% for unit in units %}<tr><td class="strong">{{ unit.name }}</td><td><span class="badge badge--gray">{{ unit.paying_company.name }}</span></td>
         <td class="num">{% if unit.is_default %}<span class="badge badge--green">padrão</span>{% else %}<form method="post" action="{% url 'catalog:set_default' 'unit' unit.pk %}">{% csrf_token %}<button class="btn btn--ghost btn--sm">tornar padrão</button></form>{% endif %}</td></tr>{% endfor %}</tbody>
     </table>
@@ -34,7 +34,7 @@
   <section class="card" style="margin:0">
     <p class="card__title mb-16">Setores solicitantes</p>
     <table class="table">
-      <thead><tr><th>Setor</th><th></th></tr></thead>
+      <thead><tr><th scope="col">Setor</th><th scope="col"><span class="sr-only">Padrão</span></th></tr></thead>
       <tbody>{% for sector in sectors %}<tr><td class="strong">{{ sector.name }}</td>
         <td class="num">{% if sector.is_default %}<span class="badge badge--green">padrão</span>{% else %}<form method="post" action="{% url 'catalog:set_default' 'sector' sector.pk %}">{% csrf_token %}<button class="btn btn--ghost btn--sm">tornar padrão</button></form>{% endif %}</td></tr>{% endfor %}</tbody>
     </table>

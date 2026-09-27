@@ -26,7 +26,7 @@
         <span class="badge badge--blue">{{ sheet.rows|length }} aplicador{{ sheet.rows|length|pluralize:"es" }}</span></label>
       <div class="row">
         {% for warning in sheet.warnings %}<span class="badge badge--yellow" title="{{ warning }}">{% icon "triangle-alert" 12 %} aviso</span>{% endfor %}
-        <button type="button" class="icon-button" data-collapse aria-label="Recolher">{% icon "chevron-down" 16 css_class="chevron" %}</button>
+        <button type="button" class="icon-button" data-collapse aria-label="Recolher {{ sheet.sheet_name }}">{% icon "chevron-down" 16 css_class="chevron" %}</button>
       </div>
     </div>
     <div class="sheet__body">
@@ -44,7 +44,8 @@
             {% for row in sheet.rows %}
             {% with row_prefix=row.prefix %}
             <tr class="{% if row.is_duplicate %}is-duplicate{% endif %}">
-              <td><input type="checkbox" name="{{ row_prefix }}-include" {% if not row.is_duplicate %}checked{% endif %}></td>
+              <td><input type="checkbox" name="{{ row_prefix }}-include" {% if not row.is_duplicate %}checked{% endif %}
+                  aria-label="Incluir {{ row.display_name }}{% if row.is_duplicate %} (possível duplicata){% endif %}"></td>
               <td class="muted small">{{ row.name }}</td>
               <td class="strong"><i class="dot" style="background:{% if row.is_duplicate %}var(--color-red-500){% elif row.is_known %}var(--color-green-500){% else %}var(--color-yellow-600){% endif %}"></i> {{ row.display_name }}{% if row.suffix %} <span class="badge badge--gray">{{ row.suffix }}</span>{% endif %}</td>
               <td><select name="{{ row_prefix }}-role" class="select" style="padding:4px 24px 4px 8px;font-size:13px"><option value="APLICADOR" {% if row.role == 'APLICADOR' %}selected{% endif %}>Aplicador</option><option value="ORIENTADOR" {% if row.role == 'ORIENTADOR' %}selected{% endif %}>Orientador</option><option value="VOLANTE">Volante</option></select></td>

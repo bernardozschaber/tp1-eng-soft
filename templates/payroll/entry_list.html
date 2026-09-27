@@ -20,8 +20,8 @@
   <div class="table-wrap">
     <table class="table">
       <thead><tr>
-        <th>Aplicador</th><th>Evento</th><th>Data</th><th>Unidade</th><th>Pgto</th>
-        <th class="num">Líquido</th><th class="num">Bruto</th><th class="num">INSS</th><th class="num">ISS</th><th class="num">IR</th><th></th>
+        <th scope="col">Aplicador</th><th scope="col">Evento</th><th scope="col">Data</th><th scope="col">Unidade</th><th scope="col">Pgto</th>
+        <th class="num" scope="col">Líquido</th><th class="num" scope="col">Bruto</th><th class="num" scope="col">INSS</th><th class="num" scope="col">ISS</th><th class="num" scope="col">IR</th><th scope="col"><span class="sr-only">Ações</span></th>
       </tr></thead>
       <tbody>
         {% for entry in entries %}
@@ -38,8 +38,8 @@
           <td class="num muted">−{{ entry.ir_amount|brl_plain }}</td>
           <td class="num" style="white-space:nowrap">
             {% if not entry.is_consistent %}<span class="badge badge--red" title="líquido recalculado difere do lançado">ver</span>{% endif %}
-            <a href="{% url 'payroll:entry_update' entry.pk %}" class="icon-button" title="Editar">{% icon "pencil" 14 %}</a>
-            <form method="post" action="{% url 'payroll:entry_delete' entry.pk %}" style="display:inline" onsubmit="return confirm('Excluir este lançamento?')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="icon-button" title="Excluir">{% icon "trash" 14 %}</button></form>
+            <a href="{% url 'payroll:entry_update' entry.pk %}" class="icon-button" title="Editar" aria-label="Editar lançamento de {{ entry.applicator.full_name }}">{% icon "pencil" 14 %}</a>
+            <form method="post" action="{% url 'payroll:entry_delete' entry.pk %}" style="display:inline" onsubmit="return confirm('Excluir este lançamento?')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="icon-button" title="Excluir" aria-label="Excluir lançamento de {{ entry.applicator.full_name }}">{% icon "trash" 14 %}</button></form>
           </td>
         </tr>
         {% empty %}
