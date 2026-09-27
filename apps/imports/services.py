@@ -218,6 +218,88 @@ def _preview_option(entry: dict) -> dict:
     }
 
 
+def merge_questions(workbooks: list[dict]) -> list[dict]:
+    """Um par de nomes parecidos por pergunta, do mais curto para o mais completo.
+
+    Cada pergunta é feita uma vez só, mesmo que o nome apareça em várias abas:
+    quem decide decide sobre a pessoa, não sobre a linha.
+    """
+    names = _preview_names(workbooks)
+    applicators = list(Applicator.objects.all())
+    by_normalized = {applicator.normalized_name: applicator for applicator in applicators}
+    questions, asked = [], set()
+
+    for key in sorted(names):
+        entry = names[key]
+        options = [_preview_option(names[other]) for other in names if other != key and looks_like_same_person(key, other)]
+        options += [
+            _applicator_option(applicator)
+            for applicator in applicators
+            if applicator.normalized_name != key
+            and applicator.normalized_name not in names
+            and looks_like_same_person(key, applicator.normalized_name)
+        ]
+        if not options:
+            continue
+        # O nome mais completo manda: juntar para trás perderia sobrenome.
+        best = max(options, key=lambda option: (len(name_tokens(option["normalized"])), option["count"]))
+        if len(name_tokens(best["normalized"])) < len(name_tokens(key)):
+            continue  # este é o nome completo; a pergunta sai pelo lado curto
+        pair = frozenset((key, best["normalized"]))
+        if pair in asked:
+            continue
+        asked.add(pair)
+        if best["value"].startswith("name:") and best["normalized"] in by_normalized:
+            best = dict(best, value=f"applicator:{by_normalized[best['normalized']].pk}",
+                        detail=f"já cadastrado · também nesta importação, em {best['count']} lançamento(s)")
+        questions.append({
+            "kind": "merge",
+            "id": _question_id(key, best["value"]),
+            "variant": dict(entry, detail=f"{entry['count']} lançamento(s) nesta importação",
+                            known=key in by_normalized),
+            "target": best,
+        })
+    return questions
+
+
+def creation_questions(workbooks: list[dict], merges: list[dict] | None = None) -> list[dict]:
+    """Um nome que não casa com ninguém: criar cadastro novo ou deixar de fora?
+
+    A lista de aplicadores é a fonte da verdade — os nomes que estão lá foram
+    conferidos. Quando a planilha traz um nome que não é nenhum deles e nem se
+    parece com nenhum deles (esse caso vira pergunta de junção, não de
+    criação), ninguém pode decidir sozinho se é gente nova ou erro de digitação
+    de alguém que já existe. Então o sistema pergunta, e há três saídas: criar
+    um cadastro novo (marcado como primeiro pagamento), deixar as linhas de
+    fora, ou lançar tudo no cadastro de outra pessoa — o caso do sobrenome
+    trocado, em que o nome da planilha não é ninguém novo, é alguém que já
+    está lá escrito errado.
+    """
+    merges = merge_questions(workbooks) if merges is None else merges
+    # Quem já tem pergunta de junção não recebe pergunta de criação: recusar a
+    # junção ("são pessoas diferentes") já é dizer que a pessoa é nova.
+    in_merge = {question["variant"]["normalized"] for question in merges}
+    in_merge |= {question["target"]["normalized"] for question in merges}
+    known = set(Applicator.objects.values_list("normalized_name", flat=True))
+    questions = []
+    for key, entry in sorted(_preview_names(workbooks).items()):
+        if key in known or key in in_merge:
+            continue
+        questions.append({
+            "kind": "create",
+            "id": _question_id("criar", key),
+            "variant": dict(entry, detail=f"{entry['count']} lançamento(s) nesta importação", known=False),
+            "target": None,
+        })
+    return questions
+
+
+def all_questions(workbooks: list[dict]) -> list[dict]:
+    """As perguntas da prévia, na ordem em que o operador as responde."""
+    merges = merge_questions(workbooks)
+    return merges + creation_questions(workbooks, merges)
+
+
 # --- confirmation ----------------------------------------------------------
 
 def _get_or_create_applicator(raw_name: str, suffix: str) -> tuple[Applicator, bool]:
