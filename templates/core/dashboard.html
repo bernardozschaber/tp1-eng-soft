@@ -34,9 +34,10 @@
     </form>
   </div>
   {% if series %}
-    <div class="chart" data-chart='{{ series_json }}'></div>
+    <div class="chart" data-chart='{{ series_json }}'
+         data-chart-label="Evolução do valor líquido a pagar no período selecionado, total {{ net_total|brl }} em {{ entry_count }} lançamento{{ entry_count|pluralize }}"></div>
   {% else %}
-    <div class="empty">Nenhum lançamento no período. <a href="{% url 'imports:upload' %}" style="color:var(--text-link)">Importe uma lista de pagamento</a> para começar.</div>
+    <div class="empty">Nenhum lançamento no período. <a href="{% url 'imports:upload' %}" class="link">Importe uma lista de pagamento</a> para começar.</div>
   {% endif %}
 </section>
 
