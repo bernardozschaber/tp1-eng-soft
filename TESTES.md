@@ -112,7 +112,7 @@ num sistema que deve durar anos. O nome do banco, usuário e volume foram alinha
 # banco descartável, sem tocar no db.sqlite3
 export BENCH=/tmp/bench.sqlite3 && rm -f $BENCH
 DATABASE_URL="sqlite:///$BENCH" python manage.py migrate
-DATABASE_URL="sqlite:///$BENCH" python manage.py seed --demo
+DATABASE_URL="sqlite:///$BENCH" python manage.py seed
 # popular com bulk_create e medir com django.test.Client + tracemalloc
 ```
 
