@@ -1,20 +1,33 @@
 """
-Reads "Relatório de Atividade" workbooks (the payment-list template).
+Lê os dois formatos de lista que a operação usa.
 
-Every sheet that follows the template looks like this (0-based columns):
+**"Relatório de Atividade"** (Lourdes), com o valor dentro da planilha:
 
     row 1:  D="Segmento da Atividade:"  F=<event name>   G="Data:"  H=<date>
     row 2:  D="Empresa:"                F=<company>                 I="Horário: Manhã"
     row 3:  D="Nome"  F="Aplicador"  G="Orientador (a)"  H="Valor"
     row 4+: D=<full name>  F=1 (applicator) or G=1 (advisor)  H=<net amount>
 
-Sheets that do not match the layout are skipped and reported as warnings.
+**Exportação de formulário** (Cidade Jardim e Vale do Sereno), uma resposta por
+linha, colunas localizadas pelo cabeçalho e não por posição:
+
+    Id | Hora de início | Hora de conclusão | Email | Nome | Nome Completo | CPF | Data | Função
+
+Esse formato **não traz valor**: a prova, o dia e o turno vêm do nome do arquivo
+("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na
+pré-visualização. As abas que não batem com nenhum dos dois são ignoradas e
+reportadas. Em ambos os layouts, o que está oculto no arquivo — aba, linha ou
+coluna — não é lido (veja `parse_workbook`).
 """
+import posixpath
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from io import BytesIO
+from xml.etree import ElementTree
+from zipfile import BadZipFile, ZipFile
 
 from openpyxl import load_workbook
 
@@ -30,13 +43,22 @@ LONG_DATE = re.compile(r"(\d{1,2})\s+de\s+([A-Za-zçÇ]+)\s+de\s+(\d{4})", re.IG
 SHORT_DATE = re.compile(r"(\d{1,2})/(\d{1,2})/(\d{4})")
 SHIFT_KEYWORDS = {"manh": "MANHA", "tarde": "TARDE", "noite": "NOITE"}
 
+# --- exportação de formulário (Cidade Jardim, Vale do Sereno) ---------------
+FORMS_HEADER_SCAN_ROWS = 5
+FORMS_NAME_HEADERS = ("nome completo",)
+FORMS_ROLE_HEADERS = ("funcao", "função")
+ROLE_BY_KEYWORD = {"aplicador": "APLICADOR", "orientador": "ORIENTADOR", "volante": "VOLANTE"}
+# "Prova Regular 11-09 Tarde.xlsx" -> dia 11, mês 09 (ano opcional).
+FILE_NAME_DATE = re.compile(r"(?<!\d)(\d{1,2})[-_./](\d{1,2})(?:[-_./](\d{2,4}))?(?!\d)")
+
 
 @dataclass
 class ParsedRow:
     name: str
-    role: str  # "APLICADOR" | "ORIENTADOR"
+    role: str  # "APLICADOR" | "ORIENTADOR" | "VOLANTE"
     net_amount: Decimal
     source_row: int
+    cpf: str = ""
 
 
 @dataclass
@@ -48,6 +70,10 @@ class ParsedSheet:
     company_hint: str = ""
     rows: list[ParsedRow] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
+    # "atividade" traz o valor na planilha; "forms" não traz e precisa do valor
+    # por pessoa na pré-visualização.
+    layout: str = "atividade"
+    needs_amount: bool = False
 
 
 @dataclass

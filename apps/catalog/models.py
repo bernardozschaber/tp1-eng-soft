@@ -39,6 +39,20 @@ class Unit(models.Model):
     def __str__(self) -> str:
         return self.name
 
+    @property
+    def short_name(self) -> str:
+        """Código curto da unidade: LOURDES, CJ, GO, VSE.
+
+        Sai da empresa pagadora ("RRPM CJ" -> "CJ"), que é onde a operação já
+        abrevia as unidades. "Matriz" não nomeia unidade nenhuma, então a
+        matriz aparece pelo próprio nome.
+        """
+        company = self.paying_company.name if self.paying_company_id else ""
+        code = company.split()[-1].upper() if company else ""
+        if not code or code == "MATRIZ":
+            return self.name.upper()
+        return code
+
 
 class Sector(models.Model):
     """Department that requested the service (e.g. "APL. DE PROVAS", "ADM")."""

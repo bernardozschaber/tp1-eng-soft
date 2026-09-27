@@ -37,7 +37,7 @@ class ApplicatorSerializer(serializers.ModelSerializer):
         model = Applicator
         fields = [
             "id", "full_name", "cpf", "email", "phone", "course", "institution",
-            "bank_name", "bank_branch", "bank_account", "pix_key", "notes", "needs_review", "is_active",
+            "bank_name", "bank_branch", "bank_account", "pix_key", "notes", "registration_status", "is_active",
         ]
 
 
