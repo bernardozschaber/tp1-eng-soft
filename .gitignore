@@ -30,3 +30,7 @@ rpa_control_system_v2.html
 # Impeccable: design system artefacts are committed (.impeccable/design.json),
 # but live-mode state is machine-local (absolute paths, session journals)
 .impeccable/live/
+
+# Local-command / pasted-content transcript files that Claude Code sometimes
+# drops in the project root (e.g. 2026-09-12-213711-local-command-caveat...txt)
+20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]-*.txt
