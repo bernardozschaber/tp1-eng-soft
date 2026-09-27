@@ -1,4 +1,4 @@
-{% extends "base.html" %}{% load icons money %}
+{% extends "base.html" %}{% load icons money avatars %}
 {% block title %}Importar listas · BernoulliPay{% endblock %}
 {% block breadcrumb %}{% icon "chevron-right" 14 %}<span class="current">Importar listas</span>{% endblock %}
 {% block content %}
@@ -14,17 +14,22 @@
   <div class="form-actions"><button type="submit" class="btn btn--primary" id="upload-button" disabled>{% icon "upload" %} Pré-visualizar</button></div>
 </form>
 <section class="card">
-  <h2 class="card__title">Importações recentes</h2>
-  <div class="table-wrap mt-16">
-    <table class="table">
-      <thead><tr><th scope="col">Arquivo</th><th scope="col">Quando</th><th scope="col">Por</th><th class="num" scope="col">Lançamentos</th></tr></thead>
+  <form method="post" action="{% url 'imports:batch_bulk_delete' %}" id="batches-form">{% csrf_token %}
+  <div class="card__header">
+    <h2 class="card__title">Importações recentes</h2>
+    <button type="submit" class="btn btn--danger btn--sm" id="bulk-delete" hidden>{% icon "trash" 14 %} <span data-bulk-label>Excluir selecionadas</span></button>
+  </div>
+  <div class="table-wrap">
+    <table class="table table--imports">
+      <thead><tr><th scope="col" class="actions--lead"><input type="checkbox" id="batches-all" aria-label="Selecionar todas as importações"><span class="sr-only">Excluir</span></th><th scope="col">Arquivo</th><th scope="col"><span class="sr-only">Pré-visualização</span></th><th scope="col">Importado em</th><th scope="col">Unidade</th><th scope="col">Autor</th><th class="num" scope="col">Lançamentos</th><th class="num" scope="col">Total líquido</th></tr></thead>
       <tbody>
         {% for batch in recent_batches %}
-        <tr><td class="strong">{{ batch.file_name }}</td><td class="muted">{{ batch.imported_at|date:"d/m/Y H:i" }}</td><td class="muted">{{ batch.imported_by|default:"—" }}</td><td class="num">{{ batch.entries.count }}</td></tr>
-        {% empty %}<tr><td colspan="4" class="empty">Nenhuma importação ainda.</td></tr>{% endfor %}
+        <tr><td class="actions actions--lead"><input type="checkbox" name="batches" value="{{ batch.pk }}" data-batch data-entries="{{ batch.entry_count }}" aria-label="Selecionar a importação {{ batch.file_name }}"><button class="icon-button icon-button--danger" formaction="{% url 'imports:batch_delete' batch.pk %}" onclick="return confirm('Excluir a importação \u201c{{ batch.file_name|escapejs }}\u201d e os {{ batch.entry_count }} lançamento(s) que ela criou?')" title="Excluir esta importação e seus lançamentos" aria-label="Excluir a importação {{ batch.file_name }} e seus {{ batch.entry_count }} lançamento(s)">{% icon "x" 14 %}</button></td><td class="strong">{{ batch.file_name }}</td><td class="actions">{% if batch.source_file %}<a href="{% url 'imports:batch_preview' batch.pk %}" class="icon-button" title="Pré-visualizar a planilha original" aria-label="Pré-visualizar {{ batch.file_name }}">{% icon "eye" 14 %}</a>{% else %}<span class="muted" title="Importação anterior ao arquivamento das planilhas">—</span>{% endif %}</td><td class="muted">{{ batch.imported_at|date:"d/m/Y H:i" }}</td><td class="units">{% for code in batch.unit_codes %}<span class="badge badge--gray">{{ code }}</span>{% empty %}<span class="muted">—</span>{% endfor %}</td><td>{% if batch.imported_by %}<span class="user-cell user-cell--chip">{% avatar batch.imported_by "sm" %}<span>{{ batch.imported_by.get_full_name|default:batch.imported_by.username }}</span></span>{% else %}<span class="muted">—</span>{% endif %}</td><td class="num">{{ batch.entry_count }}</td><td class="num">{{ batch.net_total|brl }}</td></tr>
+        {% empty %}<tr><td colspan="8" class="empty">Nenhuma importação ainda.</td></tr>{% endfor %}
       </tbody>
     </table>
   </div>
+  </form>
 </section>
 {% endblock %}
-{% block scripts %}{% load static %}<script src="{% static 'js/upload.js' %}"></script>{% endblock %}
+{% block scripts %}{% load assets %}<script src="{% static_v 'js/upload.js' %}"></script>{% endblock %}

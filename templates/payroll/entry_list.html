@@ -20,15 +20,21 @@
   <div class="table-wrap">
     <table class="table">
       <thead><tr>
-        <th scope="col">Aplicador</th><th scope="col">Evento</th><th scope="col">Data</th><th scope="col">Unidade</th><th scope="col">Pgto</th>
+        <th scope="col">Aplicador</th><th scope="col">Evento</th><th scope="col">Data</th><th scope="col">Turno</th><th scope="col">Unidade</th><th scope="col">Pgto</th>
         <th class="num" scope="col">Líquido</th><th class="num" scope="col">Bruto</th><th class="num" scope="col">INSS</th><th class="num" scope="col">ISS</th><th class="num" scope="col">IR</th><th scope="col"><span class="sr-only">Ações</span></th>
       </tr></thead>
       <tbody>
         {% for entry in entries %}
         <tr>
-          <td class="strong">{{ entry.applicator.full_name }}{% if entry.applicator.needs_review %} <span class="badge badge--yellow" title="cadastro incompleto">!</span>{% endif %}<br><span class="small muted">{{ entry.get_role_display }}</span></td>
+          <td class="strong">{{ entry.applicator.full_name }}{% if entry.applicator.is_new_registration %} <span class="badge badge--yellow" title="cadastro novo: primeiro pagamento">novo</span>{% endif %}<br><span class="small muted">{{ entry.get_role_display }}</span></td>
           <td>{{ entry.event_name }}{% if entry.segment %}<br><span class="small muted">{{ entry.segment }}</span>{% endif %}</td>
           <td class="muted" style="white-space:nowrap">{{ entry.activity_date|date:"d/m/Y" }}</td>
+          {% comment %}
+            O turno fica ao lado da data porque é ele que separa dois serviços
+            do mesmo dia — a mesma oficina de manhã e à tarde — de uma
+            duplicata. Sem ele as duas linhas se leem como a mesma coisa.
+          {% endcomment %}
+          <td>{% if entry.shift %}<span class="badge badge--gray">{{ entry.get_shift_display }}</span>{% else %}<span class="muted small" title="turno não informado">—</span>{% endif %}</td>
           <td><span class="badge badge--gray">{{ entry.unit.name }}</span></td>
           <td class="muted" style="white-space:nowrap">{{ entry.payment_date|date:"d/m/Y" }}</td>
           <td class="num strong">{{ entry.net_amount|brl }}</td>
@@ -36,24 +42,27 @@
           <td class="num muted">−{{ entry.inss_amount|brl_plain }}</td>
           <td class="num muted">−{{ entry.iss_amount|brl_plain }}</td>
           <td class="num muted">−{{ entry.ir_amount|brl_plain }}</td>
-          <td class="actions">
-            {% if not entry.is_consistent %}<span class="badge badge--red" title="líquido recalculado difere do lançado">ver</span>{% endif %}
-            <a href="{% url 'payroll:entry_update' entry.pk %}" class="icon-button" title="Editar" aria-label="Editar lançamento de {{ entry.applicator.full_name }}">{% icon "pencil" 14 %}</a>
-            <form method="post" action="{% url 'payroll:entry_delete' entry.pk %}" style="display:inline" onsubmit="return confirm('Excluir este lançamento?')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="icon-button" title="Excluir" aria-label="Excluir lançamento de {{ entry.applicator.full_name }}">{% icon "trash" 14 %}</button></form>
-          </td>
+          <td class="actions">{% if not entry.is_consistent %}<span class="badge badge--red" title="líquido recalculado difere do lançado">ver</span>{% endif %}<a href="{% url 'payroll:entry_update' entry.pk %}" class="icon-button" title="Editar" aria-label="Editar lançamento de {{ entry.applicator.full_name }}">{% icon "pencil" 14 %}</a><form method="post" action="{% url 'payroll:entry_delete' entry.pk %}" style="display:inline" onsubmit="return confirm('Excluir este lançamento?')">{% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}"><button class="icon-button" title="Excluir" aria-label="Excluir lançamento de {{ entry.applicator.full_name }}">{% icon "trash" 14 %}</button></form></td>
         </tr>
         {% empty %}
-        <tr><td colspan="11" class="empty">Nenhum lançamento encontrado.</td></tr>
+        <tr><td colspan="12" class="empty">Nenhum lançamento encontrado.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   {% if page.paginator.num_pages > 1 %}
-  <div class="pagination">
-    {% if page.has_previous %}<a href="?{{ filters.querystring }}&page={{ page.previous_page_number }}" class="btn btn--ghost btn--sm">Anterior</a>{% endif %}
-    <span>Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
-    {% if page.has_next %}<a href="?{{ filters.querystring }}&page={{ page.next_page_number }}" class="btn btn--ghost btn--sm">Próxima</a>{% endif %}
-  </div>
+  {# Ir direto à página: com centenas de lançamentos, "próxima" seria dezenas de cliques. #}
+  <form method="get" class="pagination">
+    {% for key, value in filters.raw.items %}{% if key != "page" %}<input type="hidden" name="{{ key }}" value="{{ value }}">{% endif %}{% endfor %}
+    <label for="page-select">Página</label>
+    <select name="page" id="page-select" class="select" data-autosubmit>
+      {% for number in page.paginator.page_range %}
+      <option value="{{ number }}" {% if number == page.number %}selected{% endif %}>{{ number }} de {{ page.paginator.num_pages }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn--secondary btn--sm" data-autosubmit-go>Ir</button>
+    <span class="muted small">{{ page.paginator.count }} lançamento{{ page.paginator.count|pluralize }}</span>
+  </form>
   {% endif %}
 </section>
 {% endblock %}
