@@ -117,3 +117,16 @@ class Applicator(models.Model):
     @classmethod
     def find_by_name(cls, raw_name: str) -> "Applicator | None":
         return cls.objects.filter(normalized_name=normalize_name(raw_name)).first()
+
+    @classmethod
+    def find_by_cpf(cls, cpf: str) -> "Applicator | None":
+        """Casa pelo CPF, que é identidade de verdade — nome não é.
+
+        Aceita o valor gravado com ou sem pontuação; CPF incompleto não casa
+        com ninguém (devolveria o primeiro parecido, que é pior que nada).
+        """
+        digits = "".join(char for char in (cpf or "") if char.isdigit())
+        if len(digits) != 11:
+            return None
+        formatted = f"{digits[:3]}.{digits[3:6]}.{digits[6:9]}-{digits[9:]}"
+        return cls.objects.filter(cpf__in=[formatted, digits]).first()
