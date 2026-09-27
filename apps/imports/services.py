@@ -519,28 +519,9 @@ def confirm_import(payload, workbooks: list[dict], user) -> dict:
                     created_by=user,
                 )
                 created_entries += 1
-    return {"entries": created_entries, "applicators": created_applicators, "skipped": skipped_rows}
-
-
-# --- non-interactive import (used by `manage.py seed --demo`) --------------
-
-def import_with_defaults(file_name: str, content: bytes, user=None) -> dict:
-    """Imports every sheet of a workbook using the default unit and sector, without preview."""
-    workbook = parse_workbook(file_name, content)
-    unit = Unit.objects.get(is_default=True)
-    sector = Sector.objects.get(is_default=True)
-    created_entries = created_applicators = 0
-    with transaction.atomic():
-        batch = ImportBatch.objects.create(file_name=file_name, imported_by=user)
-        for sheet in workbook.sheets:
-            for row in sheet.rows:
-                base_name, suffix = split_suffix(row.name)
-                applicator, was_created = _get_or_create_applicator(base_name, suffix)
-                created_applicators += int(was_created)
-                ServiceEntry.objects.create(
-                    applicator=applicator, role=row.role, activity_date=sheet.activity_date, event_name=sheet.event_name,
-                    shift=sheet.shift, sector=sector, unit=unit, net_amount=row.net_amount, notes=suffix,
-                    import_batch=batch, created_by=user,
-                )
-                created_entries += 1
-    return {"entries": created_entries, "applicators": created_applicators}
+        if batch is None:
+            _discard_staged(workbook.get("staged_path"))
+    return {
+        "entries": created_entries, "applicators": created_applicators,
+        "skipped": skipped_rows, "merged": merged_rows, "duplicates": duplicate_rows,
+    }
