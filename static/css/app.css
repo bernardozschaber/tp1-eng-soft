@@ -327,3 +327,54 @@ h1, h2, h3, p { margin: 0; }
 /* Visible to assistive tech only: names the columns that read as blank. */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 16px; font-size: var(--text-body); color: var(--text-secondary); align-items: center; }
+
+/* Ficha do aplicador: um cartão translúcido no meio da tela, com a foto 3x4
+   à esquerda. O fundo desfocado mantém a lista visível atrás sem competir
+   com a leitura — o contraste do texto vem do próprio cartão, que é opaco o
+   bastante (92%) para não depender do que está por baixo. */
+.sheet-overlay { position: fixed; inset: 0; z-index: 45; display: grid; place-items: center; padding: 24px; overflow-y: auto; }
+.sheet-overlay__backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--color-gray-900) 45%, transparent); backdrop-filter: blur(6px); }
+.sheet-card { position: relative; width: min(760px, 100%); max-height: calc(100vh - 48px); overflow-y: auto; padding: 24px; border-radius: var(--radius-xl); border: 1px solid var(--border-secondary); background: color-mix(in srgb, var(--bg-container) 92%, transparent); box-shadow: var(--shadow-md), 0 24px 60px rgba(11, 11, 11, 0.22); }
+.sheet-card__head { display: flex; gap: 20px; align-items: flex-start; padding-bottom: 16px; border-bottom: 1px solid var(--border-tertiary); }
+/* 3x4 de verdade: a proporção é a da foto de documento, não um quadrado. */
+.sheet-card__photo { position: relative; flex-shrink: 0; width: 108px; aspect-ratio: 3 / 4; border-radius: var(--radius-lg); border: 1px dashed var(--border-secondary); background: var(--bg-container-inset); display: grid; place-items: center; overflow: hidden; }
+.sheet-card__photo img { width: 100%; height: 100%; object-fit: cover; border: 0; }
+.sheet-card__initials { font-size: var(--text-display); font-weight: 500; color: var(--text-secondary); }
+.sheet-card__photo-hint { position: absolute; bottom: 6px; font-size: var(--text-micro); color: var(--text-secondary); }
+.sheet-card__identity { min-width: 0; }
+.sheet-card__name { margin: 0; font-size: var(--text-headline); font-weight: 500; line-height: var(--leading-snug); }
+.sheet-card__status { margin: 8px 0 0; }
+.sheet-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.sheet-card__facts { margin: 16px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.sheet-card__facts dt { font-size: var(--text-label); color: var(--text-secondary); }
+.sheet-card__facts dd { margin: 4px 0 0; font-size: var(--text-body); color: var(--text-primary); overflow-wrap: anywhere; }
+.sheet-card__facts a { color: var(--text-link); }
+
+@media (max-width: 640px) {
+  .sheet-overlay { padding: 12px; }
+  .sheet-card { padding: 18px; }
+  .sheet-card__head { flex-direction: column; }
+}
+
+/* Colunas de dado da lista de aplicadores: CPF, WhatsApp e e-mail lidos na
+   mesma voz — mesmo tamanho, mesma família, números alinhados. Antes o CPF
+   vinha em mono e os outros em corpo menor, e as três colunas brigavam. */
+.table td.cell-data { font-family: var(--font-sans); font-size: var(--text-body); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+.table th.col-ficha, .table td.col-ficha { width: 1%; padding-right: 4px; text-align: center; }
+.icon-button--whatsapp:hover { color: #25d366; }
+
+/* Terceira resposta da conferência: escolher, na busca, o cadastro que já
+   existe. A lista rola dentro do card — a altura fixa impede que 200 nomes
+   empurrem os botões de resposta para fora da tela. */
+.picker { margin-top: 16px; border: 1px solid var(--border-secondary); border-radius: var(--radius-lg); padding: 12px; background: var(--bg-container-inset); }
+.picker[hidden] { display: none; }
+.picker__label { display: block; font-size: var(--text-label); color: var(--text-secondary); margin-bottom: 6px; }
+.picker__search { width: 100%; }
+.picker__list { list-style: none; margin: 10px 0 0; padding: 0; max-height: 240px; overflow-y: auto; display: grid; gap: 2px; }
+.picker__list li[hidden] { display: none; }
+.picker__option { display: block; width: 100%; text-align: left; border: 0; background: transparent; border-radius: var(--radius-md); padding: 8px 10px; color: var(--text-primary); }
+.picker__option:hover { background: var(--bg-container-hover); }
+.picker__name { display: block; font-size: var(--text-body); }
+.picker__detail { display: block; font-size: var(--text-label); color: var(--text-secondary); }
+.picker__empty { margin-top: 10px; font-size: var(--text-label); color: var(--text-secondary); }
+.merge__chosen { margin-top: 8px; font-size: var(--text-label); color: var(--color-brand-700); }
