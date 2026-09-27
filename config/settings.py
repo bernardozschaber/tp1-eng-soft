@@ -1,5 +1,5 @@
 """
-Django settings for ProvaPay.
+Django settings for BernoulliPay.
 
 Environment variables (see .env.example):
   DJANGO_SECRET_KEY  secret key; a dev-only default is used when absent
