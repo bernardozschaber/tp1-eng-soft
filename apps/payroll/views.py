@@ -92,5 +92,5 @@ def export_excel(request):
     entries = filters.apply().order_by("activity_date", "applicator__full_name")
     content = build_workbook(entries, build_summary(entries))
     response = HttpResponse(content, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    response["Content-Disposition"] = f'attachment; filename="ProvaPay_{date.today():%Y-%m-%d}.xlsx"'
+    response["Content-Disposition"] = f'attachment; filename="BernoulliPay_{date.today():%Y-%m-%d}.xlsx"'
     return response

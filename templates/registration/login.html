@@ -1,10 +1,10 @@
 {% extends "base.html" %}{% load static icons %}
-{% block title %}Entrar · ProvaPay{% endblock %}
+{% block title %}Entrar · BernoulliPay{% endblock %}
 {% block body %}
 <div class="login">
   <form method="post" class="login__card">{% csrf_token %}
-    <img src="{% static 'img/logomark.png' %}" alt="" width="52" height="36">
-    <h1>Entrar no ProvaPay</h1>
+    <img src="{% static 'img/wordmark.png' %}" alt="" width="140" height="148">
+    <h1>Entrar no BernoulliPay</h1>
     <p>Controle de pagamentos RPA dos aplicadores</p>
     {% if form.errors %}<div class="alert alert--error">Usuário ou senha inválidos.</div>{% endif %}
     <div class="stack" style="gap:12px">

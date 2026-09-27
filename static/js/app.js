@@ -2,7 +2,7 @@
 // Below 1024px the sidebar is an overlay drawer, so it always starts closed,
 // gets a backdrop, and closes on Escape or an outside click.
 (function () {
-  const SIDEBAR_KEY = "provapay.sidebar.hidden";
+  const SIDEBAR_KEY = "bernoullipay.sidebar.hidden";
   const sidebar = document.getElementById("sidebar");
   const toggle = document.querySelector("[data-toggle-sidebar]");
   if (!sidebar || !toggle) return;

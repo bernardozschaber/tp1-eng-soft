@@ -1,5 +1,5 @@
 {% extends "base.html" %}{% load icons money %}
-{% block title %}{{ title }} · ProvaPay{% endblock %}
+{% block title %}{{ title }} · BernoulliPay{% endblock %}
 {% block breadcrumb %}{% icon "chevron-right" 14 %}<a href="{% url 'payroll:entry_list' %}">Lançamentos</a>{% icon "chevron-right" 14 %}<span class="current">{{ title }}</span>{% endblock %}
 {% block content %}
 <div class="page-header"><div><h1>{{ title }}</h1><p>O bruto e os descontos são calculados a partir do valor líquido</p></div></div>
