@@ -97,3 +97,34 @@ class Command(BaseCommand):
                 seen_profiles[profile.normalized] = applicator
             applicator.save()
         return created, updated, merged, enriched
+
+    # --- entrada de texto --------------------------------------------------
+
+    def _read_names(self, source: str) -> list[str]:
+        handle = sys.stdin if source == "-" else open(source, encoding="utf-8")
+        try:
+            lines = handle.read().splitlines()
+        finally:
+            if handle is not sys.stdin:
+                handle.close()
+        names, seen = [], set()
+        for line in lines:
+            name = " ".join(line.strip().split())
+            if not name or name.startswith("#"):
+                continue
+            key = normalize_name(name)
+            if key in seen:
+                continue
+            seen.add(key)
+            names.append(name)
+        return names
+
+    def _purge(self) -> None:
+        blocked = ServiceEntry.objects.count()
+        if blocked:
+            raise CommandError(
+                f"Há {blocked} lançamento(s) ligados aos cadastros atuais. "
+                "Apague as importações em /importar antes de substituir a lista."
+            )
+        deleted, _ = Applicator.objects.all().delete()
+        self.stdout.write(f"{deleted} cadastro(s) antigo(s) removido(s).")
