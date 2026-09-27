@@ -24,6 +24,8 @@
 }
 
 :root {
+  color-scheme: light;
+
   --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
@@ -83,13 +85,13 @@
   --bg-inverse-hover: var(--color-gray-700);
 
   --text-primary: var(--color-gray-900);
-  --text-secondary: var(--color-gray-500);
-  --text-subdued: var(--color-gray-400);
+  --text-secondary: var(--color-gray-600);
+  --text-subdued: var(--color-gray-500);
   --text-inverse: var(--color-white);
   --text-link: var(--color-blue-600);
   --text-success: var(--color-green-600);
   --text-warning: var(--color-yellow-600);
-  --text-destructive: var(--color-red-600);
+  --text-destructive: var(--color-red-700);
 
   --border-primary: var(--alpha-black-300);
   --border-secondary: var(--alpha-black-200);
