@@ -121,3 +121,91 @@ def confirm(request):
 def discard(request):
     clear_preview(request.session)
     return redirect("imports:upload")
+
+
+# --- planilha original -----------------------------------------------------
+
+PREVIEW_MAX_ROWS = 200
+PREVIEW_MAX_COLUMNS = 14
+
+
+def _cell_text(value) -> str:
+    """Valor da célula como ela se lê na planilha, não como o Python a imprime."""
+    if value is None:
+        return ""
+    if isinstance(value, datetime):
+        return value.strftime("%d/%m/%Y") if value.time() == time(0, 0) else value.strftime("%d/%m/%Y %H:%M")
+    if isinstance(value, date):
+        return value.strftime("%d/%m/%Y")
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
+
+
+def _read_sheets(batch: ImportBatch) -> list[dict]:
+    """Lê a planilha guardada e devolve as abas como linhas de texto."""
+    with batch.source_file.open("rb") as handle:
+        workbook = load_workbook(BytesIO(handle.read()), read_only=True, data_only=True)
+    sheets = []
+    try:
+        for worksheet in workbook.worksheets:
+            rows, truncated = [], False
+            for index, row in enumerate(worksheet.iter_rows(values_only=True)):
+                if index >= PREVIEW_MAX_ROWS:
+                    truncated = True
+                    break
+                cells = [_cell_text(value) for value in row[:PREVIEW_MAX_COLUMNS]]
+                if any(cells):
+                    rows.append(cells)
+            width = max((len(row) for row in rows), default=0)
+            sheets.append({
+                "name": worksheet.title,
+                "rows": [row + [""] * (width - len(row)) for row in rows],
+                "truncated": truncated,
+            })
+    finally:
+        workbook.close()
+    return sheets
+
+
+@login_required
+def batch_preview(request, pk: int):
+    """Mostra a planilha original do lote, aba por aba, como ela chegou."""
+    batch = get_object_or_404(ImportBatch.objects.select_related("imported_by__profile"), pk=pk)
+    if not batch.source_file:
+        messages.error(request, "Esta importação é anterior ao arquivamento das planilhas; o original não foi guardado.")
+        return redirect("imports:upload")
+    try:
+        sheets = _read_sheets(batch)
+    except FileNotFoundError:
+        messages.error(request, "A planilha original deste lote não está mais no servidor.")
+        return redirect("imports:upload")
+    return render(request, "imports/batch_preview.html", {"batch": batch, "sheets": sheets})
+
+
+def _delete_batches(batches: list[ImportBatch]) -> int:
+    """Apaga os lotes com os lançamentos que cada um criou. Devolve o total de lançamentos.
+
+    `ServiceEntry.import_batch` é SET_NULL, então apagar só o lote deixaria os
+    lançamentos para trás sem nenhuma origem — e sem forma de encontrá-los pela
+    lista que os criou. Os dois saem juntos, na mesma transação, junto com a
+    planilha guardada em `media/`, que não serve a mais ninguém depois disso.
+    """
+    entry_count = ServiceEntry.objects.filter(import_batch__in=batches).count()
+    with transaction.atomic():
+        ServiceEntry.objects.filter(import_batch__in=batches).delete()
+        for batch in batches:
+            batch.source_file.delete(save=False)
+            batch.delete()
+    return entry_count
+
+
+@login_required
+@require_POST
+def batch_delete(request, pk: int):
+    """Desfaz uma importação: apaga os lançamentos do lote e o próprio lote."""
+    batch = get_object_or_404(ImportBatch, pk=pk)
+    file_name = batch.file_name
+    entry_count = _delete_batches([batch])
+    messages.success(request, f"Importação \u201c{file_name}\u201d removida: {entry_count} lançamento(s) excluído(s).")
+    return redirect("imports:upload")
