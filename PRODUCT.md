@@ -100,9 +100,14 @@ paying company.
     never by cropping.
   Sources are `bernoulli-pay-logo-apenas.png` and `bernoulli-pay-logo-mais-texto.png` at the
   repository root.
-- **How the mark was arrived at — ideation, the directions explored, the selection and the
-  refinement brief — is recorded in DESIGN.md under `## Identity`**, not here. This file holds
-  what is binding about the brand; DESIGN.md holds the visual world that expresses it.
+- **The mark must not read as PicPay.** Stated as an explicit exclusion in every generation
+  brief. PicPay is one of Brazil's best-known payment apps, it is green, and it shares the
+  initials — a green Brazilian payment product built around a P is one careless decision from
+  reading as a knock-off. Binding on any future mark, not a past preference.
+- **How the mark was arrived at — the two generation rounds, the tools (v0.app, then ChatGPT
+  image generation), the directions explored, the selection and the refinement brief — is
+  recorded in DESIGN.md under `## Identity`**, not here. This file holds what is binding about
+  the brand; DESIGN.md holds the visual world that expresses it.
 - **Constraint that governs every future use of the brand colour:** `#009E8E` is 3.34:1 on
   white. It is a fill, stroke and mark colour — never text on a light surface. Brand text
   uses the darker `#047569`.

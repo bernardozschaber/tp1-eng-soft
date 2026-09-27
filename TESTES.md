@@ -193,6 +193,12 @@ folha de pagamento. Passou a usar `createElement` + `textContent`.
 
 ### 2.6 Identidade visual
 
+> A **criação** da identidade — as duas rodadas de geração, as ferramentas usadas
+> (**v0.app** na primeira, **geração de imagens do ChatGPT** na segunda), a restrição
+> explícita de não parecer com o PicPay, os dez conceitos de cada rodada e o refinamento
+> do escolhido — está em [`DESIGN.md`](DESIGN.md), seção `## Identity`.
+> Esta seção registra apenas o que foi **medido** sobre o resultado.
+
 O sistema visual era uma **porta declarada** do design system do Maybe (aplicativo de
 finanças pessoais), com os comentários dizendo isso nos próprios arquivos, incluindo
 `"Stat block (net worth style)"` e `"Weight bar (asset allocation style)"`.

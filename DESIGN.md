@@ -289,29 +289,62 @@ fails the 4.5:1 floor for text. That single number decided more than the logo:
 The rule is written into `tokens.css` itself so it survives the next edit: **verde is a fill,
 a stroke and a mark, never text on a light surface.**
 
-### Ideation
+### The constraint nobody would guess from the result
 
-The mark was developed by generating a spread of directions and narrowing, rather than by
-committing to a first idea. The directions explored, as the team recorded them:
+The brief carried an explicit **anti-reference: it must not look like PicPay.**
+
+That is not a stylistic preference, it is a collision risk. PicPay is one of Brazil's
+best-known payment apps, it is green, and it shares the initials. A green Brazilian payment
+product built around a P was one careless decision away from reading as a knock-off of it.
+Every round of generation carried that exclusion, and it is the reason the mark leans on the
+lemniscate — the school's own motif — rather than on a stylised letter, which is the space
+PicPay already occupies.
+
+### Ideation — two rounds, two tools
+
+The identity was not generated once. It went through two distinct rounds, under two different
+product names and two different tools, and the second only makes sense because of the first.
+
+**Round 1 — v0.app, while the product was still "ProvaPay".**
+The brief described Colégio Bernoulli's own mark as the anchor and asked for ten concepts
+combining two "P"s, the infinity motif, a minimalist treatment and verde Bernoulli, with the
+PicPay exclusion stated. v0 generated the ten and then built a **side-by-side comparison
+gallery** so they could be judged against each other rather than in sequence — the directions
+explored were:
 
 | # | Direction |
 |---|---|
-| 1 | Mirrored letterforms resolving into an infinity |
-| 2 | A single continuous stroke or ribbon |
+| 1 | Mirrored Ps resolving into an infinity |
+| 2 | A continuous stroke or ribbon |
 | 3 | A circular seal, in the spirit of the school crest |
 | 4 | An interlaced monogram |
 | 5 | A reclining infinity |
 | 6 | A duotone treatment |
 | 7 | An app icon working in negative space |
-| 8 | A one-line contour |
+| 8 | A single line |
 | 9 | A knotted centre |
 | 10 | A Möbius ribbon |
 
-Selection landed on **the seventh**. The refinement brief that followed was specific and
-short: make it solid rather than shaded, close the form so it reads as one whole shape, raise
-the resolution, deliver PNG. A second pass then asked for the mark **without** the words, which
-is what gave the system two lockups instead of one — and that request is the reason the icon
-rail and the login card can differ at all.
+No concept from this round shipped. The round's value was the *direction* it settled —
+letterforms meeting back to back to form the lemniscate — which is what carried into round two.
+
+**Round 2 — ChatGPT image generation, after the rename to "BernoulliPay".**
+The rename changed the problem: the monogram was no longer P+P but **B+P**, and the reference
+to the school became explicit in the name itself. The brief was restated for the new name —
+minimalist, the initials B and P, verde Bernoulli `#009E8E` referencing the Colégio, the
+school's infinity as inspiration, and again the PicPay exclusion — with the geometry named
+directly: *letters mirrored into an infinity*, *with their backs forming the infinity symbol*.
+
+Ten samples were generated. Selection landed on **the seventh**, followed by a short and
+specific refinement brief: **polished, solid colour rather than shaded, the form closed so it
+reads as one whole shape, higher resolution, delivered as PNG.**
+
+A final pass then asked for the mark **without** the words "BernoulliPay". That single request
+is why the system has two lockups instead of one, and therefore why the icon rail and the login
+card can differ at all — see **The two lockups**, below.
+
+The two outputs of that round are what ship: `bernoulli-pay-logo-mais-texto.png` and
+`bernoulli-pay-logo-apenas.png`.
 
 ### What the mark resolves to
 
@@ -359,9 +392,16 @@ into a square.
 
 ### Not recorded here
 
-The verbatim generation brief and the ten candidate renders are not in the repository — only
-the two selected outputs are. If the ideation needs to be reproducible or presented, those
-source images and the prompt text should be added alongside them.
+The candidate renders are not in the repository — only the two selected outputs of round 2.
+Specifically missing:
+
+- the ten round-1 concepts from v0.app and the comparison gallery page it built;
+- the ten round-2 samples from ChatGPT, including the one numbered 7 that was chosen.
+
+Round 1's ten directions are named in the table above because the team recorded them in prose;
+round 2's ten were never described individually, so only the selected one can be shown. If the
+ideation needs to be presented or reproduced — for the AI-usage report, for instance — those
+images should be added alongside the shipped assets.
 
 ## Colors
 

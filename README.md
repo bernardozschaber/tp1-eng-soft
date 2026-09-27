@@ -19,7 +19,11 @@ O BernoulliPay automatiza o controle de pagamentos via RPA (Recibo de Pagamento 
 * Frameworks: Django 5.2 (backend + API REST com Django REST Framework) e Django Templates + CSS e JavaScript puros (frontend web)
 * Leitura/escrita de planilhas: openpyxl
 * BD: PostgreSQL (via `DATABASE\\\_URL`); SQLite como fallback para desenvolvimento local
-* Agentes de IA: Claude Code (Fable 5.1), OpenAI Codex (GPT-5.6), Google Gemini (3.1 Pro)
+* Agentes de IA (código): Claude Code (Fable 5.1), OpenAI Codex (GPT-5.6), Google Gemini (3.1 Pro)
+* IA generativa (identidade visual): **v0.app** — primeira rodada de conceitos de logo e a galeria
+  de comparação; **geração de imagens do ChatGPT** — segunda rodada e os arquivos finais. O processo
+  completo, com os briefings e o que foi descartado, está em [`DESIGN.md`](DESIGN.md), seção
+  `## Identity`.
 
 ## Histórias de usuários (\~8 histórias com 1-2 linhas por história):
 
