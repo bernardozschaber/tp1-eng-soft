@@ -10,31 +10,47 @@
   #009E8E is 3.34:1 on white: it is a FILL, STROKE and MARK colour, never text
   on a light surface. Text uses --color-brand-700 (5.59:1).
 */
+/* IBM Plex Sans + IBM Plex Mono — SIL Open Font License 1.1 (see
+   ../fonts/IBMPlex-LICENSE.txt). Self-hosted; no CDN dependency.
+   Split by unicode-range: pt-BR lives entirely in `latin`, so `latin-ext`
+   is only fetched if a name needs it. Verified with fontTools: full
+   coverage of ãáàâçéêíóôõúü and of R$ · — ↑ ↓ %.
+   The sans and the mono are drawn as one family, which is why the money
+   columns and their labels sit on the same skeleton. */
 @font-face {
-  font-family: "Geist";
-  src: url("../fonts/Geist-Variable.woff2") format("woff2-variations");
-  font-weight: 100 900;
+  font-family: "IBM Plex Sans";
+  src: url("../fonts/IBMPlexSans-Variable-latin.woff2") format("woff2-variations");
+  font-weight: 100 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Geist Mono";
-  src: url("../fonts/GeistMono-Regular.woff2") format("woff2");
+  font-family: "IBM Plex Sans";
+  src: url("../fonts/IBMPlexSans-Variable-latin-ext.woff2") format("woff2-variations");
+  font-weight: 100 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("../fonts/IBMPlexMono-Regular-latin.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
-  font-family: "Geist Mono";
-  src: url("../fonts/GeistMono-Medium.woff2") format("woff2");
-  font-weight: 500;
+  font-family: "IBM Plex Mono";
+  src: url("../fonts/IBMPlexMono-Regular-latin-ext.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
   font-display: swap;
 }
 
 :root {
   color-scheme: light;
 
-  --font-sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --color-white: #ffffff;
   --color-black: #0b0b0b;
