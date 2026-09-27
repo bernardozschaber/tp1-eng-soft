@@ -77,7 +77,24 @@ def load_preview(session) -> list[dict]:
 
 
 def clear_preview(session) -> None:
+    """Descarta a prévia e apaga as planilhas que ficaram sem lote."""
+    for workbook in session.get(SESSION_KEY, []):
+        _discard_staged(workbook.get("staged_path"))
     session.pop(SESSION_KEY, None)
+
+
+def _discard_staged(path: str | None) -> None:
+    if path and default_storage.exists(path):
+        default_storage.delete(path)
+
+
+def _attach_source_file(batch: ImportBatch, file_name: str, staged_path: str | None) -> None:
+    """Move a planilha do staging para o lote, sob o nome original."""
+    if not staged_path or not default_storage.exists(staged_path):
+        return
+    with default_storage.open(staged_path, "rb") as staged:
+        batch.source_file.save(file_name, ContentFile(staged.read()), save=True)
+    default_storage.delete(staged_path)
 
 
 # --- enrichment ------------------------------------------------------------
