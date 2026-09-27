@@ -1,51 +1,50 @@
-// Shell behaviour shared by every page: sidebar toggle persisted per browser.
-// Below 1024px the sidebar is an overlay drawer, so it always starts closed,
-// gets a backdrop, and closes on Escape or an outside click.
+// Theme. The attribute is already on <html> (set pre-paint in base.html); this
+// only handles the toggle and keeps following the OS while the user has not
+// made an explicit choice.
 (function () {
-  const SIDEBAR_KEY = "bernoullipay.sidebar.hidden";
-  const sidebar = document.getElementById("sidebar");
-  const toggle = document.querySelector("[data-toggle-sidebar]");
-  if (!sidebar || !toggle) return;
+  const THEME_KEY = "bernoullipay.theme";
+  const root = document.documentElement;
+  const system = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
-  const drawer = window.matchMedia("(max-width: 1024px)");
-  let backdrop = null;
-
-  function readHidden() {
-    try { return localStorage.getItem(SIDEBAR_KEY) === "1"; } catch (_) { return false; }
-  }
-  function writeHidden(hidden) {
-    try { localStorage.setItem(SIDEBAR_KEY, hidden ? "1" : "0"); } catch (_) { /* ignore */ }
+  function stored() {
+    try {
+      const v = localStorage.getItem(THEME_KEY);
+      return v === "dark" || v === "light" ? v : null;
+    } catch (_) { return null; }
   }
 
-  function syncBackdrop() {
-    const needed = drawer.matches && !sidebar.hidden;
-    if (needed && !backdrop) {
-      backdrop = document.createElement("button");
-      backdrop.type = "button";
-      backdrop.className = "sidebar-backdrop";
-      backdrop.setAttribute("aria-label", "Fechar barra lateral");
-      backdrop.addEventListener("click", () => setHidden(true, true));
-      document.body.appendChild(backdrop);
-    } else if (!needed && backdrop) {
-      backdrop.remove();
-      backdrop = null;
-    }
+  function apply(theme) {
+    root.setAttribute("data-theme", theme);
+    const dark = theme === "dark";
+    document.querySelectorAll("[data-theme-toggle]").forEach((el) => {
+      el.setAttribute("aria-pressed", String(dark));
+      const label = dark ? "Usar modo claro" : "Usar modo escuro";
+      el.setAttribute("aria-label", label);
+      el.setAttribute("title", label);
+    });
   }
 
-  function setHidden(hidden, restoreFocus) {
-    sidebar.hidden = hidden;
-    toggle.setAttribute("aria-expanded", String(!hidden));
-    if (!drawer.matches) writeHidden(hidden);
-    syncBackdrop();
-    if (hidden && restoreFocus) toggle.focus();
+  apply(stored() || root.getAttribute("data-theme") || "light");
+
+  if (system) {
+    system.addEventListener("change", () => { if (!stored()) apply(system.matches ? "dark" : "light"); });
   }
 
-  // On the drawer breakpoint the stored desktop preference must not leak in.
-  setHidden(drawer.matches ? true : readHidden(), false);
-  drawer.addEventListener("change", () => setHidden(drawer.matches ? true : readHidden(), false));
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("[data-theme-toggle]")) return;
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    try { localStorage.setItem(THEME_KEY, next); } catch (_) { /* ignore */ }
+    apply(next);
+  });
+})();
 
-  toggle.addEventListener("click", () => setHidden(!sidebar.hidden, false));
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && drawer.matches && !sidebar.hidden) setHidden(true, true);
+// Seletor de página: trocar a opção já navega. O botão "Ir" fica para quem
+// está sem JS — com script, ele some para não sobrar um passo a mais.
+(function () {
+  document.querySelectorAll("[data-autosubmit]").forEach((select) => {
+    const form = select.form;
+    if (!form) return;
+    select.addEventListener("change", () => form.requestSubmit());
+    form.querySelectorAll("[data-autosubmit-go]").forEach((button) => { button.hidden = true; });
   });
 })();
