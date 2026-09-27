@@ -1,5 +1,5 @@
-/* Layout and components. Mirrors the Maybe app shell: icon nav (84px) +
-   collapsible sidebar (280px) + full-width main column. */
+/* Layout and components. Notion-style shell: one wide nav column (icon +
+   label, user card at the bottom) + full-width main column. */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { height: 100%; }
 body {
@@ -26,24 +26,12 @@ h1, h2, h3, p { margin: 0; }
 
 /* ---- App shell ------------------------------------------------------ */
 .app { display: flex; height: 100%; }
-.app__nav { width: 84px; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 0; margin-right: 8px; }
-.app__sidebar { width: 280px; flex-shrink: 0; padding: 16px 0; overflow-y: auto; }
-.app__sidebar[hidden] { display: none; }
+.app__nav { width: 240px; flex-shrink: 0; display: flex; flex-direction: column; padding: 16px 12px; }
 .app__main { flex: 1; min-width: 0; padding: 12px 12px 12px 0; }
 .app__main-card { --gutter: 20px; background: var(--bg-container); border-radius: var(--radius-xl); box-shadow: var(--shadow-border-xs); height: 100%; overflow-y: auto; display: flex; flex-direction: column; }
 .app__content { width: 100%; padding: 8px var(--gutter) 48px; }
 @media (max-width: 1024px) {
-  /* The sidebar holds the per-unit totals, which exist nowhere else. It opens
-     as an overlay drawer so the topbar toggle keeps meaning something. */
-  .app__sidebar {
-    position: fixed; top: 0; left: 0; bottom: 0; z-index: 40;
-    width: min(300px, 86vw);
-    background: var(--bg-container);
-    box-shadow: var(--shadow-md);
-    padding: 16px 8px;
-    animation: drawer-in .22s cubic-bezier(.22, 1, .36, 1);
-  }
-  .app__nav { width: 64px; margin-right: 4px; }
+  .app__nav { width: 200px; padding: 12px 8px; }
   .app__main { padding: 8px 8px 8px 0; }
   .app__main-card { --gutter: 14px; }
   .app__content { padding-bottom: 40px; }
