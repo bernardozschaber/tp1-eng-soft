@@ -183,3 +183,57 @@ class DuplicateEntryTests(TestCase):
         twin.apply_calculations()
         with self.assertRaises(ValidationError):
             twin.validate_constraints()
+
+
+class ShiftColumnTests(TestCase):
+    """A lista mostra o turno ao lado da data.
+
+    A coluna existe por causa das duplicatas: sem ela, duas linhas iguais na
+    tela podem ser a mesma oficina lançada duas vezes ou a oficina da manhã e a
+    da tarde, e não há como saber olhando. Com o turno à vista, quem confere
+    decide em um segundo.
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        company = PayingCompany.objects.create(name="RRPM Matriz")
+        cls.unit = Unit.objects.create(name="Lourdes", paying_company=company, is_default=True)
+        cls.sector = Sector.objects.create(name="Apl. de Provas", is_default=True)
+        TaxSettings.objects.create(inss_rate=Decimal("11"), iss_rate=Decimal("5"), ir_rate=Decimal("0"))
+        cls.applicator = Applicator.objects.create(full_name="Maria Wolff Florencio")
+        cls.user = get_user_model().objects.create_user("rh", password="x")
+        for shift, amount in ((Shift.MORNING, "93.00"), (Shift.AFTERNOON, "84.00")):
+            ServiceEntry.objects.create(
+                applicator=cls.applicator, role=ServiceRole.APPLICATOR, activity_date=date(2026, 5, 5),
+                event_name="Oficina de Redação", shift=shift, sector=cls.sector, unit=cls.unit,
+                net_amount=Decimal(amount),
+            )
+
+    def setUp(self):
+        self.client.force_login(self.user)
+
+    def _listing(self) -> str:
+        response = self.client.get(reverse("payroll:entry_list"))
+        self.assertEqual(response.status_code, 200)
+        return response.content.decode()
+
+    def test_the_column_sits_between_date_and_unit(self):
+        html = self._listing()
+        headers = re.findall(r'<th[^>]*scope="col"[^>]*>(.*?)</th>', html, flags=re.S)
+        headers = [re.sub(r"<[^>]+>", "", header).strip() for header in headers]
+        self.assertIn("Turno", headers)
+        self.assertEqual(headers[headers.index("Data") + 1], "Turno")
+        self.assertEqual(headers[headers.index("Turno") + 1], "Unidade")
+
+    def test_both_shifts_of_the_same_day_are_told_apart(self):
+        html = self._listing()
+        self.assertIn("Manhã", html)
+        self.assertIn("Tarde", html)
+
+    def test_an_entry_without_a_shift_does_not_break_the_row(self):
+        ServiceEntry.objects.create(
+            applicator=self.applicator, role=ServiceRole.APPLICATOR, activity_date=date(2026, 5, 6),
+            event_name="Organização de Simulados", shift="", sector=self.sector, unit=self.unit,
+            net_amount=Decimal("74.00"),
+        )
+        self.assertIn("turno não informado", self._listing())
