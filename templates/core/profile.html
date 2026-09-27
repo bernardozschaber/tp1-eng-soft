@@ -1,0 +1,26 @@
+{% extends "base.html" %}{% load icons avatars %}
+{% block title %}Meu perfil · BernoulliPay{% endblock %}
+{% block breadcrumb %}{% icon "chevron-right" 14 %}<span class="current">Meu perfil</span>{% endblock %}
+{% block content %}
+<div class="page-header"><div><h1>Meu perfil</h1><p>Os dados que aparecem ao lado do seu nome nas importações e lançamentos</p></div></div>
+<section class="card profile-card">
+  <div class="profile-card__identity">
+    {% avatar user "xl" %}
+    <div>
+      <h2 class="profile-card__name">{{ user.get_full_name|default:user.username }}</h2>
+      {% if user.profile.role %}<p class="profile-card__role">{{ user.profile.role }}</p>{% endif %}
+    </div>
+  </div>
+  <dl class="profile-card__facts">
+    <div><dt>E-mail</dt><dd>{% if user.profile.contact_email %}<a href="mailto:{{ user.profile.contact_email }}">{{ user.profile.contact_email }}</a>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+    <div><dt>Telefone</dt><dd>{% if user.profile.phone %}<span class="mono">{{ user.profile.phone }}</span>{% else %}<span class="muted">—</span>{% endif %}</dd></div>
+    <div><dt>Usuário</dt><dd><span class="mono">{{ user.username }}</span></dd></div>
+    <div><dt>Último acesso</dt><dd><span class="mono">{{ user.last_login|date:"d/m/Y H:i"|default:"—" }}</span></dd></div>
+  </dl>
+  <div class="form-actions">
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+      <button type="submit" class="btn btn--danger">{% icon "log-out" %} Sair da conta</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
