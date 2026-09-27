@@ -12,6 +12,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 a { color: inherit; text-decoration: none; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+/* Native checkboxes: size them for touch and tint them from the palette. */
+input[type="checkbox"] { width: 18px; height: 18px; margin: 0; accent-color: var(--color-gray-800); flex-shrink: 0; }
 button { font: inherit; cursor: pointer; }
 h1, h2, h3, p { margin: 0; }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -108,8 +115,10 @@ h1, h2, h3, p { margin: 0; }
 
 /* Forms */
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-.field { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 1px solid var(--border-secondary); border-radius: var(--radius-md); background: var(--bg-container); box-shadow: var(--shadow-xs); transition: box-shadow .2s; }
-.field:focus-within { box-shadow: 0 0 0 4px var(--alpha-black-100); }
+.field { display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border: 1px solid var(--border-secondary); border-radius: var(--radius-md); background: var(--bg-container); box-shadow: var(--shadow-xs); }
+.field:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+/* The container carries the ring, so the inner control must not draw a second one. */
+.field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible { outline: none; }
 .field label { font-size: 12px; color: var(--text-secondary); }
 .field input, .field select, .field textarea { border: 0; outline: 0; padding: 0; font: inherit; font-size: 14px; color: var(--text-primary); background: transparent; width: 100%; }
 .field textarea { resize: vertical; min-height: 60px; }
