@@ -124,6 +124,20 @@ h1, h2, h3, p { margin: 0; }
 .breadcrumb .current { color: var(--text-primary); }
 .icon-button { width: 32px; height: 32px; border: 0; background: transparent; border-radius: var(--radius-md); color: var(--text-secondary); display: inline-flex; align-items: center; justify-content: center; }
 .icon-button:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
+/* Ação destrutiva: neutra em repouso, para não puxar o olho antes da leitura
+   da linha; o vermelho só aparece quando o cursor já está sobre ela. */
+.icon-button--danger:hover { background: var(--color-red-50); color: var(--color-red-700); }
+
+/* Theme toggle. One button, two glyphs sharing a grid cell and cross-fading:
+   the icon names the action, not the state, so the moon offers the dark mode
+   and the sun offers the way back. aria-pressed (set in app.js) drives the
+   swap, which keeps this free of any [data-theme] selector. */
+.theme-toggle { cursor: pointer; }
+.theme-toggle__slot { display: grid; width: 18px; height: 18px; }
+.theme-toggle__slot > .icon { grid-area: 1 / 1; transition: opacity 180ms ease, transform 260ms cubic-bezier(.2, .8, .2, 1); }
+.theme-toggle__sun { opacity: 0; transform: rotate(-60deg) scale(.6); }
+.theme-toggle[aria-pressed="true"] .theme-toggle__moon { opacity: 0; transform: rotate(60deg) scale(.6); }
+.theme-toggle[aria-pressed="true"] .theme-toggle__sun { opacity: 1; transform: none; }
 
 /* Page header */
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 24px; }
@@ -164,6 +178,7 @@ h1, h2, h3, p { margin: 0; }
 .btn--danger { background: var(--bg-container); color: var(--text-destructive); border-color: var(--border-secondary); }
 .btn--danger:hover { background: var(--color-red-50); }
 .btn--sm { padding: 4px 10px; font-size: var(--text-body); border-radius: var(--radius-md); }
+.btn[hidden] { display: none; }
 .btn svg { width: 16px; height: 16px; }
 
 /* Forms */
@@ -191,7 +206,13 @@ h1, h2, h3, p { margin: 0; }
 .table td { padding: 12px; border-bottom: 1px solid var(--border-tertiary); vertical-align: middle; }
 .table tbody tr:last-child td { border-bottom: 0; }
 .table tbody tr:hover td { background: var(--bg-container-hover); }
-.table td.actions { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+/* Ações da linha. A célula continua sendo uma célula de tabela: com
+   `display: flex` ela deixa de ser table-cell, perde o `vertical-align` da
+   linha e os botões sobem para o topo nas linhas de duas alturas. O
+   espaçamento vem de margem entre irmãos, não de gap. */
+.table td.actions { text-align: right; white-space: nowrap; }
+.table td.actions > * { vertical-align: middle; }
+.table td.actions > * + * { margin-left: 6px; }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .table .muted { color: var(--text-secondary); }
 .table .strong { font-weight: 500; }
@@ -221,6 +242,36 @@ h1, h2, h3, p { margin: 0; }
 .alert--error { background: var(--color-red-50); color: var(--color-red-700); }
 .alert--info { background: var(--color-blue-50); color: var(--color-blue-700); }
 .alert--warning { background: var(--color-yellow-50); color: var(--color-yellow-700); }
+
+/* Diálogo de duplicatas. O card flutua sobre a conferência sem escondê-la: o
+   fundo é translúcido e desfocado, para a pessoa manter a lista no campo de
+   visão enquanto decide sobre um par de nomes por vez. */
+.modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.modal[hidden] { display: none; }
+.modal__backdrop { position: absolute; inset: 0; background: color-mix(in srgb, var(--bg-surface) 70%, transparent); backdrop-filter: blur(6px); }
+.modal__card { position: relative; width: min(680px, 100%); max-height: min(86vh, 720px); overflow-y: auto; background: var(--bg-container); border-radius: var(--radius-xl); box-shadow: var(--shadow-md), 0 24px 48px -12px var(--alpha-black-50); padding: 24px; }
+.modal__step { font-size: var(--text-label); color: var(--text-secondary); margin-bottom: 4px; }
+.modal__title { font-size: var(--text-title); font-weight: 500; }
+.modal__lead { color: var(--text-secondary); font-size: var(--text-body); margin-top: 4px; }
+.modal__actions { display: flex; align-items: center; gap: 8px; margin-top: 20px; justify-content: flex-end; flex-wrap: wrap; }
+.modal__actions [data-merge-back] { margin-right: auto; }
+.modal__foot { margin-top: 12px; text-align: right; }
+
+.merge { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+.merge[hidden] { display: none; }
+/* Pergunta de criação: um nome só, sem par para comparar. */
+.merge--single { grid-template-columns: 1fr; }
+.merge__side { border: 1px solid var(--border-secondary); border-radius: var(--radius-lg); padding: 14px; }
+.merge__side--target { border-color: var(--color-brand-500); }
+.merge__label { font-size: var(--text-label); color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; }
+.merge__name { font-size: var(--text-body); font-weight: 500; margin-top: 6px; }
+.merge__detail { font-size: var(--text-label); color: var(--text-secondary); margin-top: 2px; }
+.merge__services { list-style: none; margin-top: 10px; display: grid; gap: 4px; font-size: var(--text-label); color: var(--text-secondary); }
+
+@media (max-width: 640px) {
+  .merge { grid-template-columns: 1fr; }
+  .modal__card { padding: 18px; }
+}
 
 /* Weight bar (asset allocation style) */
 .weight-bar { display: flex; gap: 4px; height: 4px; margin: 12px 0 8px; }
