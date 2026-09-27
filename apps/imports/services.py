@@ -133,14 +133,89 @@ def enrich_preview(workbooks: list[dict]) -> list[dict]:
             for row_index, row in enumerate(sheet["rows"]):
                 row["prefix"] = f"{sheet['prefix']}-row-{row_index}"
                 base_name, suffix = split_suffix(row["name"])
-                applicator = Applicator.find_by_name(base_name)
+                applicator = Applicator.find_by_cpf(row.get("cpf", "")) or Applicator.find_by_name(base_name)
                 net_amount = Decimal(row["net_amount"])
                 row["display_name"] = applicator.full_name if applicator else to_display_name(base_name)
                 row["suffix"] = suffix
                 row["is_known"] = applicator is not None
-                row["is_duplicate"] = _is_duplicate(applicator, sheet["activity_date"], sheet["event_name"], net_amount)
+                row["is_duplicate"] = _is_duplicate(
+                    applicator, sheet["activity_date"], sheet["event_name"], sheet["shift"], row["role"]
+                )
                 row["gross_amount"] = str(compute_breakdown(net_amount, rates).gross_amount)
     return workbooks
+
+
+# --- duplicatas de nome ----------------------------------------------------
+#
+# As listas escrevem a mesma pessoa de dois jeitos ("Larissa Maia" numa aba,
+# "Larissa Salgado Maia" em outra) e cada grafia vira um cadastro, um RPA e uma
+# linha no resumo. Juntar sozinho seria pior: "Felipe Cardoso Oliveira" e
+# "Felipe Carneiro Oliveira" se parecem e podem ser duas pessoas. Então o
+# sistema levanta o par e o operador decide, um a um, antes de lançar.
+
+MERGE_FIELD_PREFIX = "merge-"
+MERGE_ANSWERS = {"sim", "nao"}
+# Terceira resposta da pergunta de criação: "applicator:12" lança no cadastro 12.
+APPLICATOR_ANSWER = "applicator:"
+SERVICES_SHOWN = 4
+
+
+def _question_id(variant: str, target: str) -> str:
+    """Id estável para o par: a prévia rende e a confirmação cobra o mesmo campo."""
+    digest = hashlib.sha1(f"{variant}|{target}".encode()).hexdigest()
+    return f"{MERGE_FIELD_PREFIX}{digest[:10]}"
+
+
+def _short_date(value: str) -> str:
+    try:
+        return date.fromisoformat(value).strftime("%d/%m/%Y")
+    except (TypeError, ValueError):
+        return value or "sem data"
+
+
+def _preview_names(workbooks: list[dict]) -> dict[str, dict]:
+    """Nomes distintos da prévia, com os serviços de cada um (para o card mostrar)."""
+    names: dict[str, dict] = {}
+    for workbook in workbooks:
+        for sheet in workbook["sheets"]:
+            for row in sheet["rows"]:
+                base, _ = split_suffix(row["name"])
+                key = normalize_name(base)
+                if not key:
+                    continue
+                entry = names.setdefault(key, {
+                    "normalized": key, "raw": base, "display": to_display_name(base),
+                    "services": [], "count": 0,
+                })
+                entry["count"] += 1
+                if len(entry["services"]) < SERVICES_SHOWN:
+                    entry["services"].append({
+                        "date": _short_date(sheet["activity_date"]),
+                        "event": sheet["event_name"],
+                        "amount": row["net_amount"],
+                    })
+    return names
+
+
+def _applicator_option(applicator: Applicator) -> dict:
+    entries = ServiceEntry.objects.filter(applicator=applicator).count()
+    detail = applicator.get_registration_status_display()
+    if entries:
+        detail += f" · {entries} lançamento(s) no sistema"
+    return {
+        "normalized": applicator.normalized_name, "display": applicator.full_name,
+        "detail": detail, "value": f"applicator:{applicator.pk}",
+        "services": [], "count": 0,
+    }
+
+
+def _preview_option(entry: dict) -> dict:
+    return {
+        "normalized": entry["normalized"], "display": entry["display"],
+        "detail": f"outro nome nesta importação · {entry['count']} lançamento(s)",
+        "value": f"name:{entry['display']}",
+        "services": entry["services"], "count": entry["count"],
+    }
 
 
 # --- confirmation ----------------------------------------------------------
