@@ -20,6 +20,7 @@ from django.test import TestCase, override_settings
 
 from apps.catalog.models import PayingCompany, Sector, TaxSettings, Unit
 from apps.imports.services import all_questions, confirm_import, enrich_preview, load_preview, stage_uploads
+from apps.imports.views import _cell_text, _is_noise_cell
 from apps.payroll.models import ServiceEntry
 
 SAMPLES = Path(__file__).resolve().parents[2] / "01-09 oficina e pbb"
@@ -142,3 +143,25 @@ class ImportDoesNotDuplicateTests(TestCase):
             self._import(name)
         self.assertEqual(self._duplicate_count(), 0)
         self.assertGreater(ServiceEntry.objects.count(), 100)
+
+
+class NoiseCellTests(TestCase):
+    """O dump da planilha original some com o que é ruído do template, não dado."""
+
+    def test_phone_cpf_pair_is_noise(self):
+        self.assertTrue(_is_noise_cell("32922299 / 03788016899"))
+
+    def test_signature_line_is_noise(self):
+        self.assertTrue(_is_noise_cell("ASSINATURA DO RESPONSÁVEL PELA CONTRATAÇÃO:"))
+
+    def test_broken_cell_reference_is_noise(self):
+        for text in ("!E", "!F", "!G"):
+            self.assertTrue(_is_noise_cell(text), text)
+
+    def test_real_data_is_not_noise(self):
+        for text in ("Segmento da Atividade:", "Empresa:", "Maria Silva", "Nome"):
+            self.assertFalse(_is_noise_cell(text), text)
+
+    def test_cell_text_collapses_internal_whitespace(self):
+        padded = "ASSINATURA:" + " " * 40 + "\nOUTRA LINHA"
+        self.assertEqual(_cell_text(padded), "ASSINATURA: OUTRA LINHA")
