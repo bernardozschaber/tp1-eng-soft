@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-13T00:00:00Z",
+  "generatedAt": "2026-09-28T00:00:00Z",
   "title": "Design System: BernoulliPay",
   "extensions": {
     "colorMeta": {
@@ -541,7 +541,7 @@
     "northStar": "The Ledger Signed in Verde",
     "overview": "BernoulliPay is a near-achromatic operations console that carries exactly one colour of its own. The neutral scale, spacing rhythm and shadow structure came from a port of the Maybe design system and remain the working chassis — the token file still says so in its first line, and components still carry donor names in comments (\"Stat block (net worth style)\", \"Weight bar (asset allocation style)\"). The colour identity is no longer borrowed. Every chromatic token in the build is now derived from verde Bernoulli (#009E8E), Colégio Bernoulli's own brand colour, or chosen to sit beside it. The decorative leftovers of the donor palette — violet, cyan, pink, orange, fuchsia, indigo, standalone blue — are deleted from the token file, not merely unused.\n\nThe personality is administrative rather than expressive, and the brand is applied with deliberate restraint: it appears in six places and nowhere else. The logomark, the active navigation indicator, the trend chart's stroke and gradient, positive badges and alerts, legend and status dots, and links. Everything else is grey. Density is high and unapologetically desktop-first — an 84px icon rail, a 280px totals sidebar, and a single full-height white card holding the work. Depth is almost entirely absent: a one-pixel alpha-black hairline plus a barely-there shadow is the whole elevation vocabulary, so hierarchy comes from tonal steps (page grey → card white → inset grey) and from typographic weight, not from lifting things off the page.\n\nOne contrast fact governs the whole palette and is written into the token file itself: #009E8E is 3.34:1 on white. It is a fill, stroke and mark colour and is never text on a light surface. Text that must read as brand uses --color-brand-700 (#047569, 5.59:1 on white and 4.99:1 on the brand-50 tint). That single number is why the primary button did not turn teal at the rebrand and why links, success text and positive badge ink all land on the 700 step rather than the 500.",
     "keyCharacteristics": [
-      "Light-only; `color-scheme: light` is declared and no dark theme exists.",
+      "Two themes, one identity: light is the default `:root`; `[data-theme=\"dark\"]` re-points the same semantic names rather than introducing a second vocabulary. Verde Bernoulli is lifted (`#00b8a5`) to hold its own on a dark ground; nothing else about the system's logic changes.",
       "Neutral greys carry the whole interface; verde Bernoulli is the only identity colour.",
       "The brand is a fill/stroke/mark; brand *text* is always the darker 700 step.",
       "Flat by default — hairline borders and 1px/6%-black shadows, never lifted panels.",
@@ -573,6 +573,11 @@
       {
         "name": "The Fixed-Slot Data Rule",
         "body": "Categorical colours are assigned in index order and never cycled. A ninth series does not wrap around to slot 1; it means the chart needs rethinking. The validation that earned these eight values only holds for the order they are declared in.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Semantic Layer Rule",
+        "body": "Dark mode is a re-pointed token layer, not a parallel design system. A new component references the same semantic custom properties the light theme uses (`--bg-container`, `--text-primary`, …) and gets both themes for free; it never branches on `[data-theme]` directly or hard-codes a dark-mode-only value.",
         "section": "colors"
       },
       {
@@ -620,13 +625,14 @@
       "Do give every icon-only control an `aria-label` and every table column a `scope=\"col\"` header, using `.sr-only` where a column reads as blank.",
       "Do render icons with `{% icon \"name\" %}` — inline Lucide SVG at 12/14/16/18px, stroke-only — including directional arrows, which use `arrow-up` / `arrow-down` with `css_class=\"trend-icon\"` for optical alignment.",
       "Do keep the global focus outline intact; if a composite control needs one ring, put it on the wrapper and suppress the inner one.",
-      "Do grow touch targets at the 1024px breakpoint rather than letting padding collapse."
+      "Do grow touch targets at the 1024px breakpoint rather than letting padding collapse.",
+      "Do define a new colour for both themes together, in the same edit: the light value under `:root` and its re-verified (≥4.5:1) dark equivalent under `[data-theme=\"dark\"]`."
     ],
     "donts": [
       "Don't set `--color-brand-500` as a text colour on any light surface. It is 3.34:1.",
       "Don't fill the primary button with verde. White on #009E8E fails button text contrast; the dark neutral button is the deliberate outcome of the rebrand, not an oversight.",
       "Don't redraw, re-letter or re-proportion the logomark, and don't force the horizontal lockup into a square container. It is supplied artwork; the only permitted transforms are uniform scaling and the transparent padding used for the favicon.",
-      "Don't introduce a dark theme or a second colour scheme; `color-scheme: light` is declared and no dark tokens exist.",
+      "Don't branch a component on `[data-theme]` directly or hard-code a dark-mode-only value; reference the same semantic token both themes already re-point (see Dark theme, under Colors).",
       "Don't fill a button with brand, red, yellow or blue. Status colour is text-on-tint only.",
       "Don't reintroduce decorative hues. Violet, cyan, pink, orange, fuchsia and indigo were deleted from the token layer as dead port residue; they are not a reserve palette.",
       "Don't cycle the categorical palette past slot 8, or reorder it. The validation holds for the declared order only.",
