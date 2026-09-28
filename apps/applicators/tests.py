@@ -1,0 +1,27 @@
+"""Casamento de nomes: acento, maiúscula e as grafias que a planilha repete."""
+from django.test import TestCase
+
+from apps.applicators.names import name_tokens, normalize_name, strip_accents
+
+
+class NormalizeNameTests(TestCase):
+    """`normalize_name` é a chave que decide se duas linhas são a mesma pessoa."""
+
+    def test_strips_accents(self):
+        self.assertEqual(strip_accents("Gusmão"), "Gusmao")
+
+    def test_accent_variants_collapse_to_the_same_key(self):
+        # O bug real: duas grafias do mesmo nome viravam dois cadastros.
+        self.assertEqual(
+            normalize_name("Gislaine Sousa Gusmão"),
+            normalize_name("GISLAINE SOUSA GUSMAO"),
+        )
+
+    def test_collapses_repeated_whitespace(self):
+        self.assertEqual(normalize_name("Ana   Luisa  de Souza"), "ANA LUISA DE SOUZA")
+
+    def test_drops_parenthesised_suffix(self):
+        self.assertEqual(normalize_name("Maria Silva (C.E. ONLINE)"), "MARIA SILVA")
+
+    def test_name_tokens_splits_the_normalized_form(self):
+        self.assertEqual(name_tokens("Ana de Souza"), ["ANA", "DE", "SOUZA"])
