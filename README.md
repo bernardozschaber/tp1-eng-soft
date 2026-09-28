@@ -39,35 +39,15 @@ O BernoulliPay automatiza o controle de pagamentos via RPA (Recibo de Pagamento 
 ## Como executar
 
 ```bash
-python3 -m venv .venv \\\&\\\& source .venv/bin/activate ## para criar a variável de ambiente do banco // para ativar o banco
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed               # dados de referência (unidades, setores, alíquotas) e usuário admin/admin
-python manage.py seed_team          # equipe de aplicação de provas, com foto, cargo e contato
+python manage.py seed_team          # equipe com foto, cargo, PIN e permissões de acesso
 python manage.py runserver
 ```
 
 Acesse http://127.0.0.1:8000 e entre com `admin` / `admin`.
-
-### Subindo o live server com o `.venv` já criado
-
-Sequência exata usada para colocar o servidor de desenvolvimento no ar quando o
-ambiente virtual já existe (chamando o Python do `.venv` direto, sem `activate`):
-
-```bash
-cd /home/brnrdzschbr/Debian/prova-pay
-.venv/bin/python manage.py migrate --noinput
-.venv/bin/python manage.py check
-.venv/bin/python manage.py runserver 0.0.0.0:8000
-```
-
-O `0.0.0.0` faz o servidor responder também pelo IP da máquina, o que é útil no
-WSL. Para conferir que subiu, de outro terminal:
-
-```bash
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/        # 302 (redireciona para o login)
-curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8000/login/  # 200
-```
 
 As planilhas importadas são guardadas em `media/imports/AAAA/MM/` (fora de
 `static/`, e servidas só pela view autenticada `imports:batch_download`). O
