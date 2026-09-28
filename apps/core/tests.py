@@ -81,3 +81,24 @@ class AllowedSectionsTests(TestCase):
 
     def test_user_with_no_group_sees_nothing(self):
         self.assertEqual(allowed_sections(self.no_group_user), set())
+
+
+class SectionAccessMiddlewareTests(TestCase):
+    """De ponta a ponta: o middleware barra a URL, não só esconde o menu."""
+
+    def setUp(self):
+        User = get_user_model()
+        self.rh_user = User.objects.create_user("felipe.oliveira", password="5424")
+        self.rh_user.groups.add(Group.objects.create(name="Usuário do RH"))
+        self.finance_user = User.objects.create_user("fernanda.rezende", password="1387")
+        self.finance_user.groups.add(Group.objects.create(name="Gestor financeiro"))
+
+    def test_user_outside_the_section_is_redirected_to_dashboard(self):
+        self.client.login(username="felipe.oliveira", password="5424")
+        response = self.client.get("/configuracoes/", follow=True)
+        self.assertRedirects(response, "/")
+
+    def test_user_inside_the_section_is_not_redirected(self):
+        self.client.login(username="fernanda.rezende", password="1387")
+        response = self.client.get("/configuracoes/")
+        self.assertEqual(response.status_code, 200)
