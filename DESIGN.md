@@ -251,7 +251,9 @@ teal at the rebrand and why links, success text and positive badge ink all land 
 rather than the 500.
 
 **Key Characteristics:**
-- Light-only; `color-scheme: light` is declared and no dark theme exists.
+- Two themes, one identity: light is the default `:root`; `[data-theme="dark"]` re-points the
+  same semantic names rather than introducing a second vocabulary. Verde Bernoulli is lifted
+  (`#00b8a5`) to hold its own on a dark ground; nothing else about the system's logic changes.
 - Neutral greys carry the whole interface; verde Bernoulli is the only identity colour.
 - The brand is a fill/stroke/mark; brand *text* is always the darker 700 step.
 - Flat by default — hairline borders and 1px/6%-black shadows, never lifted panels.
@@ -477,6 +479,28 @@ the pair, and never put white text on a saturated fill.
 **The Fixed-Slot Data Rule.** Categorical colours are assigned in index order and never cycled.
 A ninth series does not wrap around to slot 1; it means the chart needs rethinking. The
 validation that earned these eight values only holds for the order they are declared in.
+
+### Dark theme
+
+Applied by an explicit `[data-theme="dark"]` on `<html>`, set before first paint by an inline
+script in `base.html` so there is no flash and no second copy of the block under
+`prefers-color-scheme`. The toggle lives in the nav footer (moon/sun icon) and the choice
+persists in `localStorage`.
+
+The theme re-points the same semantic names rather than inventing a second vocabulary — a
+component never names a theme, only a semantic token. Ground inverts (surface `#121212`,
+container `#1b1b1b`, inset `#151515`, keeping the same three-step separation as light) and the
+chromatic scale flips role, not meaning: each colour's 50-tint becomes a deep desaturated
+ground and its 700-ink becomes a light hue, individually re-verified at ≥4.5:1 against the tint
+it sits on. Verde Bernoulli is lifted to `#00b8a5` (500) with `#4dd6c5` (700, 8.4:1 on the
+brand-50 ground) so it still reads as the identity colour rather than washing out on a dark
+surface; hairlines flip from black alpha to white alpha, since a black hairline is invisible on
+a dark ground; and shadows deepen, because a 6%-black shadow does not read on `#121212`.
+
+**The One Semantic Layer Rule.** Dark mode is a re-pointed token layer, not a parallel design
+system. A new component references the same semantic custom properties the light theme uses
+(`--bg-container`, `--text-primary`, …) and gets both themes for free; it never branches on
+`[data-theme]` directly or hard-codes a dark-mode-only value.
 
 ## Typography
 
@@ -733,6 +757,8 @@ disappearing — the operator must be able to see what they chose to skip.
 - **Do** keep the global focus outline intact; if a composite control needs one ring, put it on
   the wrapper and suppress the inner one.
 - **Do** grow touch targets at the 1024px breakpoint rather than letting padding collapse.
+- **Do** define a new colour for both themes together, in the same edit: the light value under
+  `:root` and its re-verified (≥4.5:1) dark equivalent under `[data-theme="dark"]`.
 
 ### Don't:
 - **Don't** set `--color-brand-500` as a text colour on any light surface. It is 3.34:1.
@@ -741,8 +767,8 @@ disappearing — the operator must be able to see what they chose to skip.
 - **Don't** redraw, re-letter or re-proportion the logomark, and don't force the horizontal
   lockup into a square container. It is supplied artwork; the only permitted transforms are
   uniform scaling and the transparent padding used for the favicon.
-- **Don't** introduce a dark theme or a second colour scheme; `color-scheme: light` is declared
-  and no dark tokens exist.
+- **Don't** branch a component on `[data-theme]` directly or hard-code a dark-mode-only value;
+  reference the same semantic token both themes already re-point (see Dark theme, under Colors).
 - **Don't** fill a button with brand, red, yellow or blue. Status colour is text-on-tint only.
 - **Don't** reintroduce decorative hues. Violet, cyan, pink, orange, fuchsia and indigo were
   deleted from the token layer as dead port residue; they are not a reserve palette.
