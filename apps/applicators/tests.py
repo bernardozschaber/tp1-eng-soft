@@ -1,8 +1,11 @@
 """Casamento de nomes: acento, maiúscula e as grafias que a planilha repete."""
-from django.db import IntegrityError, transaction
+from io import StringIO
+
+from django.core.management import call_command
+from django.db import IntegrityError, connection, transaction
 from django.test import TestCase
 
-from apps.applicators.models import Applicator
+from apps.applicators.models import Applicator, RegistrationStatus
 from apps.applicators.names import (
     is_same_person,
     looks_like_same_person,
@@ -98,3 +101,40 @@ class ApplicatorLookupTests(TestCase):
     def test_normalized_name_is_unique_even_across_accent_spellings(self):
         with self.assertRaises(IntegrityError), transaction.atomic():
             Applicator.objects.create(full_name="GISLAINE SOUSA GUSMAO")
+
+
+class DedupeNamesCommandTests(TestCase):
+    """`dedupe_names` junta cadastros que só entraram duplicados por fora da ORM."""
+
+    def _insert_raw(self, full_name, normalized_name, status):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "INSERT INTO applicators_applicator "
+                "(full_name, normalized_name, cpf, email, phone, identity_document, gender, "
+                "neighborhood, vse, course, course_period, institution, bank_name, bank_branch, "
+                "bank_account, account_type, pix_type, pix_key, pis_nit, referral, photo, notes, "
+                "registration_status, is_active, created_at, updated_at) "
+                "VALUES (%s, %s, '', '', '', '', '', '', 0, '', '', '', '', '', '', '', '', '', "
+                "'', '', '', '', %s, 1, datetime('now'), datetime('now'))",
+                [full_name, normalized_name, status],
+            )
+
+    def test_merges_duplicate_left_over_from_outside_the_orm(self):
+        # Simula uma restauração/carga direta no banco: duas grafias com
+        # normalized_name diferente por não terem passado pelo save().
+        self._insert_raw("GISLAINE SOUSA GUSMAO", "GISLAINE SOUSA GUSMAO", RegistrationStatus.NEW)
+        self._insert_raw("GISLAINE SOUSA GUSMÃO", "GISLAINE SOUSA GUSMÃO", RegistrationStatus.ACTIVE)
+
+        call_command("dedupe_names", "--apply", stdout=StringIO())
+
+        survivors = Applicator.objects.filter(full_name__icontains="Gusm")
+        self.assertEqual(survivors.count(), 1)
+        self.assertEqual(survivors.get().registration_status, RegistrationStatus.ACTIVE)
+
+    def test_dry_run_does_not_write_without_apply(self):
+        self._insert_raw("GISLAINE SOUSA GUSMAO", "GISLAINE SOUSA GUSMAO", RegistrationStatus.NEW)
+        self._insert_raw("GISLAINE SOUSA GUSMÃO", "GISLAINE SOUSA GUSMÃO", RegistrationStatus.ACTIVE)
+
+        call_command("dedupe_names", stdout=StringIO())
+
+        self.assertEqual(Applicator.objects.filter(full_name__icontains="Gusm").count(), 2)
