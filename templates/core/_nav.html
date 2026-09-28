@@ -24,7 +24,7 @@
       </span>
     </a>
     <div class="nav__footer-actions">
-      <a href="{% url 'catalog:settings' %}" class="icon-button" title="Configurações" aria-label="Configurações">{% icon "settings" 18 %}</a>
+      {% if can_configure %}<a href="{% url 'catalog:settings' %}" class="icon-button" title="Configurações" aria-label="Configurações">{% icon "settings" 18 %}</a>{% endif %}
       <button type="button" class="icon-button theme-toggle" data-theme-toggle aria-pressed="false" title="Usar modo escuro" aria-label="Usar modo escuro">
         <span class="theme-toggle__slot">{% icon "moon" 18 "theme-toggle__moon" %}{% icon "sun" 18 "theme-toggle__sun" %}</span>
       </button>

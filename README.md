@@ -120,13 +120,18 @@ tentativa de acessar a URL de outra área direto é barrada do mesmo jeito
 | `admin` | Bernardo Zschaber | Administrador do sistema | `admin` | todas |
 | `jessica.moreira` | Jessica Souza Moreira | ♾️ Supervisor - Aplicação | `2433` | todas |
 | `suzana.godoy` | Suzana Godoy | Coordenadora de Operações | `3608` | todas |
-| `fernanda.rezende` | Fernanda Rezende | Gestor financeiro | `1387` | Lançamentos, Resumo |
+| `fernanda.rezende` | Fernanda Rezende | Gestor financeiro | `1387` | Lançamentos, Resumo, Configurações |
 | `felipe.oliveira` | Felipe Oliveira | Usuário do RH | `5424` | Importar |
 | `ana.julia` | Ana Júlia | Administrador financeiro | `0089` | Aplicadores |
 
 Administrador financeiro, Usuário do RH e Gestor financeiro são os três papéis
 das histórias de usuário acima; admin, Jessica e Suzana têm acesso total por
 serem operação/administração do sistema, não personas do produto.
+
+"Configurações" (a engrenagem no rodapé do menu, onde ficam as alíquotas e os
+setores) é a única área fora do menu principal e segue a mesma regra: só quem
+tem acesso total e a Fernanda (Gestor financeiro) veem o ícone ou conseguem
+abrir `/configuracoes/` direto pela URL.
 
 O banco é sempre `db.sqlite3`, criado no `migrate`; não há outra opção configurável.
 

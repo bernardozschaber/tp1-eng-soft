@@ -11,6 +11,7 @@ SECTION_GROUPS = {
     "imports": "Usuário do RH",
     "payroll": "Gestor financeiro",
     "summary": "Gestor financeiro",
+    "settings": "Gestor financeiro",
 }
 
 
@@ -20,6 +21,8 @@ def section_for_view(app_name: str, view_name: str) -> str:
         return "summary"
     if app_name == "payroll":
         return "payroll"
+    if app_name == "catalog":
+        return "settings"
     if app_name in ("imports", "applicators"):
         return app_name
     return ""

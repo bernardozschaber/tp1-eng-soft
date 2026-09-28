@@ -33,4 +33,4 @@ def navigation(request):
         for label, url_name, icon_name, app_name in NAV_ITEMS
         if not app_name or app_name in sections
     ]
-    return {"nav_items": nav_items}
+    return {"nav_items": nav_items, "can_configure": "settings" in sections}
