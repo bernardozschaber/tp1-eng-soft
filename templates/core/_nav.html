@@ -1,13 +1,13 @@
 {% load static icons avatars %}
 <nav class="app__nav">
-  <a href="{% url 'dashboard' %}" class="nav__logo">
+  <a href="{% url 'dashboard' %}" class="nav__logo" aria-label="BernoulliPay — Início">
     <img src="{% static 'img/logomark.png' %}" alt="" width="28" height="18">
     <span class="nav__logo-text">BernoulliPay</span>
   </a>
   <ul class="nav__list">
     {% for item in nav_items %}
     <li>
-      <a href="{{ item.url }}" class="nav__item {% if item.active %}is-active{% endif %}">
+      <a href="{{ item.url }}" class="nav__item {% if item.active %}is-active{% endif %}" title="{{ item.label }}" aria-label="{{ item.label }}">
         <span class="nav__icon">{% icon item.icon 18 %}</span>
         <span class="nav__label">{{ item.label }}</span>
       </a>

@@ -41,6 +41,17 @@ h1, h2, h3, p { margin: 0; }
   .icon-button { width: 40px; height: 40px; }
   .btn--sm { padding: 8px 12px; }
   .table td.actions > * + * { margin-left: 10px; }
+  .nav__item.is-active::before { left: -8px; }
+}
+
+@media (max-width: 480px) {
+  /* A 200px labelled nav leaves a 390px phone with barely 180px for content —
+     not enough for a data table. Below 480px the rail drops its text and
+     goes icon-only, the way DESIGN.md's rail was meant to work. */
+  .app__nav { width: 64px; padding: 12px 8px; }
+  .nav__logo-text, .nav__label, .nav__user-info { display: none; }
+  .nav__logo { justify-content: center; padding: 4px; }
+  .nav__item, .nav__user { justify-content: center; }
 }
 
 /* Reduced motion: kill movement, keep the colour and shadow fades that report
@@ -51,13 +62,17 @@ h1, h2, h3, p { margin: 0; }
 }
 
 /* Icon navigation — Notion-style: icon and label side by side, full column
-   width, active item picked out with a filled row instead of a thin bar. */
+   width, active item picked out with a filled row plus a thin brand bar. */
 .nav__logo { display: flex; align-items: center; gap: 8px; padding: 4px 8px; margin-bottom: 16px; }
 .nav__logo-text { font-size: var(--text-label); font-weight: 700; color: var(--text-primary); }
 .nav__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.nav__item { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--radius-md); color: var(--text-secondary); }
+.nav__item { position: relative; display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: var(--radius-md); color: var(--text-secondary); }
 .nav__item:hover { background: var(--bg-surface-hover); }
 .nav__item.is-active { background: var(--bg-container); box-shadow: var(--shadow-xs); color: var(--text-primary); }
+/* The rail's own brand placement: a verde bar flush with the rail edge, not
+   just the tile. Offset cancels .app__nav's own horizontal padding (12px
+   default, 8px from 1024px down) so it reaches the true edge either way. */
+.nav__item.is-active::before { content: ""; position: absolute; left: -12px; top: 4px; bottom: 4px; width: 3px; background: var(--color-brand-500); border-radius: 0 2px 2px 0; }
 .nav__icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .nav__label { font-size: var(--text-body); font-weight: 500; }
 /* O rodapé fica no fim da mesma coluna larga: cabe nome, cargo e unidade por
@@ -146,8 +161,10 @@ h1, h2, h3, p { margin: 0; }
 .page-header__actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 @media (max-width: 640px) { .page-header h1 { font-size: var(--text-headline); } }
 
-/* Cards */
-.card { background: var(--bg-container); border-radius: var(--radius-xl); box-shadow: var(--shadow-border-xs); padding: 16px; margin-bottom: 24px; }
+/* Cards. No shadow here: `.card` always nests inside `.app__main-card`, which
+   already carries the shadow-border-xs edge — repeating it reads as a card
+   inside a card. A hairline groups the section instead. */
+.card { background: var(--bg-container); border-radius: var(--radius-xl); border: 1px solid var(--border-secondary); padding: 16px; margin-bottom: 24px; }
 .card__header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; }
 .card__title { font-size: var(--text-title); font-weight: 500; line-height: var(--leading-snug); }
 .card__title .muted { color: var(--text-secondary); font-weight: 400; }
@@ -161,9 +178,10 @@ h1, h2, h3, p { margin: 0; }
 .trend-up { color: var(--text-success); }
 .trend-down { color: var(--text-destructive); }
 
-/* Metrics grid */
+/* Metrics grid. Same reasoning as .card: this always sits inside
+   .app__main-card, so it takes a hairline instead of repeating the shell's shadow. */
 .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
-.metric { background: var(--bg-container); border-radius: var(--radius-lg); box-shadow: var(--shadow-border-xs); padding: 12px 16px; }
+.metric { background: var(--bg-container); border-radius: var(--radius-lg); border: 1px solid var(--border-secondary); padding: 12px 16px; }
 .metric__label { font-size: var(--text-label); color: var(--text-secondary); margin-bottom: 4px; }
 .metric__value { font-size: var(--text-metric); font-weight: 500; font-variant-numeric: tabular-nums; }
 
@@ -198,7 +216,9 @@ h1, h2, h3, p { margin: 0; }
 .filters input[type="date"], .filters input[type="search"] { background: var(--bg-container); border: 1px solid var(--border-secondary); border-radius: var(--radius-md); padding: 8px 12px; font: inherit; font-size: var(--text-body); color: var(--text-primary); }
 
 /* Tables */
-.table-wrap { overflow-x: auto; }
+/* 8px of trailing room so a table wide enough to scroll doesn't clip its
+   last column flush against the scroller's edge. */
+.table-wrap { overflow-x: auto; padding-right: 8px; }
 .table { width: 100%; border-collapse: collapse; font-size: var(--text-body); }
 .table th { text-align: left; font-size: var(--text-micro); font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); padding: 10px 12px; background: var(--bg-container-inset); }
 .table th:first-child { border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
@@ -271,6 +291,9 @@ h1, h2, h3, p { margin: 0; }
 @media (max-width: 640px) {
   .merge { grid-template-columns: 1fr; }
   .modal__card { padding: 18px; }
+  /* 180px tiles at the 14px gutter don't fit two across a 390px phone with
+     the grid gap; the rightmost tile overflows the card and clips. */
+  .metrics { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 }
 
 /* Weight bar (asset allocation style) */

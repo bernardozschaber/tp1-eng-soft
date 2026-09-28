@@ -63,7 +63,7 @@
               <td class="strong ap-cell"><i class="dot" style="background:{% if row.is_duplicate %}var(--color-red-500){% elif row.is_known %}var(--color-brand-500){% else %}var(--color-yellow-600){% endif %}"></i> {{ row.display_name }}{% if row.suffix %} <span class="badge badge--gray">{{ row.suffix }}</span>{% endif %}</td>
               <td class="mono muted">{{ row.cpf|default:"—" }}</td>
               <td><select name="{{ row_prefix }}-role" class="select select--sm"><option value="APLICADOR" {% if row.role == 'APLICADOR' %}selected{% endif %}>Aplicador</option><option value="ORIENTADOR" {% if row.role == 'ORIENTADOR' %}selected{% endif %}>Orientador</option><option value="VOLANTE">Volante</option></select></td>
-              <td class="num"><input name="{{ row_prefix }}-net_amount" value="{% if not sheet.needs_amount %}{{ row.net_amount }}{% endif %}" placeholder="{% if sheet.needs_amount %}valor da aba{% endif %}" inputmode="decimal" style="width:90px;text-align:right;border:1px solid var(--border-secondary);border-radius:6px;padding:4px 8px;font:inherit"></td>
+              <td class="num"><input name="{{ row_prefix }}-net_amount" value="{% if not sheet.needs_amount %}{{ row.net_amount }}{% endif %}" placeholder="{% if sheet.needs_amount %}valor da aba{% endif %}" inputmode="decimal" style="width:90px;text-align:right;border:1px solid var(--border-secondary);border-radius:var(--radius-md);padding:4px 8px;font:inherit"></td>
               <td class="num muted">{{ row.gross_amount|brl }}</td>
             </tr>
             {% endwith %}
