@@ -1,4 +1,5 @@
 """Upload -> preview -> confirm flow for payment lists."""
+import re
 from datetime import date, datetime, time
 from decimal import Decimal
 from io import BytesIO
@@ -127,6 +128,13 @@ def discard(request):
 
 PREVIEW_MAX_ROWS = 200
 PREVIEW_MAX_COLUMNS = 14
+# Ruído fixo do template das planilhas do setor: telefone/CPF do rodapé,
+# linhas de assinatura e referências de célula quebradas ("!E", "!F", "!G").
+# Não tem valor nenhum pra conferência, então some daqui, não só some da tela.
+_NOISE_PATTERNS = (
+    re.compile(r"^\d{5,}\s*/\s*\d{5,}$"),
+    re.compile(r"^!\s*[A-Za-z]$"),
+)
 
 
 def _cell_text(value) -> str:
@@ -139,11 +147,19 @@ def _cell_text(value) -> str:
         return value.strftime("%d/%m/%Y")
     if isinstance(value, float) and value.is_integer():
         return str(int(value))
-    return str(value)
+    # Colapsa quebras de linha e espaços repetidos (célula de assinatura do
+    # template costuma vir com dezenas de espaços até a próxima linha).
+    return " ".join(str(value).split())
+
+
+def _is_noise_cell(text: str) -> bool:
+    if text.upper().startswith("ASSINATURA"):
+        return True
+    return any(pattern.match(text) for pattern in _NOISE_PATTERNS)
 
 
 def _read_sheets(batch: ImportBatch) -> list[dict]:
-    """Lê a planilha guardada e devolve as abas como linhas de texto."""
+    """Lê a planilha guardada e devolve as abas como linhas de texto, sem o ruído do template."""
     with batch.source_file.open("rb") as handle:
         workbook = load_workbook(BytesIO(handle.read()), read_only=True, data_only=True)
     sheets = []
@@ -154,13 +170,15 @@ def _read_sheets(batch: ImportBatch) -> list[dict]:
                 if index >= PREVIEW_MAX_ROWS:
                     truncated = True
                     break
-                cells = [_cell_text(value) for value in row[:PREVIEW_MAX_COLUMNS]]
+                cells = [text if not _is_noise_cell(text) else "" for text in (_cell_text(value) for value in row[:PREVIEW_MAX_COLUMNS])]
                 if any(cells):
                     rows.append(cells)
-            width = max((len(row) for row in rows), default=0)
+            # Larga só até a última coluna com algum dado — tirar o ruído
+            # costuma esvaziar as colunas do fim, e sobrariam vazias na tabela.
+            width = max((index + 1 for row in rows for index, cell in enumerate(row) if cell), default=0)
             sheets.append({
                 "name": worksheet.title,
-                "rows": [row + [""] * (width - len(row)) for row in rows],
+                "rows": [row[:width] for row in rows],
                 "truncated": truncated,
             })
     finally:
