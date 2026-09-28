@@ -1,9 +1,11 @@
 """Defeitos que não pertencem a um app, e sim ao projeto inteiro."""
 import re
+from io import StringIO
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.management import call_command
 from django.test import TestCase
 
 from apps.core.access import FULL_ACCESS_GROUP, allowed_sections, section_for_view
@@ -102,3 +104,25 @@ class SectionAccessMiddlewareTests(TestCase):
         self.client.login(username="fernanda.rezende", password="1387")
         response = self.client.get("/configuracoes/")
         self.assertEqual(response.status_code, 200)
+
+
+class SeedTeamRenameTests(TestCase):
+    """Quem mudou de usuário (fernanda -> fernanda.rezende) é renomeado, não duplicado."""
+
+    def test_rerunning_seed_team_renames_the_old_username_keeping_the_pk(self):
+        old_user = get_user_model().objects.create_user("fernanda")
+        old_pk = old_user.pk
+
+        call_command("seed_team", stdout=StringIO())
+
+        self.assertFalse(get_user_model().objects.filter(username="fernanda").exists())
+        renamed = get_user_model().objects.get(username="fernanda.rezende")
+        self.assertEqual(renamed.pk, old_pk)
+        self.assertEqual(renamed.profile.role, "Gestor financeiro")
+        self.assertIn("Gestor financeiro", renamed.groups.values_list("name", flat=True))
+
+    def test_rerunning_seed_team_does_not_duplicate_an_already_renamed_user(self):
+        call_command("seed_team", stdout=StringIO())
+        call_command("seed_team", stdout=StringIO())
+
+        self.assertEqual(get_user_model().objects.filter(username="fernanda.rezende").count(), 1)
