@@ -2,7 +2,11 @@
 import re
 from pathlib import Path
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import TestCase
+
+from apps.core.access import FULL_ACCESS_GROUP, allowed_sections, section_for_view
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[2] / "templates"
 # O tokenizer do Django casa {# … #} sem DOTALL, então um comentário que
@@ -36,3 +40,44 @@ class TemplateCommentTests(TestCase):
             "comentário {# … #} em mais de uma linha vaza para a página; "
             f"use {{% comment %}}: {', '.join(offenders)}",
         )
+
+
+class SectionForViewTests(TestCase):
+    """A chave de seção que o menu e o middleware compartilham."""
+
+    def test_payroll_summary_is_its_own_section(self):
+        self.assertEqual(section_for_view("payroll", "payroll:summary"), "summary")
+
+    def test_payroll_entries_are_not_summary(self):
+        self.assertEqual(section_for_view("payroll", "payroll:entry_list"), "payroll")
+
+    def test_catalog_maps_to_settings(self):
+        self.assertEqual(section_for_view("catalog", "catalog:settings"), "settings")
+
+    def test_dashboard_has_no_section(self):
+        self.assertEqual(section_for_view("", "dashboard"), "")
+
+
+class AllowedSectionsTests(TestCase):
+    """Grupo de acesso total vê tudo; os demais, só a própria seção."""
+
+    def setUp(self):
+        User = get_user_model()
+        self.full_access_user = User.objects.create_user("jessica.moreira")
+        self.full_access_user.groups.add(Group.objects.create(name=FULL_ACCESS_GROUP))
+        self.restricted_user = User.objects.create_user("fernanda.rezende")
+        self.restricted_user.groups.add(Group.objects.create(name="Gestor financeiro"))
+        self.no_group_user = User.objects.create_user("sem.grupo")
+
+    def test_full_access_group_sees_every_section(self):
+        self.assertEqual(allowed_sections(self.full_access_user), {"applicators", "imports", "payroll", "summary", "settings"})
+
+    def test_superuser_sees_every_section_without_a_group(self):
+        superuser = get_user_model().objects.create_superuser("admin", password="admin")
+        self.assertEqual(allowed_sections(superuser), {"applicators", "imports", "payroll", "summary", "settings"})
+
+    def test_gestor_financeiro_sees_only_its_own_sections(self):
+        self.assertEqual(allowed_sections(self.restricted_user), {"payroll", "summary", "settings"})
+
+    def test_user_with_no_group_sees_nothing(self):
+        self.assertEqual(allowed_sections(self.no_group_user), set())
