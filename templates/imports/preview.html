@@ -151,10 +151,10 @@
     <div class="modal__actions">
       <button type="button" class="btn btn--ghost btn--sm" data-merge-back>{% icon "chevron-left" 14 %} Voltar</button>
       <button type="button" class="btn btn--secondary" data-merge-link hidden>{% icon "search" 14 %} Associar a outro aplicador</button>
-      <button type="button" class="btn btn--secondary" data-merge-answer="nao">São pessoas diferentes</button>
-      <button type="button" class="btn btn--primary" data-merge-answer="sim">É a mesma pessoa</button>
+      <button type="button" class="btn btn--secondary" data-merge-answer="nao" title="Atalho: ←" aria-keyshortcuts="ArrowLeft">São pessoas diferentes</button>
+      <button type="button" class="btn btn--primary" data-merge-answer="sim" title="Atalho: →" aria-keyshortcuts="ArrowRight">É a mesma pessoa</button>
     </div>
-    <p class="modal__foot muted small">Esc fecha e volta para a conferência sem lançar nada.</p>
+    <p class="modal__foot muted small">← nega, → confirma, Esc fecha e volta para a conferência sem lançar nada.</p>
   </div>
 </div>
 {% endif %}

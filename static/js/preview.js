@@ -150,7 +150,14 @@
   back.addEventListener("click", () => show(current - 1));
   dialog.querySelectorAll("[data-merge-cancel]").forEach((element) => element.addEventListener("click", close));
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && !dialog.hidden) close();
+    if (dialog.hidden) return;
+    if (event.key === "Escape") { close(); return; }
+    // Atalho para a pergunta "é a mesma pessoa?": seta direita confirma
+    // (mesma pessoa / criar cadastro), seta esquerda nega. Não dispara
+    // dentro da busca de cadastro, onde as setas movem o cursor do texto.
+    if (search && event.target === search) return;
+    if (event.key === "ArrowRight") { event.preventDefault(); answer("sim"); }
+    if (event.key === "ArrowLeft") { event.preventDefault(); answer("nao"); }
   });
   document.querySelectorAll("[data-merge-open]").forEach((button) =>
     button.addEventListener("click", () => open(pending() === -1 ? 0 : pending()))
