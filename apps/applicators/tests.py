@@ -1,6 +1,8 @@
 """Casamento de nomes: acento, maiúscula e as grafias que a planilha repete."""
+from django.db import IntegrityError, transaction
 from django.test import TestCase
 
+from apps.applicators.models import Applicator
 from apps.applicators.names import (
     is_same_person,
     looks_like_same_person,
@@ -73,3 +75,26 @@ class WhatsappNumberTests(TestCase):
 
     def test_display_phone_is_empty_without_a_mobile(self):
         self.assertEqual(display_phone(""), "")
+
+
+class ApplicatorLookupTests(TestCase):
+    """`normalized_name` é sempre recalculado no save — é o que faz `find_by_name` funcionar."""
+
+    def setUp(self):
+        self.applicator = Applicator.objects.create(full_name="Gislaine Sousa Gusmão", cpf="123.456.789-00")
+
+    def test_find_by_name_ignores_accent_and_case(self):
+        self.assertEqual(Applicator.find_by_name("GISLAINE SOUSA GUSMAO"), self.applicator)
+
+    def test_find_by_name_returns_none_for_unknown_name(self):
+        self.assertIsNone(Applicator.find_by_name("Alguém Que Não Existe"))
+
+    def test_find_by_cpf_accepts_digits_only(self):
+        self.assertEqual(Applicator.find_by_cpf("12345678900"), self.applicator)
+
+    def test_find_by_cpf_rejects_incomplete_number(self):
+        self.assertIsNone(Applicator.find_by_cpf("123"))
+
+    def test_normalized_name_is_unique_even_across_accent_spellings(self):
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            Applicator.objects.create(full_name="GISLAINE SOUSA GUSMAO")
