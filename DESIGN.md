@@ -237,8 +237,8 @@ The personality is administrative rather than expressive, and the brand is appli
 deliberate restraint: it appears in six places and nowhere else. The logomark, the active
 navigation indicator, the trend chart's stroke and gradient, positive badges and alerts,
 legend and status dots, and links. Everything else is grey. Density is high and
-unapologetically desktop-first — an 84px icon rail, a 280px totals sidebar, and a single
-full-height white card holding the work. Depth is almost entirely absent: a one-pixel
+unapologetically desktop-first — a 240px nav rail (200px from 1024px down, icon-only at
+64px below 480px) and a single full-height white card holding the work. Depth is almost entirely absent: a one-pixel
 alpha-black hairline plus a barely-there shadow is the whole elevation vocabulary, so
 hierarchy comes from tonal steps (page grey → card white → inset grey) and from typographic
 weight, not from lifting things off the page.
@@ -258,7 +258,8 @@ rather than the 500.
 - The brand is a fill/stroke/mark; brand *text* is always the darker 700 step.
 - Flat by default — hairline borders and 1px/6%-black shadows, never lifted panels.
 - Money and counts are monospaced and tabular-aligned; prose is not.
-- Desktop-first density: three fixed columns, breaking to a drawer below 1024px.
+- Desktop-first density: nav rail plus one content column, the rail narrowing in place —
+  never a drawer — down to a phone width.
 - Every icon is inline Lucide SVG rendered by a template tag; there is no icon font and no
   Unicode glyph stands in for one.
 
@@ -371,8 +372,9 @@ function follows — the same hierarchy the product name states.
 
 Which one appears is a decision, not a convenience:
 
-- `static/img/logomark.png` — the mark alone, **1.544:1**, displayed 44×28 in the icon rail.
-  The rail is 84px of chrome; it gets the mark and no words.
+- `static/img/logomark.png` — the mark alone, **1.544:1**, displayed 28×18 next to the
+  wordtext "BernoulliPay" at the top of the nav rail. The wordtext drops away only at the
+  narrowest, icon-only rail (below 480px) — everywhere wider, the mark keeps its words.
 - `static/img/wordmark.png` — the mark above the words "BernoulliPay", **0.946:1**, displayed
   140×148 on the login card. The login screen is the one surface with room for the name and a
   reason to say it, so it is the one surface that carries the full lockup.
@@ -412,7 +414,7 @@ validated categorical palette for data.
 
 ### Primary
 - **Verde Bernoulli** (`brand`): the institution's colour and the product's only identity hue.
-  It is the ink of the supplied logomark, paints the 4px active navigation indicator, strokes the trend
+  It is the ink of the supplied logomark, paints the 3px active navigation indicator, strokes the trend
   chart at 2px and fades its area gradient from 12% to 0, and fills the first categorical slot.
   It is never set as text on a light surface.
 - **Verde Ink** (`brand-ink`): the readable step of the same green. Links, the positive trend
@@ -568,8 +570,8 @@ borrowed for one.
 
 ## Layout
 
-A three-column fixed shell at full height, defined once in `base.html` and never overridden:
-an 84px icon navigation rail, a 280px sidebar carrying per-unit net totals, and a flexible main
+A two-column fixed shell at full height, defined once in `base.html` and never overridden: a
+nav rail carrying the logomark, the section links and the account footer, and a flexible main
 column. The main column holds a single white card (12px radius) that fills the viewport height
 and scrolls internally — the page itself never scrolls. Content inside the card sits on a
 `--gutter` custom property (20px desktop, 14px below 1024px) so the topbar and body share one
@@ -578,21 +580,24 @@ horizontal rhythm, with 48px of bottom breathing room.
 Spacing is a 4px-based rhythm used at 4 / 8 / 12 / 16 / 24: 24px between stacked sections
 (`.stack`, card bottom margin, page-header margin), 16px of card padding, 12px of table cell
 padding, 8px between adjacent controls. Grids are auto-fitting rather than fixed-column —
-metric tiles at `minmax(180px, 1fr)`, form fields at `minmax(220px, 1fr)` — so wide monitors
-fill out instead of leaving a dead gutter.
+metric tiles at `minmax(180px, 1fr)` (`minmax(150px, 1fr)` below 640px, where two 180px tiles
+plus their grid gap no longer fit a phone-width card), form fields at `minmax(220px, 1fr)` — so
+wide monitors fill out instead of leaving a dead gutter.
 
-**Responsive behaviour.** One real breakpoint at 1024px and a minor one at 640px. Below 1024px
-the sidebar leaves the flow and becomes a fixed overlay drawer (`min(300px, 86vw)`), sliding in
-over 220ms on a `cubic-bezier(.22, 1, .36, 1)` curve behind a 40%-black backdrop; it closes on
-Escape, on backdrop click, and returns focus to the toggle. The nav rail narrows to 64px, the
-gutter tightens, and touch targets grow rather than shrink — icon buttons go 32px → 40px and
-small buttons regain padding, because both sat under the 24px minimum once padding collapsed.
-Below 640px only the page title shrinks. The desktop sidebar preference is persisted in
-`localStorage`, and deliberately not applied at the drawer breakpoint.
+**Responsive behaviour.** Three breakpoints, each earning its keep. Below 1024px the nav rail
+narrows from 240px to 200px, the gutter tightens, and touch targets grow rather than shrink —
+icon buttons go 32px → 40px and small buttons regain padding, because both sat under the 24px
+minimum once padding collapsed. Below 640px the page title shrinks and metric tiles drop their
+minimum width, per above. Below 480px the rail drops its text — logo wordtext, item labels,
+account name — down to a 64px icon-only strip, because a labelled 200px rail plus a data table
+does not fit a phone screen with anything left to read; every icon-only link keeps its label as
+an `aria-label` so nothing loses its accessible name. There is no drawer, no overlay and no
+per-viewport layout preference in `localStorage` — the rail is always present, just narrower.
 
 **Motion.** Near-zero: a 150ms background fade on buttons and the dropzone, a 200ms chevron
-rotation, the 220ms drawer slide. Under `prefers-reduced-motion` the drawer animation and
-chevron rotation are removed while colour transitions are kept, so state feedback survives.
+rotation, a 180ms icon cross-fade on the theme toggle. Under `prefers-reduced-motion` the
+chevron rotation is removed while colour and opacity transitions are kept, so state feedback
+survives.
 
 ### Named Rules
 **The Card-Is-The-Page Rule.** The scroll container is the main card, not the document. New
@@ -612,13 +617,16 @@ than 1px at rest, and nothing lifts on hover; hover changes background tone only
 
 ### Shadow Vocabulary
 - **Edge** (`box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06), 0 0 0 1px rgba(11,11,11,0.05)`): the
-  default card treatment. Main card, content cards, metric tiles.
+  main card only — the single shell that sits directly on page grey. Content cards and metric
+  tiles nest inside that shell, so they take a hairline border instead of repeating its shadow;
+  see the Fill-Not-Text-style rule under Shapes.
 - **Edge, larger** (`box-shadow: 0 1px 6px 0 rgba(11,11,11,0.06), 0 0 0 1px rgba(11,11,11,0.05)`):
   the login card only — the one surface that floats alone on grey.
 - **Control** (`box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06)`): secondary buttons, form fields
-  and the active nav icon tile, giving them just enough presence to read as interactive.
-- **Drawer** (`box-shadow: 0 4px 8px -2px rgba(11,11,11,0.06)`): the mobile sidebar overlay,
-  the only genuinely floating element in the product.
+  and the active nav item's tile, giving them just enough presence to read as interactive.
+- **Overlay** (`box-shadow: 0 4px 8px -2px rgba(11,11,11,0.06)`, stacked with a deeper ambient
+  shadow): the merge-confirmation modal and the import sheet-detail card — the two genuinely
+  floating elements in the product, both dialogs over a scrim, neither a drawer.
 
 ### Named Rules
 **The Edge-Not-Lift Rule.** Shadows draw edges, not altitude. A surface may gain a hairline ring;
@@ -634,7 +642,7 @@ it is not a brand surface.
 ## Shapes
 
 Softly rounded rectangles throughout, at three used steps: 8px for small controls and
-interactive chrome (icon buttons, nav icon tiles, sidebar rows, fields, selects, small buttons),
+interactive chrome (icon buttons, nav item tiles, fields, selects, small buttons),
 10px for buttons, metric tiles and alerts, 12px for cards, the main column card, table frames,
 sheets and the dropzone. Badges and weight-bar segments are full pills (999px); avatars and
 legend dots are circles.
@@ -693,18 +701,18 @@ The logomark is not system geometry and is specified under **Identity**, above.
   brand — an 18px control needs the contrast).
 
 ### Navigation
-- **Icon rail (84px):** the logomark, then a vertical list of items, each a 32px rounded icon
-  tile with an 11px weight-500 label beneath. Inactive is secondary ink on transparent; hover
-  tints the tile; active gets a white tile with the control shadow, full ink, and a **verde
-  Bernoulli** indicator bar at the rail edge — the single strongest brand placement in the
-  chrome, and the only place the 500 step touches the shell. The rail's footer pins a help
-  button and a circular initials avatar that submits logout.
-- **Sidebar (280px):** two action links, then per-unit rows showing unit name, paying company
-  in 11px secondary ink, and a right-aligned tabular total over a mono entry count. Rows tint
-  on hover; nothing is boxed.
-- **Topbar:** a `›`-separated breadcrumb in secondary ink with the current page in full ink,
-  preceded by the sidebar toggle icon button.
-- **Mobile:** below 1024px the sidebar becomes the overlay drawer described in Layout.
+- **Rail (240px, 200px below 1024px, 64px icon-only below 480px):** the logomark and wordtext,
+  then a vertical list of items, each an 18px icon and an inline label sharing one row (icon
+  above label only disappears — the label does, not the row — at the narrowest, icon-only
+  width). Inactive is secondary ink on transparent; hover tints the tile; active gets a white
+  tile with the control shadow, full ink, and a 3px **verde Bernoulli** bar flush with the
+  rail's own edge — the single strongest brand placement in the chrome, and the only place the
+  500 step touches the shell. Every link keeps an `aria-label` matching its visible text, so the
+  icon-only width loses no accessible name. The rail's footer pins the account row (avatar,
+  name, role) above settings, theme toggle and logout icon buttons.
+- **Topbar:** a `›`-separated breadcrumb in secondary ink with the current page in full ink.
+- **Mobile:** the rail never leaves the flow — there is no drawer or overlay. It narrows in
+  place at 1024px and 480px, per Layout.
 
 ### Data Table
 The product's densest and most characteristic surface. Column headers are 11px uppercase
@@ -777,7 +785,7 @@ disappearing — the operator must be able to see what they chose to skip.
 - **Don't** add font weights above 500 or a third font family. Emphasis is weight 500 or darker ink.
 - **Don't** use uppercase letter-spaced type anywhere but table column headers — in particular,
   not as a kicker or eyebrow above a heading.
-- **Don't** lift surfaces on hover or add a shadow heavier than the Drawer step; hover changes
+- **Don't** lift surfaces on hover or add a shadow heavier than the Overlay step; hover changes
   background tone.
 - **Don't** replace the focus outline with a box-shadow or a border-colour change; that treatment
   was already removed once by audit for failing contrast.
