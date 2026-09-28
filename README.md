@@ -9,7 +9,7 @@
 * Bernardo Zschaber Morato Nogueira - full
 * Lucas Ferreira Marinho - full
 
-## Objetivo do sistema (\~5 linhas):
+## Objetivo do sistema (~5 linhas):
 
 O BernoulliPay automatiza o controle de pagamentos via RPA (Recibo de Pagamento Autônomo) dos aplicadores de prova que prestam serviço freelancer para o Colégio Bernoulli. Hoje esse processo é feito manualmente em planilhas Excel separadas — uma de cadastro/agendamento dos aplicadores e outra de conferência de lançamentos, valores e unidades — o que é sujeito a erro e difícil de auditar. O sistema unifica esses dados em um banco único e em uma interface web interativa, permitindo importar ou lançar as atividades realizadas por aplicador, evento, data e unidade do colégio. A partir do valor líquido recebido em cada atividade, o sistema calcula automaticamente o valor bruto do RPA e os descontos de INSS, ISS e IR, além de consolidar o total a pagar por aplicador. O objetivo é dar mais confiabilidade, rastreabilidade e agilidade ao fechamento mensal de pagamentos, substituindo o fluxo atual baseado em planilhas.
 
@@ -25,7 +25,7 @@ O BernoulliPay automatiza o controle de pagamentos via RPA (Recibo de Pagamento 
   completo, com os briefings e o que foi descartado, está em [`DESIGN.md`](DESIGN.md), seção
   `## Identity`.
 
-## Histórias de usuários (\~8 histórias com 1-2 linhas por história):
+## Histórias de usuários (~8 histórias com 1-2 linhas por história):
 
 * História 1: Como administrador financeiro, quero cadastrar e manter os dados dos aplicadores (dados pessoais, bancários, curso e instituição) em um banco de dados único, para não depender mais de planilhas de agendamento espalhadas por unidade.
 * História 2: Como usuário do RH, quero importar listas de aplicação (arquivos .xlsx/.xlsm) com o nome do evento, a data e o valor líquido recebido por aplicador, para lançar rapidamente os serviços prestados em cada prova.
@@ -162,14 +162,14 @@ reutilizá-las nas páginas HTML, na API REST e no comando de seed.
 ```
 config/            settings, urls, wsgi
 apps/
-  core/            layout base, dashboard, login, template tags (ícones, moeda)
+  core/            layout base, dashboard, login, controle de acesso por cargo, template tags (ícones, moeda)
   catalog/         unidades, empresas pagadoras, setores, alíquotas (+ comando seed)
   applicators/     cadastro de aplicadores e normalização de nomes
   payroll/         lançamentos, calculadora RPA, calendário de pagamento, resumo, exportação
   imports/         parser das listas de pagamento e fluxo upload → prévia → confirmação
   api/             serializers e viewsets DRF (/api/)
 templates/         páginas por app
-static/            tokens de design (Geist, paleta), CSS de componentes, JS sem frameworks
+static/            tokens de design (IBM Plex, verde Bernoulli), CSS de componentes, JS sem frameworks
 docs/samples/      lista de pagamento de exemplo, só como referência do parser
 ```
 
@@ -290,7 +290,7 @@ Autenticação por sessão (faça login na interface e acesse `/api/` no navegad
 
 |Endpoint|Descrição|
 |-|-|
-|`GET/POST /api/lancamentos/`|lista/cria lançamentos; filtros `q`, `unit`, `company`, `sector`, `applicator`, `payment\\\_date`, `from`, `to`|
+|`GET/POST /api/lancamentos/`|lista/cria lançamentos; filtros `q`, `unit`, `company`, `sector`, `applicator`, `payment_date`, `from`, `to`|
 |`GET /api/lancamentos/summary/`|resumo por data de pagamento › aplicador › empresa (mesmos filtros)|
 |`GET/POST/PUT/DELETE /api/aplicadores/`|cadastro de aplicadores (`?q=` busca por nome)|
 |`GET /api/unidades/`, `/api/setores/`, `/api/empresas/`|tabelas de referência|
@@ -298,7 +298,7 @@ Autenticação por sessão (faça login na interface e acesse `/api/` no navegad
 
 ## Convenções
 
-* Commits seguem [Conventional Commits](https://www.conventionalcommits.org/) e ficam abaixo de \~100 linhas (exceções justificadas na mensagem).
+* Commits seguem [Conventional Commits](https://www.conventionalcommits.org/) e ficam abaixo de ~100 linhas (exceções justificadas na mensagem).
 * Código, nomes de variáveis e comentários em inglês; interface em português.
-* Interface baseada no design system do [Maybe](https://github.com/maybe-finance/maybe) (fonte Geist, paleta e componentes), reescrito em CSS puro em `static/css/`.
-* As planilhas reais do setor não são versionadas (`.gitignore`), pois contêm dados pessoais; use `docs/samples/lista\\\_pagamento\\\_exemplo.xlsx`.
+* Sistema de design próprio, em CSS puro (`static/css/tokens.css`): tipografia IBM Plex Sans/Mono e verde Bernoulli (`#009E8E`) como cor de identidade, com tema claro e escuro. Documentado em [`DESIGN.md`](DESIGN.md).
+* As planilhas reais do setor não são versionadas (`.gitignore`), pois contêm dados pessoais; use `docs/samples/lista_pagamento_exemplo.xlsx`.
