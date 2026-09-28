@@ -4,14 +4,10 @@ Django settings for BernoulliPay.
 Environment variables (see .env.example):
   DJANGO_SECRET_KEY  secret key; a dev-only default is used when absent
   DJANGO_DEBUG       "1" enables debug mode (default: 1)
-  DATABASE_URL       e.g. postgres://user:pass@localhost:5432/bernoullipay
-                     When absent the project falls back to a local SQLite file.
   ALLOWED_HOSTS      comma-separated list (default: localhost,127.0.0.1)
 """
 from pathlib import Path
 import os
-
-import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -69,10 +65,10 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-    )
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [

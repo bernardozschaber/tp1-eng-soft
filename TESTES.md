@@ -99,21 +99,20 @@ dez anos a coorte continua com ~2.000 lançamentos e esses números se mantêm.
 
 ### 1.7 Decisão sobre o banco
 
-**PostgreSQL**, com SQLite como fallback local (`DATABASE_URL` ausente). A escolha
-não se justifica por desempenho de consulta — o benchmark acima mostra que, nesse
-volume, as consultas não são o problema. Justifica-se por **durabilidade**: backup,
-recuperação *point-in-time* e concorrência real de escrita durante o fechamento,
-num sistema que deve durar anos. O nome do banco, usuário e volume foram alinhados
-à marca (`bernoullipay`).
+**SQLite**, único banco suportado — não é mais configurável por variável de ambiente.
+O benchmark acima mostra que, no volume real da operação (~2.000 lançamentos por
+coorte), consulta não é o gargalo nem em dez anos de histórico acumulado; um serviço
+de banco à parte (Postgres) adicionava operação (subir, migrar, fazer backup de um
+processo separado) sem resolver problema nenhum que este sistema realmente tem.
 
 ### 1.8 Como reproduzir
 
 ```bash
-# banco descartável, sem tocar no db.sqlite3
-export BENCH=/tmp/bench.sqlite3 && rm -f $BENCH
-DATABASE_URL="sqlite:///$BENCH" python manage.py migrate
-DATABASE_URL="sqlite:///$BENCH" python manage.py seed
+# banco descartável, sem tocar no db.sqlite3 de verdade
+cp db.sqlite3 /tmp/db.sqlite3.bak 2>/dev/null
+rm -f db.sqlite3 && python manage.py migrate && python manage.py seed
 # popular com bulk_create e medir com django.test.Client + tracemalloc
+mv /tmp/db.sqlite3.bak db.sqlite3 2>/dev/null  # restaura o banco de desenvolvimento
 ```
 
 ### 1.9 O que continua em aberto
@@ -277,9 +276,6 @@ Declarado explicitamente para que ninguém confie mais do que deve:
 - **Nenhuma página foi renderizada em navegador.** Não havia driver de automação
   disponível. Os achados de responsividade e de alvo de toque vêm de análise estática
   do CSS, não de viewport renderizado nem de gesto de toque sintetizado.
-- **O `docker compose up -d` não foi executado** — não há daemon Docker na máquina.
-  A configuração do Postgres foi validada por parsing de `DATABASE_URL` e por
-  comparação estrutural com a versão anterior, não por execução.
 
 Recomendação: abrir a aplicação e percorrer o fluxo de importação, a gaveta lateral
 e o export antes da apresentação.

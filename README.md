@@ -18,7 +18,7 @@ O BernoulliPay automatiza o controle de pagamentos via RPA (Recibo de Pagamento 
 * Linguagem: Python 3.13
 * Frameworks: Django 5.2 (backend + API REST com Django REST Framework) e Django Templates + CSS e JavaScript puros (frontend web)
 * Leitura/escrita de planilhas: openpyxl
-* BD: PostgreSQL (via `DATABASE\\\_URL`); SQLite como fallback para desenvolvimento local
+* BD: SQLite (arquivo local `db.sqlite3`)
 * Agentes de IA (código): Claude Code (Fable 5.1), OpenAI Codex (GPT-5.6), Google Gemini (3.1 Pro)
 * IA generativa (identidade visual): **v0.app** — primeira rodada de conceitos de logo e a galeria
   de comparação; **geração de imagens do ChatGPT** — segunda rodada e os arquivos finais. O processo
@@ -135,21 +135,12 @@ dígitos no fim do próprio telefone:
 | Login | Pessoa | Cargo | PIN |
 |---|---|---|---|
 | `jessica.moreira` | Jessica Souza Moreira | ♾️ Supervisor - Aplicação de Prova | `2433` |
-| `fernanda` | Fernanda | Aplicação de Provas (Vale do Sereno) | `1387` |
-| `felipe` | Felipe | Aplicação de Provas (Lourdes) | `5424` |
-| `ana.julia` | Ana Júlia | Aplicação de Provas (Cidade Jardim) | `0089` |
+| `fernanda.rezende` | Fernanda Rezende | Gestor financeiro | `1387` |
+| `felipe.oliveira` | Felipe Oliveira | Usuário do RH | `5424` |
+| `ana.julia` | Ana Júlia | Administrador financeiro | `0089` |
 | `suzana.godoy` | Suzana Godoy | Coordenadora de Operações | `3608` |
 
-Para usar PostgreSQL, suba o banco com `docker compose up -d` e exporte
-`DATABASE\\\_URL=postgres://bernoullipay:bernoullipay@localhost:5432/bernoullipay` antes de rodar
-`migrate` (ver `.env.example`). Sem a variável o projeto usa `db.sqlite3`.
-
-> **Vindo de uma versão anterior?** O banco, o usuário e o volume do Postgres foram
-> renomeados de `provapay` para `bernoullipay` junto com o rebranding. O Postgres só cria
-> o usuário e o banco quando o diretório de dados está vazio, então o volume também mudou
-> de nome (`bernoullipay_pgdata`) — assim um `docker compose up -d` já sobe limpo, sem erro
-> de autenticação. O volume antigo não é apagado, apenas fica órfão: remova com
-> `docker volume rm pgdata` quando tiver certeza de que não precisa mais dele.
+O banco é sempre `db.sqlite3`, criado no `migrate`; não há outra opção configurável.
 
 ## Testes e medições
 
@@ -301,7 +292,7 @@ flowchart LR
     Views --> Domain\\\[Regras de domínio<br/>calculator · schedule · summary · parser · export]
     API --> Domain
     Domain --> ORM\\\[Django ORM]
-    ORM --> DB\\\[(PostgreSQL / SQLite)]
+    ORM --> DB\\\[(SQLite)]
     Excel\\\[(Planilhas .xlsx/.xlsm)] -->|openpyxl| Domain
 ```
 
