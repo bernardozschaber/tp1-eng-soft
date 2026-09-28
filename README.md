@@ -110,15 +110,23 @@ usuário a seguir: X?”. Só o “sim” dessa última cria o cadastro, marcado
 primeiro pagamento; o “não” deixa as linhas daquele nome de fora do lote.
 
 `seed_team` cria os logins da equipe. A senha de cada pessoa é o PIN de quatro
-dígitos no fim do próprio telefone:
+dígitos no fim do próprio telefone, e cada cargo só vê as abas da própria função —
+"Início" é a única exceção, aberta a todos. Não é só o menu que esconde: uma
+tentativa de acessar a URL de outra área direto é barrada do mesmo jeito
+(`apps/core/access.py`, `apps/core/middleware.py`).
 
-| Login | Pessoa | Cargo | PIN |
-|---|---|---|---|
-| `jessica.moreira` | Jessica Souza Moreira | ♾️ Supervisor - Aplicação de Prova | `2433` |
-| `fernanda.rezende` | Fernanda Rezende | Gestor financeiro | `1387` |
-| `felipe.oliveira` | Felipe Oliveira | Usuário do RH | `5424` |
-| `ana.julia` | Ana Júlia | Administrador financeiro | `0089` |
-| `suzana.godoy` | Suzana Godoy | Coordenadora de Operações | `3608` |
+| Login | Pessoa | Cargo | PIN | Abas visíveis |
+|---|---|---|---|---|
+| `admin` | Bernardo Zschaber | Administrador do sistema | `admin` | todas |
+| `jessica.moreira` | Jessica Souza Moreira | ♾️ Supervisor - Aplicação | `2433` | todas |
+| `suzana.godoy` | Suzana Godoy | Coordenadora de Operações | `3608` | todas |
+| `fernanda.rezende` | Fernanda Rezende | Gestor financeiro | `1387` | Lançamentos, Resumo |
+| `felipe.oliveira` | Felipe Oliveira | Usuário do RH | `5424` | Importar |
+| `ana.julia` | Ana Júlia | Administrador financeiro | `0089` | Aplicadores |
+
+Administrador financeiro, Usuário do RH e Gestor financeiro são os três papéis
+das histórias de usuário acima; admin, Jessica e Suzana têm acesso total por
+serem operação/administração do sistema, não personas do produto.
 
 O banco é sempre `db.sqlite3`, criado no `migrate`; não há outra opção configurável.
 
