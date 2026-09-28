@@ -98,8 +98,7 @@ paying company.
     for the name and where naming the product matters.
   - `static/img/favicon.png` pads the mark onto a square transparent canvas — by padding,
     never by cropping.
-  Sources are `bernoulli-pay-logo-apenas.png` and `bernoulli-pay-logo-mais-texto.png` at the
-  repository root.
+  Sources are `logos/bernoulli-pay-logo-apenas.png` and `logos/bernoulli-pay-logo-mais-texto.png`.
 - **The mark must not read as PicPay.** Stated as an explicit exclusion in every generation
   brief. PicPay is one of Brazil's best-known payment apps, it is green, and it shares the
   initials — a green Brazilian payment product built around a P is one careless decision from
@@ -120,7 +119,6 @@ paying company.
 ## Evidence on Hand
 
 - `README.md` — objective, the eight user stories, the business-rule table, UML.
-- `enunciado do trabalho.md` — the assignment this was built for.
 - `apps/payroll/calculator.py`, `schedule.py` — the gross-up and payment-date rules.
 - `docs/samples/lista_pagamento_exemplo.xlsx` — a representative source workbook (reference only; no command loads it).
 

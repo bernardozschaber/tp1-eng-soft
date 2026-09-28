@@ -345,8 +345,8 @@ A final pass then asked for the mark **without** the words "BernoulliPay". That 
 is why the system has two lockups instead of one, and therefore why the icon rail and the login
 card can differ at all — see **The two lockups**, below.
 
-The two outputs of that round are what ship: `bernoulli-pay-logo-mais-texto.png` and
-`bernoulli-pay-logo-apenas.png`.
+The two outputs of that round are what ship: `logos/bernoulli-pay-logo-mais-texto.png` and
+`logos/bernoulli-pay-logo-apenas.png`.
 
 ### What the mark resolves to
 
@@ -380,9 +380,9 @@ Which one appears is a decision, not a convenience:
 
 ### Production notes
 
-Both ship from the team's renders (`bernoulli-pay-logo-apenas.png`,
-`bernoulli-pay-logo-mais-texto.png`), trimmed to their alpha bounds and resized to delivery
-size. The ink is then normalised to exactly `#009E8E`.
+Both ship from the team's renders (`logos/bernoulli-pay-logo-apenas.png`,
+`logos/bernoulli-pay-logo-mais-texto.png`), trimmed to their alpha bounds and resized to
+delivery size. The ink is then normalised to exactly `#009E8E`.
 
 **The order matters.** Normalising the colour *before* resizing lets the resampling blend the
 flat ink and leaves it a step off the token — measured at `#009d8d` on the first attempt.
