@@ -8,6 +8,7 @@ from apps.applicators.names import (
     normalize_name,
     strip_accents,
 )
+from apps.applicators.phones import display_phone, whatsapp_number
 
 
 class NormalizeNameTests(TestCase):
@@ -53,3 +54,22 @@ class SamePersonHeuristicsTests(TestCase):
 
     def test_single_word_names_never_match(self):
         self.assertFalse(looks_like_same_person("Ana", "Ana Luisa Souza"))
+
+
+class WhatsappNumberTests(TestCase):
+    """Só o celular vira link; o fixo da mesma ficha é descartado."""
+
+    def test_picks_the_mobile_over_the_landline(self):
+        self.assertEqual(whatsapp_number("3657-6258 / 31 99444-9630"), "5531994449630")
+
+    def test_mobile_without_area_code_borrows_it_from_the_other_number(self):
+        self.assertEqual(whatsapp_number("3657-6258 / 99444-9630"), "5531994449630")
+
+    def test_landline_only_has_no_whatsapp(self):
+        self.assertEqual(whatsapp_number("3657-6258"), "")
+
+    def test_display_phone_formats_the_whatsapp_number(self):
+        self.assertEqual(display_phone("31994449630"), "(31) 99444-9630")
+
+    def test_display_phone_is_empty_without_a_mobile(self):
+        self.assertEqual(display_phone(""), "")
