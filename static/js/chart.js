@@ -3,10 +3,11 @@
 (function () {
   const NS = "http://www.w3.org/2000/svg";
   // Read the stroke from the token layer instead of duplicating the hex, so a
-  // palette change cannot leave the chart on a stale colour. verde Bernoulli
-  // is 3.34:1 on white — fine as a 2px stroke, never as text.
+  // palette change — or the dark theme's lifted brand tone — cannot leave the
+  // chart on a stale colour. verde Bernoulli is 3.34:1 on white — fine as a
+  // 2px stroke, never as text.
   const BRAND = getComputedStyle(document.documentElement)
-    .getPropertyValue("--color-brand-500").trim() || "#009e8e";
+    .getPropertyValue("--color-brand-500").trim();
   let seq = 0;
 
   function el(name, attrs) {
