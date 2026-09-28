@@ -149,7 +149,7 @@ para 6,4s/24 MB, e o custo de ambos deixou de crescer com o histórico acumulado
 |Ajuste de −R$0,01 da planilha antiga|**Não aplicado**, por decisão do setor|
 |Data de pagamento|atividade até o dia 15 → dia 5 do mês seguinte; após o dia 15 → dia 20 do mês seguinte (`apps/payroll/schedule.py`)|
 |Empresa pagadora|derivada da unidade (Lourdes → RRPM Matriz, Cidade Jardim → RRPM CJ, Santo Antônio → RRPM GO, Vale do Sereno → RRPM VSE)|
-|Consistência|`|
+|Consistência|recalcula o líquido a partir do bruto e dos descontos gravados; sinaliza quando diverge do líquido lançado em mais de R$1,00 (`ServiceEntry.is_consistent`)|
 |Resumo por aplicador|agrupa por (data de pagamento, aplicador, empresa pagadora), como a aba RESUMO DE PGTO POR APLICADOR|
 |Importação|dois formatos: **"Relatório de Atividade"** (Lourdes), com o valor na planilha; e **exportação de formulário** (Cidade Jardim e Vale do Sereno), com nome completo, CPF e função por resposta — nesse caso a prova, o dia e o turno saem do nome do arquivo ("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na pré-visualização. Casa o aplicador por CPF e, na falta dele, por nome; cria desconhecidos marcados como *cadastro incompleto*; sinaliza possíveis duplicatas|
 
@@ -182,61 +182,61 @@ classDiagram
     }
     class Unit {
         +name
-        +is\\\_default
+        +is_default
     }
     class Sector {
         +name
-        +is\\\_default
+        +is_default
     }
     class TaxSettings {
-        +inss\\\_rate
-        +iss\\\_rate
-        +ir\\\_rate
+        +inss_rate
+        +iss_rate
+        +ir_rate
         +current()$
     }
     class Applicator {
-        +full\\\_name
-        +normalized\\\_name
+        +full_name
+        +normalized_name
         +cpf
-        +bank\\\_account
-        +pix\\\_key
-        +needs\\\_review
-        +find\\\_by\\\_name(raw)$
+        +bank_account
+        +pix_key
+        +registration_status
+        +find_by_name(raw)$
     }
     class ServiceEntry {
         +role
-        +activity\\\_date
-        +event\\\_name
+        +activity_date
+        +event_name
         +shift
-        +payment\\\_date
-        +net\\\_amount
-        +gross\\\_amount
-        +inss\\\_amount
-        +iss\\\_amount
-        +ir\\\_amount
-        +net\\\_payable
-        +is\\\_consistent
-        +apply\\\_calculations()
+        +payment_date
+        +net_amount
+        +gross_amount
+        +inss_amount
+        +iss_amount
+        +ir_amount
+        +net_payable
+        +is_consistent
+        +apply_calculations()
     }
     class ImportBatch {
-        +file\\\_name
-        +imported\\\_at
+        +file_name
+        +imported_at
     }
     class PayrollCalculator {
         <<module>>
-        +compute\\\_breakdown(net, rates) PayrollBreakdown
+        +compute_breakdown(net, rates) PayrollBreakdown
     }
     class PaymentSchedule {
         <<module>>
-        +payment\\\_date\\\_for(activity\\\_date) date
+        +payment_date_for(activity_date) date
     }
 
-    Unit "\\\*" --> "1" PayingCompany
-    ServiceEntry "\\\*" --> "1" Applicator
-    ServiceEntry "\\\*" --> "1" Unit
-    ServiceEntry "\\\*" --> "1" Sector
-    ServiceEntry "\\\*" --> "1" PayingCompany : snapshot
-    ServiceEntry "\\\*" --> "0..1" ImportBatch
+    Unit "*" --> "1" PayingCompany
+    ServiceEntry "*" --> "1" Applicator
+    ServiceEntry "*" --> "1" Unit
+    ServiceEntry "*" --> "1" Sector
+    ServiceEntry "*" --> "1" PayingCompany : snapshot
+    ServiceEntry "*" --> "0..1" ImportBatch
     ServiceEntry ..> PayrollCalculator : usa
     ServiceEntry ..> PaymentSchedule : usa
     PayrollCalculator ..> TaxSettings : lê alíquotas
@@ -254,18 +254,18 @@ sequenceDiagram
 
     RH->>View: POST /importar/ (arquivos .xlsx/.xlsm)
     loop para cada arquivo
-        View->>Parser: parse\\\_workbook(nome, bytes)
+        View->>Parser: parse_workbook(nome, bytes)
         Parser-->>View: ParsedWorkbook (abas, evento, data, linhas)
     end
-    View->>Service: stage\\\_uploads → sessão
+    View->>Service: stage_uploads → sessão
     View-->>RH: redirect /importar/previa/
     RH->>View: GET /importar/previa/
-    View->>Service: enrich\\\_preview (casa nomes, detecta duplicatas, calcula bruto)
-    Service->>DB: Applicator.find\\\_by\\\_name / ServiceEntry.exists
+    View->>Service: enrich_preview (casa nomes, detecta duplicatas, calcula bruto)
+    Service->>DB: Applicator.find_by_name / ServiceEntry.exists
     View-->>RH: blocos por aba (editáveis, com avisos)
     RH->>View: POST /importar/confirmar/ (abas e linhas marcadas)
-    View->>Service: confirm\\\_import(payload, sessão, usuário)
-    Service->>DB: cria Applicator faltantes (needs\\\_review)
+    View->>Service: confirm_import(payload, sessão, usuário)
+    Service->>DB: cria Applicator faltantes (cadastro novo: primeiro pagamento)
     Service->>DB: cria ImportBatch + ServiceEntry (bruto, INSS, ISS, IR, data pgto)
     Service-->>View: contadores
     View-->>RH: redirect /lancamentos/ com mensagem de sucesso
@@ -275,13 +275,13 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    Browser\\\[Navegador<br/>HTML + CSS + JS] -->|sessão| Views\\\[Views Django<br/>core · payroll · imports · applicators · catalog]
-    Browser -->|JSON| API\\\[API REST<br/>Django REST Framework]
-    Views --> Domain\\\[Regras de domínio<br/>calculator · schedule · summary · parser · export]
+    Browser[Navegador<br/>HTML + CSS + JS] -->|sessão| Views[Views Django<br/>core · payroll · imports · applicators · catalog]
+    Browser -->|JSON| API[API REST<br/>Django REST Framework]
+    Views --> Domain[Regras de domínio<br/>calculator · schedule · summary · parser · export]
     API --> Domain
-    Domain --> ORM\\\[Django ORM]
-    ORM --> DB\\\[(SQLite)]
-    Excel\\\[(Planilhas .xlsx/.xlsm)] -->|openpyxl| Domain
+    Domain --> ORM[Django ORM]
+    ORM --> DB[(SQLite)]
+    Excel[(Planilhas .xlsx/.xlsm)] -->|openpyxl| Domain
 ```
 
 ## API REST
