@@ -11,6 +11,7 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
 from django.test import TestCase
@@ -202,6 +203,7 @@ class ShiftColumnTests(TestCase):
         TaxSettings.objects.create(inss_rate=Decimal("11"), iss_rate=Decimal("5"), ir_rate=Decimal("0"))
         cls.applicator = Applicator.objects.create(full_name="Maria Wolff Florencio")
         cls.user = get_user_model().objects.create_user("rh", password="x")
+        cls.user.groups.add(Group.objects.create(name="Gestor financeiro"))
         for shift, amount in ((Shift.MORNING, "93.00"), (Shift.AFTERNOON, "84.00")):
             ServiceEntry.objects.create(
                 applicator=cls.applicator, role=ServiceRole.APPLICATOR, activity_date=date(2026, 5, 5),
