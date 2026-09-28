@@ -6,12 +6,21 @@ o admin continua com a senha "admin". Pode rodar quantas vezes precisar.
     python manage.py seed_team
 """
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 
 from apps.catalog.models import Unit
+from apps.core.access import FULL_ACCESS_GROUP, SECTION_GROUPS
 from apps.core.models import Profile
 
-# (username, nome, sobrenome, e-mail, cargo, telefone, foto, nome da unidade)
+# Usernames antigos que viraram outro: renomeia em vez de criar conta nova,
+# para lançamentos e importações já gravados continuarem apontando pra pessoa certa.
+RENAMED_USERNAMES = {
+    "fernanda": "fernanda.rezende",
+    "felipe": "felipe.oliveira",
+}
+
+# (username, nome, sobrenome, e-mail, cargo, telefone, foto, nome da unidade, grupo de acesso)
 # A senha sai dos quatro últimos dígitos do telefone — o PIN combinado com o time.
 TEAM = [
     (
@@ -23,36 +32,40 @@ TEAM = [
         "+55 31 8349-2433",
         "img/avatars/jessica.jpeg",
         "",
+        FULL_ACCESS_GROUP,
     ),
     (
-        "fernanda",
+        "fernanda.rezende",
         "Fernanda",
-        "",
-        "fernanda@bernoulli.com.br",
-        "Aplicação de Provas (VSE)",
+        "Rezende",
+        "fernanda.rezende@bernoulli.com.br",
+        "Gestor financeiro",
         "+55 31 9314-1387",
         "img/avatars/fernanda.jpeg",
         "Vale do Sereno",
+        SECTION_GROUPS["payroll"],
     ),
     (
-        "felipe",
+        "felipe.oliveira",
         "Felipe",
-        "",
-        "felipe@bernoulli.com.br",
-        "Aplicação de Provas (Lourdes)",
+        "Oliveira",
+        "felipe.oliveira@bernoulli.com.br",
+        "Usuário do RH",
         "+55 31 8353-5424",
         "img/avatars/felipe.jpeg",
         "Lourdes",
+        SECTION_GROUPS["imports"],
     ),
     (
         "ana.julia",
         "Ana",
         "Júlia",
         "ana.julia@bernoulli.com.br",
-        "Aplicação de Provas (CJ)",
+        "Administrador financeiro",
         "+55 31 9350-0089",
         "img/avatars/ana-julia.jpeg",
         "Cidade Jardim",
+        SECTION_GROUPS["applicators"],
     ),
     (
         "suzana.godoy",
@@ -63,10 +76,11 @@ TEAM = [
         "+55 31 9383-3608",
         "img/avatars/suzana.jpeg",
         "",
+        FULL_ACCESS_GROUP,
     ),
 ]
 
-# O admin já existe (criado pelo `seed`); aqui ele só ganha rosto e cargo.
+# O admin já existe (criado pelo `seed`); aqui ele só ganha rosto, cargo e acesso total.
 ADMIN_PROFILE = {
     "username": "admin",
     "first_name": "Bernardo",
@@ -90,7 +104,9 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         User = get_user_model()
 
-        for username, first_name, last_name, email, role, phone, photo, unit_name in TEAM:
+        self._rename_existing(User)
+
+        for username, first_name, last_name, email, role, phone, photo, unit_name, group_name in TEAM:
             user, created = User.objects.get_or_create(username=username)
             user.first_name = first_name
             user.last_name = last_name
@@ -103,6 +119,8 @@ class Command(BaseCommand):
                 user=user,
                 defaults={"role": role, "email": email, "phone": phone, "photo": photo, "unit": unit},
             )
+            group, _ = Group.objects.get_or_create(name=group_name)
+            user.groups.set([group])
             verb = "criado" if created else "atualizado"
             self.stdout.write(f"{verb}: {username} (senha {pin(phone)}) — {role}")
 
@@ -123,4 +141,18 @@ class Command(BaseCommand):
                 "photo": ADMIN_PROFILE["photo"],
             },
         )
+        full_access, _ = Group.objects.get_or_create(name=FULL_ACCESS_GROUP)
+        admin.groups.set([full_access])
         self.stdout.write(self.style.SUCCESS("Equipe pronta. Cada pessoa entra com o PIN do próprio telefone."))
+
+    def _rename_existing(self, User) -> None:
+        """Troca o username de quem mudou de função sem perder histórico (lançamentos, importações)."""
+        for old, new in RENAMED_USERNAMES.items():
+            if User.objects.filter(username=new).exists():
+                continue
+            user = User.objects.filter(username=old).first()
+            if user is None:
+                continue
+            user.username = new
+            user.save(update_fields=["username"])
+            self.stdout.write(f"renomeado: {old} -> {new}")
