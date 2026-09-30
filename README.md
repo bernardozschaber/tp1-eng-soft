@@ -44,10 +44,42 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed               # dados de referência (unidades, setores, alíquotas) e usuário admin/admin
 python manage.py seed_team          # equipe com foto, cargo, PIN e permissões de acesso
+python manage.py seed_demo          # opcional: operação fictícia para explorar o sistema
 python manage.py runserver
 ```
 
 Acesse http://127.0.0.1:8000 e entre com `admin` / `admin`.
+
+### Dados de demonstração
+
+`seed_demo` enche o banco com uma operação inteira de mentira, para quem abre o
+sistema pela primeira vez não encontrar as telas vazias: 32 aplicadores com
+ficha completa, cerca de 320 lançamentos espalhados pelas quinzenas fechadas dos
+últimos seis meses, nas quatro unidades, nos seis setores solicitantes e nas três
+funções (aplicador, orientador, volante). Assim o painel tem série histórica, o
+Resumo tem treze quinzenas para comparar e os filtros de unidade, setor e período
+mudam de resposta.
+
+Nada ali é de ninguém: os nomes são combinações sorteadas, e CPF, banco e PIX são
+inventados (o CPF sai com dígito verificador válido só para não ser recusado numa
+conferência). O sorteio é determinístico, então o comando produz os mesmos números
+em qualquer máquina.
+
+```bash
+python manage.py seed_demo                    # recusa se já houver dados
+python manage.py seed_demo --reset            # apaga o que existe e recria
+python manage.py seed_demo --applicators 60   # equipe maior
+```
+
+Seis aplicadores só aparecem na última quinzena, e continuam marcados como
+*cadastro novo: primeiro pagamento* — é o estado que o financeiro precisa
+conferir na lista. Cada atividade é gravada com um lote de importação, para a
+coluna de origem do lançamento não ficar vazia.
+
+As planilhas importadas são guardadas em `media/imports/AAAA/MM/` (fora de
+`static/`, e servidas só pela view autenticada `imports:batch_download`). O
+diretório já está no `.gitignore`; um workbook típico tem algumas dezenas de KB.
+
 
 As planilhas importadas são guardadas em `media/imports/AAAA/MM/` (fora de
 `static/`, e servidas só pela view autenticada `imports:batch_download`). O
