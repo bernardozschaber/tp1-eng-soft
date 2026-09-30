@@ -357,28 +357,43 @@ A transição é só de ida e acontece no momento em que o lançamento é salvo
 sequenceDiagram
     actor RH
     participant View as imports.views
-    participant Parser as imports.parser
     participant Service as imports.services
+    participant Parser as imports.parser
+    participant Media as media/imports/
     participant DB as Banco de dados
 
     RH->>View: POST /importar/ (arquivos .xlsx/.xlsm)
+    View->>Service: stage_uploads(sessão, arquivos)
     loop para cada arquivo
-        View->>Parser: parse_workbook(nome, bytes)
-        Parser-->>View: ParsedWorkbook (abas, evento, data, linhas)
+        Service->>Parser: parse_workbook(nome, bytes)
+        Parser-->>Service: ParsedWorkbook (abas, evento, data, turno, linhas)
+        Service->>Media: guarda o arquivo original
     end
-    View->>Service: stage_uploads → sessão
+    Service-->>View: erros por arquivo (vazio = tudo lido)
     View-->>RH: redirect /importar/previa/
+
     RH->>View: GET /importar/previa/
-    View->>Service: enrich_preview (casa nomes, detecta duplicatas, calcula bruto)
-    Service->>DB: Applicator.find_by_name / ServiceEntry.exists
-    View-->>RH: blocos por aba (editáveis, com avisos)
-    RH->>View: POST /importar/confirmar/ (abas e linhas marcadas)
-    View->>Service: confirm_import(payload, sessão, usuário)
-    Service->>DB: cria Applicator faltantes (cadastro novo: primeiro pagamento)
-    Service->>DB: cria ImportBatch + ServiceEntry (bruto, INSS, ISS, IR, data pgto)
-    Service-->>View: contadores
+    View->>Service: load_preview(sessão) + enrich_preview(abas)
+    Service->>DB: Applicator.find_by_cpf / find_by_name
+    Service->>DB: ServiceEntry.find_duplicate
+    Service-->>View: abas editáveis, perguntas de nome, avisos
+    View-->>RH: blocos por aba, com bruto calculado
+
+    RH->>View: POST /importar/confirmar/ (abas, linhas e respostas)
+    View->>Service: confirm_import(payload, abas, usuário)
+    Service->>DB: cria Applicator faltantes (situação "novo")
+    alt serviço já lançado
+        Service-->>Service: pula a linha e conta como duplicata
+    else serviço novo
+        Service->>DB: cria ImportBatch (na primeira linha gravada)
+        Service->>DB: cria ServiceEntry (bruto, INSS, ISS, IR, data pgto)
+    end
+    Service-->>View: contadores (lançamentos, cadastros, duplicatas)
     View-->>RH: redirect /lancamentos/ com mensagem de sucesso
 ```
+
+O `ImportBatch` só é criado quando há a primeira linha para gravar: uma lista
+em que tudo já estava lançado não deixa lote vazio para trás.
 
 ### Diagrama de componentes
 
