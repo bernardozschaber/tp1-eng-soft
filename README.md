@@ -332,6 +332,25 @@ cadastro de unidades, e recusa gravar um serviço que já existe
 (`check_not_duplicate`, sobre a restrição `applicator + activity_date +
 event_key + shift + role + unit`).
 
+### Diagrama de estados (situação do cadastro)
+
+```mermaid
+stateDiagram-v2
+    [*] --> Novo : cadastro criado à mão ou confirmado numa importação
+    Novo --> Novo : mais lançamentos na mesma data de pagamento
+    Novo --> Ativo : lançamento numa segunda data de pagamento
+    Ativo --> Ativo : novo lançamento não devolve à fila de estreantes
+
+    note right of Novo
+        "cadastro novo: primeiro pagamento"
+        é nele que se confere documento,
+        banco e PIX pela primeira vez
+    end note
+```
+
+A transição é só de ida e acontece no momento em que o lançamento é salvo
+(`Applicator.promote_if_recurring`, chamado por `ServiceEntry.save`).
+
 ### Diagrama de sequência (importação de listas)
 
 ```mermaid
