@@ -21,7 +21,7 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from apps.applicators.models import Applicator
+from apps.applicators.models import Applicator, RegistrationStatus
 from apps.catalog.models import Sector, Unit
 from apps.payroll.models import DuplicateServiceEntry, ImportBatch, ServiceEntry, ServiceRole, Shift
 
@@ -164,9 +164,7 @@ class Command(BaseCommand):
             applicators = self.create_applicators(rng, options["applicators"])
             entries = self.create_entries(rng, applicators, units, sectors)
 
-        self.stdout.write(self.style.SUCCESS(
-            f"{len(applicators)} aplicadores e {len(entries)} lançamentos criados."
-        ))
+        self.report(applicators, entries)
 
     # -- cadastros ------------------------------------------------------
 
@@ -273,3 +271,21 @@ class Command(BaseCommand):
                     continue  # o sorteio repetiu o mesmo turno; um turno é um só
                 created.append(entry)
         return created
+
+    # -- saída ----------------------------------------------------------
+
+    def report(self, applicators, entries) -> None:
+        payment_dates = sorted({entry.payment_date for entry in entries})
+        total = sum(entry.net_amount for entry in entries)
+        newcomers = Applicator.objects.filter(registration_status=RegistrationStatus.NEW).count()
+        money = f"{total:,.2f}".replace(",", "@").replace(".", ",").replace("@", ".")
+        self.stdout.write(
+            f"{len(applicators)} aplicadores ({newcomers} em primeiro pagamento), "
+            f"{len(entries)} lançamentos em {len(payment_dates)} quinzenas."
+        )
+        if payment_dates:
+            self.stdout.write(
+                f"Pagamentos de {payment_dates[0]:%d/%m/%Y} a {payment_dates[-1]:%d/%m/%Y}, "
+                f"R$ {money} em valores líquidos."
+            )
+        self.stdout.write(self.style.SUCCESS("Dados de demonstração criados."))
