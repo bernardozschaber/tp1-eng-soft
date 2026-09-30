@@ -220,30 +220,55 @@ classDiagram
     class Unit {
         +name
         +is_default
+        +short_name() str
     }
     class Sector {
         +name
         +is_default
     }
     class TaxSettings {
+        <<singleton>>
         +inss_rate
         +iss_rate
         +ir_rate
-        +current()$
+        +current()$ TaxSettings
+    }
+    class RegistrationStatus {
+        <<enumeration>>
+        NOVO
+        ATIVO
     }
     class Applicator {
         +full_name
         +normalized_name
         +cpf
+        +phone
         +bank_account
         +pix_key
         +registration_status
-        +find_by_name(raw)$
+        +is_active
+        +find_by_name(raw)$ Applicator
+        +find_by_cpf(cpf)$ Applicator
+        +promote_if_recurring() bool
+    }
+    class ServiceRole {
+        <<enumeration>>
+        APLICADOR
+        ORIENTADOR
+        VOLANTE
+    }
+    class Shift {
+        <<enumeration>>
+        MANHA
+        TARDE
+        NOITE
     }
     class ServiceEntry {
         +role
         +activity_date
         +event_name
+        +event_key
+        +segment
         +shift
         +payment_date
         +net_amount
@@ -254,10 +279,24 @@ classDiagram
         +net_payable
         +is_consistent
         +apply_calculations()
+        +check_not_duplicate()
+        +find_duplicate(chave_do_servico)$ ServiceEntry
     }
     class ImportBatch {
         +file_name
+        +source_file
         +imported_at
+    }
+    class Profile {
+        +role
+        +phone
+        +photo
+        +meta_line() str
+    }
+    class User {
+        <<django.contrib.auth>>
+        +username
+        +groups
     }
     class PayrollCalculator {
         <<module>>
@@ -269,15 +308,29 @@ classDiagram
     }
 
     Unit "*" --> "1" PayingCompany
+    Profile "1" --> "1" User
+    Profile "*" --> "0..1" Unit
+    Applicator ..> RegistrationStatus
     ServiceEntry "*" --> "1" Applicator
     ServiceEntry "*" --> "1" Unit
     ServiceEntry "*" --> "1" Sector
     ServiceEntry "*" --> "1" PayingCompany : snapshot
     ServiceEntry "*" --> "0..1" ImportBatch
+    ServiceEntry "*" --> "0..1" User : created_by
+    ServiceEntry ..> ServiceRole
+    ServiceEntry ..> Shift
+    ImportBatch "*" --> "0..1" User : imported_by
     ServiceEntry ..> PayrollCalculator : usa
     ServiceEntry ..> PaymentSchedule : usa
-    PayrollCalculator ..> TaxSettings : lê alíquotas
+    ServiceEntry ..> TaxSettings : lê alíquotas
 ```
+
+`ServiceEntry` é a classe central: nasce do líquido lançado e deriva sozinha o
+bruto, os três descontos e a data de pagamento (`apply_calculations`), guarda a
+empresa pagadora como cópia para o histórico sobreviver a uma edição no
+cadastro de unidades, e recusa gravar um serviço que já existe
+(`check_not_duplicate`, sobre a restrição `applicator + activity_date +
+event_key + shift + role + unit`).
 
 ### Diagrama de sequência (importação de listas)
 
