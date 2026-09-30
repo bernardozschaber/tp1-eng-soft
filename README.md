@@ -80,11 +80,6 @@ As planilhas importadas são guardadas em `media/imports/AAAA/MM/` (fora de
 `static/`, e servidas só pela view autenticada `imports:batch_download`). O
 diretório já está no `.gitignore`; um workbook típico tem algumas dezenas de KB.
 
-
-As planilhas importadas são guardadas em `media/imports/AAAA/MM/` (fora de
-`static/`, e servidas só pela view autenticada `imports:batch_download`). O
-diretório já está no `.gitignore`; um workbook típico tem algumas dezenas de KB.
-
 ### A lista de aplicadores é a fonte da verdade
 
 `/aplicadores` guarda os cadastros conferidos, com nome completo, CPF,
@@ -209,6 +204,14 @@ templates/         páginas por app
 static/            tokens de design (IBM Plex, verde Bernoulli), CSS de componentes, JS sem frameworks
 docs/samples/      lista de pagamento de exemplo, só como referência do parser
 ```
+
+Os quatro diagramas a seguir são a documentação UML preliminar do sistema, em
+Mermaid: **classes** (o domínio), **estados** (a situação do cadastro do
+aplicador), **sequência** (a importação de listas) e **componentes** (como as
+camadas se encaixam). O primeiro rascunho de cada um foi gerado por IA e depois
+conferido contra o código — foi nessa revisão que saíram, por exemplo, a
+dependência invertida entre a calculadora e as alíquotas e a ordem errada das
+chamadas na importação.
 
 ### Diagrama de classes (domínio)
 
@@ -401,11 +404,14 @@ em que tudo já estava lançado não deixa lote vazio para trás.
 flowchart LR
     Browser[Navegador<br/>HTML + CSS + JS] -->|sessão| Views[Views Django<br/>core · payroll · imports · applicators · catalog]
     Browser -->|JSON| API[API REST<br/>Django REST Framework]
-    Views --> Domain[Regras de domínio<br/>calculator · schedule · summary · parser · export]
+    Views --> Access[Controle de acesso por cargo<br/>core.access · core.middleware]
+    Access --> Domain[Regras de domínio<br/>calculator · schedule · summary · parser · export]
+    Views --> Domain
     API --> Domain
     Domain --> ORM[Django ORM]
     ORM --> DB[(SQLite)]
     Excel[(Planilhas .xlsx/.xlsm)] -->|openpyxl| Domain
+    Domain -->|openpyxl| Export[(Planilha exportada)]
 ```
 
 ## API REST
