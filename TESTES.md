@@ -457,15 +457,24 @@ transação; ela não é o que sustenta a garantia.
 |---|---:|---|
 | `DuplicateEntryTests` | 13 | A regra de unicidade nas três camadas, e o que **não** é duplicata |
 | `ShiftColumnTests` | 3 | A coluna de turno na lista, via `django.test.Client` |
-| `ImportDoesNotDuplicateTests` | 4 | A importação de ponta a ponta, sobre as planilhas reais |
+| `ImportDoesNotDuplicateTests` | 4 | A importação de ponta a ponta, sobre a pasta reconstruída |
 | `TemplateCommentTests` | 1 | Varre todos os templates atrás de `{# … #}` em mais de uma linha |
 
-Os testes de importação **não usam fixtures sintéticas**: leem os oito arquivos
-de `01-09 oficina e pbb/` e os passam por `stage_uploads → enrich_preview →
-confirm_import`, o mesmo caminho da tela. O teste `test_the_stale_tab_of_the_next_week_does_not_pay_08_09_again` reproduz o
-defeito relatado com o arquivo que o causou, e
+Os testes de importação passam pelo caminho inteiro da tela —
+`stage_uploads → enrich_preview → confirm_import` — sobre planilhas `.xlsx` de
+verdade, geradas em memória no layout "Relatório de Atividade". Elas
+reconstroem a pasta `01-09 oficina e pbb/` onde o defeito apareceu: a mesma
+sequência de listas, as mesmas abas de oficina repetidas com a data da semana
+anterior, nomes inventados no lugar dos reais. A pasta original não entra no
+repositório porque é lista de pagamento com dados pessoais, e o que está sob
+teste é a regra, não quem estava na lista. O teste
+`test_the_stale_tab_of_the_next_week_does_not_pay_08_09_again` reproduz o
+defeito relatado, e
 `test_nobody_is_paid_twice_for_the_same_shift_across_the_whole_folder` importa a
 pasta inteira na ordem em que a operação a enviaria.
+
+A reconstrução foi conferida por mutação: desligar a checagem de duplicata de
+`confirm_import` quebra exatamente os três testes que existem para pegá-la.
 
 `TemplateCommentTests` é de outra natureza: não cobre uma tela, varre o
 repositório. `{# … #}` só comenta uma linha — escrito em duas, o Django não o
