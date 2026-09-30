@@ -13,15 +13,20 @@ Não substitui `seed`: as unidades, os setores e as alíquotas continuam vindo d
 lá, e este comando falha se elas não existirem.
 """
 import random
-from datetime import date
+from datetime import date, timedelta
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.applicators.models import Applicator
 from apps.catalog.models import Sector, Unit
+from apps.payroll.models import ServiceRole, Shift
 
 SEED = 20260930
+
+# Seis meses de atividade dão doze quinzenas: o suficiente para o Resumo ter
+# histórico e para os filtros de período do painel mudarem de resposta.
+MONTHS_OF_HISTORY = 6
 
 FIRST_NAMES = [
     "Ana Luiza", "Bruno", "Camila", "Daniel", "Eduarda", "Felipe", "Gabriela",
@@ -48,6 +53,35 @@ NEIGHBORHOODS = [
 BANKS = ["Banco do Brasil", "Bradesco", "Caixa Econômica", "Itaú", "Nubank", "Santander"]
 PERIODS = ["Manhã", "Noite", "Integral"]
 
+# (nome do evento, setor solicitante, segmento) — o setor é o que pediu a
+# atividade, e é por ele que o financeiro separa a conta no fechamento.
+EVENTS = [
+    ("Prova Regular", "APL. DE PROVAS", "Ensino Médio"),
+    ("Simulado ENEM", "APL. DE PROVAS", "Pré-vestibular"),
+    ("Prova Bimestral", "APL. DE PROVAS", "Ensino Fundamental II"),
+    ("Avaliação Diagnóstica", "PEDAGÓGICO", "Ensino Médio"),
+    ("Oficina de Redação", "PEDAGÓGICO", "Pré-vestibular"),
+    ("Simulado Medicina", "APL. DE PROVAS", "Pré-vestibular"),
+    ("Processo Seletivo Bolsas", "SECRETARIA - REGULATÓRIO", "Ensino Médio"),
+    ("Feira de Profissões", "MKT", ""),
+    ("Olimpíada de Matemática", "CDM", "Ensino Fundamental II"),
+    ("Recuperação Semestral", "ADM", "Ensino Médio"),
+]
+
+# Peso de cada unidade no volume de trabalho: Lourdes é a matriz e concentra a
+# maior parte das aplicações, como na operação real.
+UNIT_WEIGHTS = [("Lourdes", 10), ("Cidade Jardim", 5), ("Santo Antônio", 3), ("Vale do Sereno", 2)]
+
+# (função, peso no sorteio, valor líquido mínimo, máximo) — orientador ganha
+# mais que aplicador, volante menos, e cada turno cai num valor "redondo".
+ROLE_PROFILE = [
+    (ServiceRole.APPLICATOR, 12, 120, 190),
+    (ServiceRole.ADVISOR, 3, 200, 280),
+    (ServiceRole.FLOATER, 2, 90, 130),
+]
+
+SHIFTS = [(Shift.MORNING, 5), (Shift.AFTERNOON, 4), (Shift.EVENING, 2)]
+
 
 def cpf_check_digits(base: str) -> str:
     """Os dois dígitos verificadores de um CPF, para os números da demo serem válidos."""
@@ -62,6 +96,31 @@ def cpf_check_digits(base: str) -> str:
 def format_cpf(base: str) -> str:
     full = base + cpf_check_digits(base)
     return f"{full[:3]}.{full[3:6]}.{full[6:9]}-{full[9:]}"
+
+
+def fortnight_ranges(today: date, months: int) -> list[tuple[date, date, str]]:
+    """As quinzenas fechadas dos últimos `months` meses, da mais antiga para a mais nova.
+
+    Uma quinzena só entra quando terminou: a demo não inventa atividade em dia
+    que ainda não aconteceu, para o "Último pagamento" do painel bater com o
+    que a lista mostra.
+    """
+    ranges: list[tuple[date, date, str]] = []
+    month_index = today.year * 12 + (today.month - 1)
+    for offset in range(months, -1, -1):
+        year, month = divmod(month_index - offset, 12)
+        month += 1
+        last_day = (date(year + month // 12, month % 12 + 1, 1) - timedelta(days=1)).day
+        for start, end, half in ((1, 15, "1ª"), (16, last_day, "2ª")):
+            first, final = date(year, month, start), date(year, month, end)
+            if final < today:
+                ranges.append((first, final, f"{half} quinzena {month:02d}-{year}"))
+    return ranges
+
+
+def weighted(rng: random.Random, options: list[tuple]) -> tuple:
+    """Sorteia uma das opções `(valor, peso, ...)` respeitando os pesos."""
+    return rng.choices(options, weights=[option[1] for option in options])[0]
 
 
 class Command(BaseCommand):
