@@ -1,26 +1,29 @@
 """
-Popula o banco com uma operação fictícia, para quem abre o sistema pela
+Popula o banco com uma operação fictícia inteira, para quem abre o sistema pela
 primeira vez encontrar as telas cheias e poder explorá-las.
 
     python manage.py seed_demo            # cria; recusa se já houver dados
-    python manage.py seed_demo --reset    # apaga os cadastros antes
+    python manage.py seed_demo --reset    # apaga lançamentos e aplicadores antes
 
-Os dados são inventados — nome e CPF não pertencem a ninguém. O sorteio é
+Os dados são inventados — nome, CPF, banco e PIX não pertencem a ninguém — mas
+seguem a forma dos reais: seis meses de atividade, doze quinzenas fechadas, as
+quatro unidades, vários setores solicitantes e as três funções. O sorteio é
 determinístico (`random.Random(SEED)`), então duas máquinas que rodam o comando
-veem exatamente os mesmos cadastros, o que também serve para conferir a demo.
+veem exatamente os mesmos números, o que também serve para conferir a demo.
 
 Não substitui `seed`: as unidades, os setores e as alíquotas continuam vindo de
 lá, e este comando falha se elas não existirem.
 """
 import random
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from apps.applicators.models import Applicator
 from apps.catalog.models import Sector, Unit
-from apps.payroll.models import ServiceRole, Shift
+from apps.payroll.models import DuplicateServiceEntry, ImportBatch, ServiceEntry, ServiceRole, Shift
 
 SEED = 20260930
 
@@ -82,6 +85,10 @@ ROLE_PROFILE = [
 
 SHIFTS = [(Shift.MORNING, 5), (Shift.AFTERNOON, 4), (Shift.EVENING, 2)]
 
+# Nome dos arquivos de onde os lançamentos "vieram", um por quinzena fechada:
+# dá o que clicar na coluna de origem da lista de lançamentos.
+BATCH_FILE_TEMPLATE = "Relatório de Atividade - {unit} - {label}.xlsx"
+
 
 def cpf_check_digits(base: str) -> str:
     """Os dois dígitos verificadores de um CPF, para os números da demo serem válidos."""
@@ -128,27 +135,40 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--reset", action="store_true", help="apaga os cadastros atuais antes de criar os novos"
+            "--reset",
+            action="store_true",
+            help="apaga lançamentos, lotes de importação e aplicadores antes de criar os novos",
         )
         parser.add_argument(
             "--applicators", type=int, default=32, help="quantos aplicadores criar (padrão: 32)"
         )
 
     def handle(self, *args, **options):
-        if not Unit.objects.exists() or not Sector.objects.exists():
+        units = {unit.name: unit for unit in Unit.objects.all()}
+        sectors = {sector.name: sector for sector in Sector.objects.all()}
+        if not units or not sectors:
             raise CommandError("Rode `python manage.py seed` antes: faltam unidades ou setores.")
 
         if options["reset"]:
-            deleted, _ = Applicator.objects.all().delete()
-            self.stdout.write(f"{deleted} cadastros antigos apagados.")
-        elif Applicator.objects.exists():
-            raise CommandError("Já há aplicadores no banco. Use --reset para substituí-los.")
+            deleted, _ = ServiceEntry.objects.all().delete()
+            ImportBatch.objects.all().delete()
+            Applicator.objects.all().delete()
+            self.stdout.write(f"{deleted} registros antigos apagados.")
+        elif ServiceEntry.objects.exists() or Applicator.objects.exists():
+            raise CommandError(
+                "Já há aplicadores ou lançamentos no banco. Use --reset para substituí-los."
+            )
 
         rng = random.Random(SEED)
         with transaction.atomic():
             applicators = self.create_applicators(rng, options["applicators"])
+            entries = self.create_entries(rng, applicators, units, sectors)
 
-        self.stdout.write(self.style.SUCCESS(f"{len(applicators)} aplicadores criados."))
+        self.stdout.write(self.style.SUCCESS(
+            f"{len(applicators)} aplicadores e {len(entries)} lançamentos criados."
+        ))
+
+    # -- cadastros ------------------------------------------------------
 
     def create_applicators(self, rng: random.Random, wanted: int) -> list[Applicator]:
         """Cria os cadastros com ficha completa, menos alguns deixados pela metade.
@@ -193,3 +213,63 @@ class Command(BaseCommand):
             applicator.save()
             applicators.append(applicator)
         return applicators
+
+    # -- lançamentos ----------------------------------------------------
+
+    def create_entries(self, rng, applicators, units, sectors) -> list[ServiceEntry]:
+        """Distribui as atividades pelas quinzenas fechadas dos últimos meses.
+
+        A escala é a mesma de um fechamento de verdade: cada quinzena tem duas
+        ou três atividades, cada atividade convoca uma parte da equipe, e uma
+        pessoa pode pegar mais de um turno no mesmo dia. Quem entra por último
+        só aparece na quinzena mais recente — e continua marcado como primeiro
+        pagamento, que é o estado que o financeiro precisa ver na lista.
+        """
+        entries: list[ServiceEntry] = []
+        periods = fortnight_ranges(date.today(), MONTHS_OF_HISTORY)
+        # Os últimos cadastros da lista só entram nas quinzenas finais, para a
+        # demo ter gente recorrente e gente estreando ao mesmo tempo.
+        veterans = applicators[: len(applicators) - 6]
+        for period_index, (first_day, last_day, label) in enumerate(periods):
+            pool = veterans if period_index < len(periods) - 1 else applicators
+            for _ in range(rng.randrange(2, 4)):
+                unit = units[weighted(rng, UNIT_WEIGHTS)[0]]
+                batch = ImportBatch.objects.create(
+                    file_name=BATCH_FILE_TEMPLATE.format(unit=unit.short_name, label=label)
+                )
+                entries += self.create_activity(rng, pool, unit, sectors, first_day, last_day, batch)
+        return entries
+
+    def create_activity(self, rng, pool, unit, sectors, first_day, last_day, batch) -> list[ServiceEntry]:
+        """Uma atividade: um evento, um dia, uma unidade e a equipe convocada."""
+        event_name, sector_name, segment = rng.choice(EVENTS)
+        sector = sectors.get(sector_name) or sectors["APL. DE PROVAS"]
+        span = (last_day - first_day).days
+        activity_date = first_day + timedelta(days=rng.randrange(span + 1))
+        team = rng.sample(pool, k=min(len(pool), rng.randrange(6, 13)))
+
+        created = []
+        for applicator in team:
+            role, _, low, high = weighted(rng, ROLE_PROFILE)
+            shifts = [weighted(rng, SHIFTS)[0]]
+            if rng.random() < 0.25:  # quem faz o dia inteiro pega dois turnos
+                shifts.append(Shift.AFTERNOON if shifts[0] == Shift.MORNING else Shift.MORNING)
+            for shift in shifts:
+                entry = ServiceEntry(
+                    applicator=applicator,
+                    role=role,
+                    activity_date=activity_date,
+                    event_name=event_name,
+                    segment=segment,
+                    shift=shift,
+                    sector=sector,
+                    unit=unit,
+                    net_amount=Decimal(rng.randrange(low, high + 1, 5)),
+                    import_batch=batch,
+                )
+                try:
+                    entry.save()
+                except DuplicateServiceEntry:
+                    continue  # o sorteio repetiu o mesmo turno; um turno é um só
+                created.append(entry)
+        return created
