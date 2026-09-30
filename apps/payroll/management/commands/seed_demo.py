@@ -35,6 +35,18 @@ LAST_NAMES = [
     "Horta", "Innocenti", "Junqueira", "Lacerda", "Machado", "Nogueira",
     "Oliveira", "Prado", "Queiroz", "Rezende", "Siqueira", "Teixeira", "Vasconcelos",
 ]
+COURSES = [
+    ("Medicina", "UFMG"), ("Direito", "PUC Minas"), ("Engenharia Civil", "CEFET-MG"),
+    ("Letras", "UFMG"), ("Psicologia", "Newton Paiva"), ("Administração", "Ibmec"),
+    ("Arquitetura", "UFMG"), ("Ciência da Computação", "PUC Minas"),
+    ("Fisioterapia", "UFMG"), ("Publicidade", "UNA"),
+]
+NEIGHBORHOODS = [
+    "Savassi", "Funcionários", "Santo Antônio", "Buritis", "Serra", "Cidade Nova",
+    "Pampulha", "Gutierrez", "Sion", "Floresta", "Vila da Serra", "Castelo",
+]
+BANKS = ["Banco do Brasil", "Bradesco", "Caixa Econômica", "Itaú", "Nubank", "Santander"]
+PERIODS = ["Manhã", "Noite", "Integral"]
 
 
 def cpf_check_digits(base: str) -> str:
@@ -80,7 +92,11 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"{len(applicators)} aplicadores criados."))
 
     def create_applicators(self, rng: random.Random, wanted: int) -> list[Applicator]:
-        """Cria os cadastros, cada um com nome, CPF, contato e nascimento."""
+        """Cria os cadastros com ficha completa, menos alguns deixados pela metade.
+
+        Uns poucos ficam sem banco e sem PIX de propósito: é assim que a lista
+        real chega ao financeiro, e é o que dá o que conferir na ficha.
+        """
         names: list[str] = []
         while len(names) < wanted:
             name = f"{rng.choice(FIRST_NAMES)} {rng.choice(LAST_NAMES)} {rng.choice(LAST_NAMES)}"
@@ -88,7 +104,9 @@ class Command(BaseCommand):
                 names.append(name)
 
         applicators = []
-        for name in sorted(names):
+        for index, name in enumerate(sorted(names)):
+            course, institution = rng.choice(COURSES)
+            incomplete = index % 9 == 0  # ~1 em 9 chega sem dados bancários
             first_name = name.split()[0].lower().replace(" ", "")
             applicator = Applicator(
                 full_name=name,
@@ -98,6 +116,20 @@ class Command(BaseCommand):
                 identity_document=f"MG-{rng.randrange(10, 99)}.{rng.randrange(100, 999)}.{rng.randrange(100, 999)}",
                 birth_date=date(rng.randrange(1996, 2006), rng.randrange(1, 13), rng.randrange(1, 29)),
                 gender=rng.choice(["Feminino", "Masculino"]),
+                neighborhood=rng.choice(NEIGHBORHOODS),
+                vse=rng.random() < 0.3,
+                course=course,
+                course_period=rng.choice(PERIODS),
+                institution=institution,
+                bank_name="" if incomplete else rng.choice(BANKS),
+                bank_branch="" if incomplete else f"{rng.randrange(1000, 9999)}",
+                bank_account="" if incomplete else f"{rng.randrange(10000, 99999)}-{rng.randrange(0, 9)}",
+                account_type="" if incomplete else rng.choice(["Corrente", "Poupança"]),
+                pix_type="" if incomplete else rng.choice(["CPF", "E-mail", "Celular"]),
+                pix_key="" if incomplete else f"{first_name}.{name.split()[-1].lower()}@email.com",
+                pis_nit="" if incomplete else f"{rng.randrange(100, 999)}.{rng.randrange(10000, 99999)}.{rng.randrange(10, 99)}-{rng.randrange(0, 9)}",
+                referral=rng.choice(["", "", "Indicação de colega", "Site do colégio", "Instagram"]),
+                notes="Cadastro incompleto: falta banco e PIX." if incomplete else "",
             )
             applicator.save()
             applicators.append(applicator)
