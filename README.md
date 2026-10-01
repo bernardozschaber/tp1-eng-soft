@@ -183,7 +183,7 @@ para 6,4s/24 MB, e o custo de ambos deixou de crescer com o histórico acumulado
 |Empresa pagadora|derivada da unidade (Lourdes → RRPM Matriz, Cidade Jardim → RRPM CJ, Santo Antônio → RRPM GO, Vale do Sereno → RRPM VSE)|
 |Consistência|recalcula o líquido a partir do bruto e dos descontos gravados; sinaliza quando diverge do líquido lançado em mais de R$1,00 (`ServiceEntry.is_consistent`)|
 |Resumo por aplicador|agrupa por (data de pagamento, aplicador, empresa pagadora), como a aba RESUMO DE PGTO POR APLICADOR|
-|Importação|dois formatos: **"Relatório de Atividade"** (Lourdes), com o valor na planilha; e **exportação de formulário** (Cidade Jardim e Vale do Sereno), com nome completo, CPF e função por resposta — nesse caso a prova, o dia e o turno saem do nome do arquivo ("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na pré-visualização. Casa o aplicador por CPF e, na falta dele, por nome; cria desconhecidos marcados como *cadastro incompleto*; sinaliza possíveis duplicatas|
+|Importação|dois formatos: **"Relatório de Atividade"** (Lourdes), com o valor na planilha; e **exportação de formulário** (Cidade Jardim e Vale do Sereno), com nome completo, CPF e função por resposta — nesse caso a prova, o dia e o turno saem do nome do arquivo ("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na pré-visualização. Casa o aplicador por CPF e, na falta dele, por nome; para cada nome desconhecido, pergunta na pré-visualização se cria um *cadastro novo* (primeiro pagamento) ou deixa as linhas de fora; sinaliza possíveis duplicatas|
 
 ## Arquitetura
 
