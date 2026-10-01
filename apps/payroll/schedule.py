@@ -45,3 +45,4 @@ def fortnight_label(payment_date: date, with_year: bool = False) -> str:
     ordinal = "1ª" if payment_date.day <= MID_MONTH else "2ª"
     year, month = previous_month(payment_date)
     suffix = f"/{year}" if with_year else ""
+    return f"{ordinal} quinzena de {MONTH_NAMES[month - 1]}{suffix}"
