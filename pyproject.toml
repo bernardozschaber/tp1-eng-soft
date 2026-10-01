@@ -1,0 +1,11 @@
+[tool.ruff]
+line-length = 120
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+# F: pyflakes (variável não usada, import faltando) — pegou o return perdido
+# de fortnight_label. E/W: pycodestyle. I: ordem dos imports.
+select = ["E", "F", "W", "I"]
+# O comprimento de linha fica para a revisão: impor agora reformataria ~50
+# linhas sem relação com nenhuma mudança.
+ignore = ["E501"]
