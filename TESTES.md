@@ -451,8 +451,9 @@ transação; ela não é o que sustenta a garantia.
 
 ### 4.1 O que existe
 
-**78 testes**, nos `tests.py` de `payroll`, `imports`, `applicators` e `core`
-e nos módulos `test_calculator.py` e `test_schedule.py` de `apps/payroll`. O
+**79 testes**, nos `tests.py` de `payroll`, `imports`, `applicators` e `core`
+e nos módulos `test_calculator.py`, `test_schedule.py` e
+`test_query_budget.py` de `apps/payroll`. O
 GitHub Actions roda a suíte, o ruff e um `node --check` dos arquivos JS a cada
 push na `main` e em todo pull request (`.github/workflows/ci.yml`).
 
@@ -462,6 +463,7 @@ push na `main` e em todo pull request (`.github/workflows/ci.yml`).
 | `ShiftColumnTests` | 3 | A coluna de turno na lista, via `django.test.Client` |
 | `ComputeBreakdownTests`, `TaxRatesTests`, `ConsistencyTests` | 10 | O bruto do RPA, INSS, ISS e IR a partir do líquido, o arredondamento e a conferência de R$ 1 |
 | `PaymentDateTests`, `FortnightLabelTests` | 8 | A regra dia 5 / dia 20, a virada de ano e o título de cada quinzena no export |
+| `QueryBudgetTests` | 1 | Lista, Resumo e export fazem o mesmo número de consultas com 3x o histórico |
 | `ImportDoesNotDuplicateTests` | 4 | A importação de ponta a ponta, sobre a pasta reconstruída |
 | `NoiseCellTests` | 5 | Células de ruído da planilha que não podem virar aplicador |
 | `ApplicatorLookupTests`, `NormalizeNameTests`, `SamePersonHeuristicsTests`, `DedupeNamesCommandTests` | 17 | Como um nome digitado de dois jeitos é reconhecido como a mesma pessoa |
@@ -555,7 +557,7 @@ Em ordem de risco para o fechamento de pagamento:
 | 4 | `imports/services.py` | `merge_questions` e `creation_questions`: nomes parecidos, correntes de junção, resposta ausente | Decide se duas grafias são uma pessoa ou duas — erra e paga em dobro por outro caminho |
 | 5 | `payroll/summary.py` e `export.py` | Totais do resumo iguais à soma dos lançamentos; o workbook abre e tem as abas esperadas | É o número que vai para a contabilidade — e o título `None` em todo bloco passou sem nenhum teste notar |
 | 6 | `payroll/filters.py` | Cada filtro isolado e combinado, incluindo `inconsistent_only` | Filtro errado mostra fechamento incompleto sem avisar |
-| 7 | Desempenho | `assertNumQueries` nos tetos medidos na seção 1 | Transforma a medição de 1.5 em regressão detectável |
+| 7 | ~~Desempenho~~ | Coberto em `test_query_budget.py`: tirar o `select_related` de `filters.py` quebra as três telas | — |
 | 8 | Acesso | Toda rota exige login; exclusão de lote exige `POST` | Hoje só o `@login_required` no código garante isso; nada verifica que ele continua lá |
 
 Duas lacunas de infraestrutura, herdadas da seção 2.10 e ainda abertas: **nenhum
