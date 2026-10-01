@@ -6,8 +6,8 @@ Environment variables (see .env.example):
   DJANGO_DEBUG       "1" enables debug mode (default: 1)
   ALLOWED_HOSTS      comma-separated list (default: localhost,127.0.0.1)
 """
-from pathlib import Path
 import os
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

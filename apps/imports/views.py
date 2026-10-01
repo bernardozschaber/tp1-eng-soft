@@ -11,7 +11,6 @@ from django.db.models import Prefetch
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-
 from openpyxl import load_workbook
 
 from apps.applicators.models import Applicator

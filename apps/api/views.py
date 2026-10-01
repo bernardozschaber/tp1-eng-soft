@@ -4,8 +4,12 @@ from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 
 from apps.api.serializers import (
-    ApplicatorSerializer, PayingCompanySerializer, SectorSerializer, ServiceEntrySerializer,
-    TaxSettingsSerializer, UnitSerializer,
+    ApplicatorSerializer,
+    PayingCompanySerializer,
+    SectorSerializer,
+    ServiceEntrySerializer,
+    TaxSettingsSerializer,
+    UnitSerializer,
 )
 from apps.applicators.models import Applicator
 from apps.catalog.models import PayingCompany, Sector, TaxSettings, Unit
