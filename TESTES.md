@@ -451,11 +451,12 @@ transação; ela não é o que sustenta a garantia.
 
 ### 4.1 O que existe
 
-**79 testes**, nos `tests.py` de `payroll`, `imports`, `applicators` e `core`
-e nos módulos `test_calculator.py`, `test_schedule.py` e
-`test_query_budget.py` de `apps/payroll`. O
-GitHub Actions roda a suíte, o ruff e um `node --check` dos arquivos JS a cada
-push na `main` e em todo pull request (`.github/workflows/ci.yml`).
+**257 testes**, nos `tests.py` e `test_*.py` de cada app, com **96% de
+cobertura** de linhas e desvios de `apps/` (migrations, `admin.py` e `apps.py`
+fora da conta). O GitHub Actions roda a suíte pelo `pytest`, o ruff e um
+`node --check` dos arquivos JS a cada push na `main` e em todo pull request
+(`.github/workflows/ci.yml`); **abaixo de 80% de cobertura o job falha**
+(`fail_under` em `pyproject.toml`).
 
 | Classe | Testes | Cobre |
 |---|---:|---|
@@ -470,6 +471,22 @@ push na `main` e em todo pull request (`.github/workflows/ci.yml`).
 | `WhatsappNumberTests` | 5 | A normalização do telefone para o link do WhatsApp |
 | `SectionAccessMiddlewareTests`, `SectionForViewTests`, `AllowedSectionsTests`, `SeedTeamRenameTests` | 12 | O acesso por cargo, aplicado no servidor e não só no menu |
 | `TemplateCommentTests` | 1 | Varre todos os templates atrás de `{# … #}` em mais de uma linha |
+| `ParseDateTests`, `ParseCellTests`, `ParseActivitySheetTests` | 15 | Datas por extenso e curtas, valor com `R$` e vírgula, e onde o layout "Relatório de Atividade" para de ler |
+| `ParseFileNameTests`, `ParseFormsSheetTests` | 8 | Prova, dia e turno tirados do nome do arquivo de formulário; o ano tirado das respostas |
+| `ParseWorkbookTests` | 4 | Aba, linha e coluna ocultas ficam de fora, sem renumerar o "Linha 37" dos avisos |
+| `QuestionTests`, `ReadAnswersTests`, `SmallHelpersTests` | 13 | Cada par de nomes parecidos perguntado uma vez, correntes de junção, resposta ausente ou apontando para ficha apagada |
+| `ConfirmImportTests`, `StageUploadsTests` | 14 | A confirmação como o operador respondeu: junção, recusa, CPF, sufixo, valor da lista de formulário e o arquivo do lote |
+| `ImportViewsTests` | 14 | Envio, prévia, confirmação e lotes (prévia da planilha original, download, exclusão em massa) |
+| `EntryFiltersParsingTests`, `EntryFiltersApplyTests` | 12 | Cada filtro isolado e combinado, e o fechamento padrão do Resumo |
+| `EntryViewsTests`, `ApplicatorViewsTests`, `SettingsPageTests` | 31 | As telas de lançamento, cadastro e configurações pelo `django.test.Client` |
+| `LoginRequiredTests`, `PostOnlyTests` | 4 | Percorre o URLconf: toda rota exige login e toda exclusão exige `POST` |
+| `SeedCommandTests`, `SeedTeamAdminTests`, `SeedDemo*Tests`, `Roster*Tests`, `ReadPaymentNamesTests`, `ReadProfilesTests`, `MatchProfilesTests`, `CellHelpersTests` | 63 | Os comandos de gerenciamento e a leitura das planilhas do setor que o `roster` usa |
+
+`SettingsPageTests` nasceu de um defeito que ele mesmo achou: salvar alíquotas
+somando 100% derrubava a página de configurações com erro 500, porque o
+`ModelForm` escreve o POST recusado na instância e o exemplo de cálculo usava
+essa instância. `LoginRequiredTests` não lista as rotas, percorre o URLconf:
+uma view nova sem `@login_required` quebra o teste sem ninguém lembrar dela.
 
 `FortnightLabelTests` nasceu de um defeito: `fortnight_label` montava o rótulo
 e não o retornava, então todo bloco do Resumo exportado saía com título `None`.
@@ -510,16 +527,19 @@ apressada estragaria pagamento:
 ### 4.2 Como rodar
 
 ```bash
-python manage.py test              # a suíte inteira, ~20-30s
-python manage.py test apps.payroll # unicidade, coluna de turno, calculadora e calendário
-python manage.py test apps.imports # só a importação (planilhas geradas em memória)
-python manage.py test apps.core    # acesso por cargo e a varredura dos templates
-ruff check .                       # o lint do CI (pip install -r requirements-dev.txt)
-python manage.py test -v2          # com o nome e a docstring de cada teste
+pip install -r requirements-dev.txt  # pytest, pytest-django, pytest-cov, ruff
+pytest                               # a suíte inteira com cobertura, como no CI (~1-2 min)
+pytest apps/imports                  # só a importação (planilhas geradas em memória)
+pytest apps/payroll/test_filters.py  # um arquivo
+pytest --no-cov -x                   # sem cobertura, parando no primeiro erro
+ruff check .                         # o lint do CI
+python manage.py test -v2            # o runner do Django também roda tudo, com a docstring de cada teste
 ```
 
 O runner cria um banco descartável; `db.sqlite3` não é tocado. Os testes de
 importação escrevem em `MEDIA_ROOT` temporário, removido no `tearDownClass`.
+`pytest` roda os mesmos `TestCase` do Django (pytest-django), então os dois
+runners servem; a cobertura e o limite de 80% só valem pelo `pytest`.
 
 ### 4.3 Convenções adotadas
 
