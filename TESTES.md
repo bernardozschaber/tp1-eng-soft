@@ -573,12 +573,12 @@ Em ordem de risco para o fechamento de pagamento:
 |---|---|---|---|
 | 1 | `payroll/calculator.py` | Conferir os casos de 4.1 contra linhas da planilha de controle, não só contra valores calculados à mão | Os testes atuais garantem a fórmula; falta provar que ela bate com o que o financeiro pagava |
 | 2 | ~~`payroll/schedule.py`~~ | Coberto em `test_schedule.py` | — |
-| 3 | `imports/parser.py` | Os dois layouts, abas ocultas ignoradas, data por extenso e curta, valor com `R$` e vírgula | O parser é a porta de entrada de todo dado do sistema |
-| 4 | `imports/services.py` | `merge_questions` e `creation_questions`: nomes parecidos, correntes de junção, resposta ausente | Decide se duas grafias são uma pessoa ou duas — erra e paga em dobro por outro caminho |
-| 5 | `payroll/summary.py` e `export.py` | Totais do resumo iguais à soma dos lançamentos; o workbook abre e tem as abas esperadas | É o número que vai para a contabilidade — e o título `None` em todo bloco passou sem nenhum teste notar |
-| 6 | `payroll/filters.py` | Cada filtro isolado e combinado, incluindo `inconsistent_only` | Filtro errado mostra fechamento incompleto sem avisar |
+| 3 | ~~`imports/parser.py`~~ | Coberto em `test_parser.py` (99% do módulo) | — |
+| 4 | ~~`imports/services.py`~~ | Coberto em `test_services.py` (98% do módulo) | — |
+| 5 | `payroll/summary.py` e `export.py` | Totais do resumo iguais à soma dos lançamentos com várias pessoas e quinzenas; o conteúdo de cada aba do workbook | `test_views.py` já abre o export e conta as abas, mas com um lançamento só a soma não prova nada |
+| 6 | ~~`payroll/filters.py`~~ | Coberto em `test_filters.py` | — |
 | 7 | ~~Desempenho~~ | Coberto em `test_query_budget.py`: tirar o `select_related` de `filters.py` quebra as três telas | — |
-| 8 | Acesso | Toda rota exige login; exclusão de lote exige `POST` | Hoje só o `@login_required` no código garante isso; nada verifica que ele continua lá |
+| 8 | ~~Acesso~~ | Coberto em `core/test_routes.py`, que percorre o URLconf inteiro | — |
 
 Duas lacunas de infraestrutura, herdadas da seção 2.10 e ainda abertas: **nenhum
 teste executa JavaScript** e **nenhum renderiza página em navegador**. O CI já
