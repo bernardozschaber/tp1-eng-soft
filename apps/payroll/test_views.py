@@ -132,3 +132,23 @@ class EntryViewsTests(TestCase):
         self.assertIn(f'BernoulliPay_pgto_{self.entry.payment_date:%Y-%m-%d}.xlsx', response["Content-Disposition"])
         workbook = load_workbook(BytesIO(response.content))
         self.assertGreaterEqual(len(workbook.sheetnames), 2)
+
+    def test_all_payment_dates_summary_shows_every_run_not_the_latest(self):
+        """Escolher "Todas as datas de pgto" no filtro não pode voltar para a mais recente."""
+        later = ServiceEntry.objects.create(
+            applicator=self.ana, role=ServiceRole.APPLICATOR, activity_date=date(2026, 9, 20),
+            event_name="Simulado", shift=Shift.MORNING, sector=self.sector, unit=self.unit, net_amount=102,
+        )
+        self.assertNotEqual(later.payment_date, self.entry.payment_date)
+
+        response = self.client.get("/lancamentos/resumo/", {"payment_date": ""})
+
+        self.assertEqual([group.payment_date for group in response.context["groups"]],
+                         sorted([self.entry.payment_date, later.payment_date]))
+        self.assertEqual(response.context["totals"]["net"], Decimal("204"))
+        self.assertContains(response, "todas as datas de pagamento")
+
+    def test_export_of_all_payment_dates_is_named_todas(self):
+        response = self.client.get("/lancamentos/exportar/", {"payment_date": ""})
+
+        self.assertIn('BernoulliPay_pgto_todas.xlsx', response["Content-Disposition"])
