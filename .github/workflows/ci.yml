@@ -37,6 +37,8 @@ jobs:
           cache: pip
           cache-dependency-path: requirements*.txt
       - run: pip install -r requirements-dev.txt
+      # Os testes E2E (e2e/) abrem as telas no Chromium do Playwright.
+      - run: python -m playwright install --with-deps chromium
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
       # pytest-django roda os mesmos TestCase do `manage.py test`, e o
