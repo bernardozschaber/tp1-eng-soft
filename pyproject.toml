@@ -12,10 +12,15 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
-# Os testes atuais seguem o padrão do Django (tests.py e test_*.py dentro de
-# cada app); o pytest-django roda as classes TestCase sem mudança.
+# Os testes de unidade e integração seguem o padrão do Django (tests.py e
+# test_*.py dentro de cada app); o pytest-django roda as classes TestCase sem
+# mudança. Os E2E ficam em e2e/, no navegador (pytest-playwright).
 python_files = ["tests.py", "test_*.py"]
-testpaths = ["apps"]
+testpaths = ["apps", "e2e"]
+filterwarnings = [
+    # Vem do pytest-base-url, que o pytest-playwright puxa; não é código nosso.
+    "ignore:Session-scoped fixtures defined as instance methods:pytest.PytestRemovedIn10Warning",
+]
 addopts = "--cov --cov-report=term-missing:skip-covered"
 
 [tool.coverage.run]
