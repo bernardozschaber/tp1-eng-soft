@@ -65,8 +65,9 @@ Diagnóstico preciso:
 1. **Escopo obrigatório por ciclo de pagamento** (`EntryFilters.scope_to_payment_run()`).
    O Resumo e o Export são documentos de um fechamento: a operação paga uma coorte
    por vez. Sem data na requisição, usa-se a mais recente, e a página informa isso
-   explicitamente. *Não existe* a opção de exportar o histórico inteiro — era a
-   funcionalidade que quebrava a aplicação.
+   explicitamente. Ver todas as datas só acontece quando o usuário escolhe
+   "Todas as datas de pgto" no filtro — nunca por omissão, porque o histórico
+   inteiro como padrão era o que quebrava a aplicação.
 2. **Uma única materialização no export** (`build_summary_from()`), eliminando a
    segunda busca das mesmas linhas.
 3. **Índices**: `db_index` em `activity_date` e `payment_date`, mais um índice
@@ -451,7 +452,7 @@ transação; ela não é o que sustenta a garantia.
 
 ### 4.1 O que existe
 
-**263 testes**: 259 de unidade e integração, nos `tests.py` e `test_*.py` de
+**265 testes**: 261 de unidade e integração, nos `tests.py` e `test_*.py` de
 cada app, e **4 end-to-end** em `e2e/`, que abrem o sistema no navegador. A
 cobertura é de **96%** de linhas e desvios de `apps/` (migrations, `admin.py` e
 `apps.py` fora da conta). O GitHub Actions roda a suíte pelo `pytest`, o ruff e
@@ -478,8 +479,8 @@ um `node --check` dos arquivos JS a cada push na `main` e em todo pull request
 | `QuestionTests`, `ReadAnswersTests`, `SmallHelpersTests` | 13 | Cada par de nomes parecidos perguntado uma vez, correntes de junção, resposta ausente ou apontando para ficha apagada |
 | `ConfirmImportTests`, `StageUploadsTests` | 14 | A confirmação como o operador respondeu: junção, recusa, CPF, sufixo, valor da lista de formulário e o arquivo do lote |
 | `ImportViewsTests` | 14 | Envio, prévia, confirmação e lotes (prévia da planilha original, download, exclusão em massa) |
-| `EntryFiltersParsingTests`, `EntryFiltersApplyTests` | 12 | Cada filtro isolado e combinado, e o fechamento padrão do Resumo |
-| `EntryViewsTests`, `ApplicatorViewsTests`, `SettingsPageTests` | 31 | As telas de lançamento, cadastro e configurações pelo `django.test.Client` |
+| `EntryFiltersParsingTests`, `EntryFiltersApplyTests` | 14 | Cada filtro isolado e combinado, o fechamento padrão do Resumo e a escolha explícita de todas as datas |
+| `EntryViewsTests`, `ApplicatorViewsTests`, `SettingsPageTests` | 33 | As telas de lançamento, cadastro e configurações pelo `django.test.Client` |
 | `LoginRequiredTests`, `PostOnlyTests` | 4 | Percorre o URLconf: toda rota exige login e toda exclusão exige `POST` |
 | `SeedCommandTests`, `SeedTeamAdminTests`, `SeedDemo*Tests`, `Roster*Tests`, `ReadPaymentNamesTests`, `ReadProfilesTests`, `MatchProfilesTests`, `CellHelpersTests` | 63 | Os comandos de gerenciamento e a leitura das planilhas do setor que o `roster` usa |
 
