@@ -108,8 +108,10 @@
     updateNotice();
     const next = pending();
     if (next === -1) {
+      // close() zera submitAfter: lê antes, senão o envio pedido se perde.
+      const shouldSubmit = submitAfter;
       close();
-      if (submitAfter) form.requestSubmit();
+      if (shouldSubmit) form.requestSubmit();
       return;
     }
     show(next);
