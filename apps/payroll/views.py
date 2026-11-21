@@ -94,6 +94,6 @@ def export_excel(request):
     entries = list(filters.apply().order_by("activity_date", "applicator__full_name"))
     content = build_workbook(entries, build_summary_from(entries))
     response = HttpResponse(content, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    stamp = filters.payment_date or date.today()
-    response["Content-Disposition"] = f'attachment; filename="BernoulliPay_pgto_{stamp:%Y-%m-%d}.xlsx"'
+    stamp = "todas" if filters.all_payment_dates else f"{filters.payment_date or date.today():%Y-%m-%d}"
+    response["Content-Disposition"] = f'attachment; filename="BernoulliPay_pgto_{stamp}.xlsx"'
     return response

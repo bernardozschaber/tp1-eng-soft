@@ -23,6 +23,7 @@ class EntryFiltersParsingTests(TestCase):
         parsed = filters("")
 
         self.assertEqual((parsed.query, parsed.unit_id, parsed.payment_date), ("", None, None))
+        self.assertFalse(parsed.all_payment_dates)
         self.assertFalse(parsed.inconsistent_only)
 
     def test_bad_numbers_and_dates_are_ignored_not_errors(self):
@@ -32,6 +33,12 @@ class EntryFiltersParsingTests(TestCase):
         self.assertIsNone(parsed.sector_id)
         self.assertIsNone(parsed.payment_date)
         self.assertIsNone(parsed.date_from)
+
+    def test_empty_payment_date_means_all_dates(self):
+        parsed = filters("payment_date=")
+
+        self.assertTrue(parsed.all_payment_dates)
+        self.assertEqual(parsed.raw, {"payment_date": ""})
 
     def test_inconsistent_flag(self):
         self.assertTrue(filters("inconsistent=1").inconsistent_only)
@@ -98,6 +105,12 @@ class EntryFiltersApplyTests(TestCase):
 
         self.assertTrue(scoped.payment_date_defaulted)
         self.assertEqual(scoped.payment_date, max(e.payment_date for e in (self.early, self.late, self.ana_late)))
+
+    def test_scope_respects_an_explicit_all_dates_choice(self):
+        scoped = filters("payment_date=").scope_to_payment_run()
+
+        self.assertIsNone(scoped.payment_date)
+        self.assertFalse(scoped.payment_date_defaulted)
 
     def test_scope_on_an_empty_database_stays_empty(self):
         ServiceEntry.objects.all().delete()

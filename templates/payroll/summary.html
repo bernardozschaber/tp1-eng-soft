@@ -13,8 +13,12 @@
 <div class="alert alert--info">{% icon "calendar" %}
   <span>
     Mostrando o pagamento de <b>{{ filters.payment_date|date:"d/m/Y" }}</b>{% if filters.payment_date_defaulted %} — o mais recente{% endif %}.
-    O resumo e a exportação trabalham sempre sobre um único fechamento; troque a data no filtro abaixo para ver outro.
+    Troque a data no filtro abaixo para ver outro fechamento, ou escolha <b>Todas as datas de pgto</b> para ver todos.
   </span>
+</div>
+{% elif filters.all_payment_dates %}
+<div class="alert alert--info">{% icon "calendar" %}
+  <span>Mostrando <b>todas as datas de pagamento</b>, agrupadas por fechamento.</span>
 </div>
 {% endif %}
 {% include "payroll/_filters.html" %}

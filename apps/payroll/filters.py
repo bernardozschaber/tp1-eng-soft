@@ -34,9 +34,17 @@ class EntryFilters:
     raw: dict = field(default_factory=dict)
     #: True when payment_date was not asked for and the most recent one was used.
     payment_date_defaulted: bool = False
+    #: True when the user explicitly picked "Todas as datas de pgto".
+    all_payment_dates: bool = False
 
     @classmethod
     def from_request(cls, params) -> "EntryFilters":
+        # "payment_date" present but empty means the user chose "Todas as datas
+        # de pgto" in the filter bar; absent means a first visit with no choice.
+        all_payment_dates = "payment_date" in params and not params.get("payment_date")
+        raw = {key: value for key, value in params.items() if value}
+        if all_payment_dates:
+            raw["payment_date"] = ""
         return cls(
             query=params.get("q", "").strip(),
             unit_id=_parse_int(params.get("unit")),
@@ -47,24 +55,25 @@ class EntryFilters:
             date_from=_parse_date(params.get("from")),
             date_to=_parse_date(params.get("to")),
             inconsistent_only=params.get("inconsistent") == "1",
-            raw={key: value for key, value in params.items() if value},
+            raw=raw,
+            all_payment_dates=all_payment_dates,
         )
 
     def scope_to_payment_run(self) -> "EntryFilters":
-        """Pin the filters to a single payment date.
+        """Default the summary and the export to the most recent payment date.
 
-        The summary and the export are payment-run documents: the operation
-        closes fortnightly and pays one cohort at a time, so "every entry ever
-        recorded" is not a view anyone needs. It is also not a view the app can
-        serve - unscoped, both pages build the whole history in Python
-        (measured at one year of real volume: the summary took 35.8s and 189 MB,
-        the export 164.0s and 534 MB, on 7 and 4 queries respectively, so the
-        cost is aggregation and rendering, not the database).
+        The operation closes fortnightly and pays one cohort at a time, so a
+        first visit opens on the latest payment run. When the user explicitly
+        picks "Todas as datas de pgto", every payment date is shown instead.
+
+        Unscoped, both pages build the whole history in Python (measured at one
+        year of real volume: the summary took 35.8s and 189 MB, the export
+        164.0s and 534 MB), so "all dates" is opt-in, never the default.
 
         When the request names no payment date, the most recent one is used and
         payment_date_defaulted records that so the page can say so.
         """
-        if self.payment_date is None:
+        if self.payment_date is None and not self.all_payment_dates:
             latest = (
                 ServiceEntry.objects.order_by("-payment_date")
                 .values_list("payment_date", flat=True)
