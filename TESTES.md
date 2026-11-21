@@ -451,10 +451,11 @@ transação; ela não é o que sustenta a garantia.
 
 ### 4.1 O que existe
 
-**257 testes**, nos `tests.py` e `test_*.py` de cada app, com **96% de
-cobertura** de linhas e desvios de `apps/` (migrations, `admin.py` e `apps.py`
-fora da conta). O GitHub Actions roda a suíte pelo `pytest`, o ruff e um
-`node --check` dos arquivos JS a cada push na `main` e em todo pull request
+**263 testes**: 259 de unidade e integração, nos `tests.py` e `test_*.py` de
+cada app, e **4 end-to-end** em `e2e/`, que abrem o sistema no navegador. A
+cobertura é de **96%** de linhas e desvios de `apps/` (migrations, `admin.py` e
+`apps.py` fora da conta). O GitHub Actions roda a suíte pelo `pytest`, o ruff e
+um `node --check` dos arquivos JS a cada push na `main` e em todo pull request
 (`.github/workflows/ci.yml`); **abaixo de 80% de cobertura o job falha**
 (`fail_under` em `pyproject.toml`).
 
@@ -517,6 +518,32 @@ para o operador no meio da pergunta que ele precisava responder. O defeito é
 invisível em revisão de diff e fácil de repetir em qualquer arquivo, então a
 guarda é uma varredura, não uma asserção por página.
 
+#### Testes end-to-end
+
+Os E2E sobem o Django no `live_server` do pytest-django, com os dados de
+referência do `manage.py seed`, e pilotam o Chromium pelo **Playwright**
+(`pytest-playwright`). São os únicos testes que executam o JavaScript das
+páginas e veem a tela como o operador vê: clicam, escolhem arquivo, respondem
+ao `confirm()` do navegador e abrem o `.xlsx` baixado.
+
+| Teste | Fluxo | O que garante |
+|---|---|---|
+| `test_access.py` | Login e acesso por cargo | Link para `/lancamentos/` sem login vai para o login; senha errada é recusada; o RH entra, é barrado no servidor (não só no menu) e chega à importação; sair encerra a sessão |
+| `test_import.py` | Importação de uma lista | `upload.js` só libera o envio com arquivo escolhido; `preview.js` segura o "Confirmar" até o nome novo ter resposta e envia sozinho depois; a mesma lista reenviada chega desmarcada e não paga ninguém duas vezes |
+| `test_payment_run.py` | Do cadastro à exportação | Cadastro com recusa de nome repetido (acento e caixa), lançamento manual com data de pagamento pela regra do dia 5/20, bruto e descontos no Resumo, e o conteúdo do `.xlsx` exportado |
+| `test_batch_delete.py` | Exclusão de importações em lote | O botão diz quantos lançamentos vão junto; "Cancelar" no `confirm()` não apaga nada; só os lotes marcados saem, com os pagamentos deles, e os cadastros ficam |
+
+Cada um foi conferido por mutação: desligar o redirecionamento do
+`SectionAccessMiddleware`, deixar o botão de envio sempre habilitado, trocar a
+alíquota do INSS pela do ISS no cálculo, ignorar a resposta do `confirm()` ou
+o estado "parcial" do selecionar-todas quebra o teste correspondente.
+
+`test_import.py` nasceu achando um defeito: em `preview.js`, `answer()` chamava
+`close()` — que zera `submitAfter` — antes de ler a flag, então o envio
+automático depois da última pergunta nunca acontecia. O operador respondia,
+o card fechava e a prévia ficava parada sem dizer se tinha lançado. Nenhum
+teste anterior executava JS, e o `node --check` do CI só vê sintaxe.
+
 Três testes existem para proteger o **caso vizinho**, que é onde uma correção
 apressada estragaria pagamento:
 
@@ -527,11 +554,15 @@ apressada estragaria pagamento:
 ### 4.2 Como rodar
 
 ```bash
-pip install -r requirements-dev.txt  # pytest, pytest-django, pytest-cov, ruff
+pip install -r requirements-dev.txt  # pytest, pytest-django, pytest-cov, pytest-playwright, ruff
+python -m playwright install chromium  # o navegador dos E2E, uma vez por máquina
 pytest                               # a suíte inteira com cobertura, como no CI (~1-2 min)
 pytest apps/imports                  # só a importação (planilhas geradas em memória)
 pytest apps/payroll/test_filters.py  # um arquivo
 pytest --no-cov -x                   # sem cobertura, parando no primeiro erro
+pytest apps                          # só unidade e integração, com o relatório de cobertura
+pytest e2e --no-cov                  # só os E2E (sem --no-cov o limite de 80% reprova: eles cobrem pouco sozinhos)
+pytest e2e --no-cov --headed --slowmo 500  # os E2E com o navegador à vista, devagar o bastante para acompanhar
 ruff check .                         # o lint do CI
 python manage.py test -v2            # o runner do Django também roda tudo, com a docstring de cada teste
 ```
@@ -580,9 +611,9 @@ Em ordem de risco para o fechamento de pagamento:
 | 7 | ~~Desempenho~~ | Coberto em `test_query_budget.py`: tirar o `select_related` de `filters.py` quebra as três telas | — |
 | 8 | ~~Acesso~~ | Coberto em `core/test_routes.py`, que percorre o URLconf inteiro | — |
 
-Duas lacunas de infraestrutura, herdadas da seção 2.10 e ainda abertas: **nenhum
-teste executa JavaScript** e **nenhum renderiza página em navegador**. O CI já
-roda `node --check` em `static/js/`, o que barra erro de sintaxe mas não erro de
-comportamento; o próximo passo é Playwright no mesmo workflow. `ShiftColumnTests`
-inspeciona o HTML que o Django produz, o que é diferente de ver a página.
-Cobrir `upload.js` e `preview.js` no TP2 exige resolver isso primeiro.
+As duas lacunas de infraestrutura herdadas da seção 2.10 — **nenhum teste
+executava JavaScript** e **nenhum renderizava página em navegador** — foram
+fechadas pelos E2E em `e2e/` (Playwright, no mesmo workflow do CI). `upload.js`
+e `preview.js` passam pelos fluxos de importação e exclusão em lote; `app.js`,
+`card.js` e `chart.js` (tema, ficha e gráfico do Início) ainda não têm teste de
+comportamento.
