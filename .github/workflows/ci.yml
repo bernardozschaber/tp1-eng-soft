@@ -42,5 +42,6 @@ jobs:
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
       # pytest-django roda os mesmos TestCase do `manage.py test`, e o
-      # pyproject.toml liga a cobertura: abaixo de 80% o job falha.
-      - run: pytest
+      # pyproject.toml liga a cobertura: abaixo de 80% o job falha. O -n auto
+      # (pytest-xdist) divide a suíte entre os núcleos do runner.
+      - run: pytest -n auto
