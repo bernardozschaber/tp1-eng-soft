@@ -38,3 +38,5 @@ rpa_control_system_v2.html
 # pytest-cov
 .coverage
 htmlcov/
+# Capturas e traces dos E2E que falharam (pytest-playwright)
+test-results/
