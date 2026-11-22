@@ -554,10 +554,13 @@ apressada estragaria pagamento:
 
 ### 4.2 Como rodar
 
+O passo a passo completo, com o ambiente, os E2E ao vivo e os problemas comuns,
+está em [`COMO_RODAR_TESTES.md`](COMO_RODAR_TESTES.md). O resumo:
+
 ```bash
-pip install -r requirements-dev.txt  # pytest, pytest-django, pytest-cov, pytest-playwright, ruff
+pip install -r requirements-dev.txt  # pytest, pytest-django, pytest-cov, pytest-xdist, pytest-playwright, ruff
 python -m playwright install chromium  # o navegador dos E2E, uma vez por máquina
-pytest                               # a suíte inteira com cobertura, como no CI (~1-2 min)
+pytest -n auto                       # a suíte inteira com cobertura, em paralelo, como no CI (~1 min 30 s)
 pytest apps/imports                  # só a importação (planilhas geradas em memória)
 pytest apps/payroll/test_filters.py  # um arquivo
 pytest --no-cov -x                   # sem cobertura, parando no primeiro erro

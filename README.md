@@ -174,8 +174,9 @@ para 6,4s/24 MB, e o custo de ambos deixou de crescer com o histórico acumulado
 
 A suíte automatizada tem testes de unidade e integração (`pytest apps`, com
 cobertura mínima de 80% verificada no CI) e 4 testes end-to-end no navegador
-com Playwright (`pytest e2e --no-cov`); a seção 4 de [`TESTES.md`](TESTES.md)
-descreve cada um e como rodar.
+com Playwright (`pytest e2e --no-cov`). Os comandos, passo a passo, estão em
+[`COMO_RODAR_TESTES.md`](COMO_RODAR_TESTES.md); a seção 4 de [`TESTES.md`](TESTES.md)
+descreve o que cada teste garante.
 
 ## Regras de negócio
 
