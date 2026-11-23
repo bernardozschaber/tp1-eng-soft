@@ -211,3 +211,81 @@ class Command(BaseCommand):
             applicator.save()
             applicators.append(applicator)
         return applicators
+
+    # -- lançamentos ----------------------------------------------------
+
+    def create_entries(self, rng, applicators, units, sectors) -> list[ServiceEntry]:
+        """Distribui as atividades pelas quinzenas fechadas dos últimos meses.
+
+        A escala é a mesma de um fechamento de verdade: cada quinzena tem duas
+        ou três atividades, cada atividade convoca uma parte da equipe, e uma
+        pessoa pode pegar mais de um turno no mesmo dia. Quem entra por último
+        só aparece na quinzena mais recente — e continua marcado como primeiro
+        pagamento, que é o estado que o financeiro precisa ver na lista.
+        """
+        entries: list[ServiceEntry] = []
+        periods = fortnight_ranges(date.today(), MONTHS_OF_HISTORY)
+        # Os últimos cadastros da lista só entram nas quinzenas finais, para a
+        # demo ter gente recorrente e gente estreando ao mesmo tempo.
+        veterans = applicators[: len(applicators) - 6]
+        for period_index, (first_day, last_day, label) in enumerate(periods):
+            pool = veterans if period_index < len(periods) - 1 else applicators
+            for _ in range(rng.randrange(2, 4)):
+                unit = units[weighted(rng, UNIT_WEIGHTS)[0]]
+                batch = ImportBatch.objects.create(
+                    file_name=BATCH_FILE_TEMPLATE.format(unit=unit.short_name, label=label)
+                )
+                entries += self.create_activity(rng, pool, unit, sectors, first_day, last_day, batch)
+        return entries
+
+    def create_activity(self, rng, pool, unit, sectors, first_day, last_day, batch) -> list[ServiceEntry]:
+        """Uma atividade: um evento, um dia, uma unidade e a equipe convocada."""
+        event_name, sector_name, segment = rng.choice(EVENTS)
+        sector = sectors.get(sector_name) or sectors["APL. DE PROVAS"]
+        span = (last_day - first_day).days
+        activity_date = first_day + timedelta(days=rng.randrange(span + 1))
+        team = rng.sample(pool, k=min(len(pool), rng.randrange(6, 13)))
+
+        created = []
+        for applicator in team:
+            role, _, low, high = weighted(rng, ROLE_PROFILE)
+            shifts = [weighted(rng, SHIFTS)[0]]
+            if rng.random() < 0.25:  # quem faz o dia inteiro pega dois turnos
+                shifts.append(Shift.AFTERNOON if shifts[0] == Shift.MORNING else Shift.MORNING)
+            for shift in shifts:
+                entry = ServiceEntry(
+                    applicator=applicator,
+                    role=role,
+                    activity_date=activity_date,
+                    event_name=event_name,
+                    segment=segment,
+                    shift=shift,
+                    sector=sector,
+                    unit=unit,
+                    net_amount=Decimal(rng.randrange(low, high + 1, 5)),
+                    import_batch=batch,
+                )
+                try:
+                    entry.save()
+                except DuplicateServiceEntry:
+                    continue  # o sorteio repetiu o mesmo turno; um turno é um só
+                created.append(entry)
+        return created
+
+    # -- saída ----------------------------------------------------------
+
+    def report(self, applicators, entries) -> None:
+        payment_dates = sorted({entry.payment_date for entry in entries})
+        total = sum(entry.net_amount for entry in entries)
+        newcomers = Applicator.objects.filter(registration_status=RegistrationStatus.NEW).count()
+        money = f"{total:,.2f}".replace(",", "@").replace(".", ",").replace("@", ".")
+        self.stdout.write(
+            f"{len(applicators)} aplicadores ({newcomers} em primeiro pagamento), "
+            f"{len(entries)} lançamentos em {len(payment_dates)} quinzenas."
+        )
+        if payment_dates:
+            self.stdout.write(
+                f"Pagamentos de {payment_dates[0]:%d/%m/%Y} a {payment_dates[-1]:%d/%m/%Y}, "
+                f"R$ {money} em valores líquidos."
+            )
+        self.stdout.write(self.style.SUCCESS("Dados de demonstração criados."))
