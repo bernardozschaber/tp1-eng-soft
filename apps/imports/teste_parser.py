@@ -15,8 +15,30 @@ from apps.imports.parser import (
     parse_amount,
     parse_date,
     parse_role,
+    parse_sheet,
     parse_shift,
 )
+
+
+def activity_rows(people, *, event="Simulado ENEM", when="15 de Setembro de 2026", shift="Horário: Manhã",
+                  tail=()) -> list[tuple]:
+    """As linhas de uma aba "Relatório de Atividade", como o openpyxl as devolve.
+
+    Cada pessoa é (nome, valor) ou (nome, valor, "orientador").
+    """
+    blank = (None,) * 9
+    rows = [
+        (None, None, None, "Relatório de Atividade", None, None, None, None, None),
+        (None, None, None, "Segmento da Atividade:", None, event, "Data:", when, None),
+        (None, None, None, "Empresa:", None, "Matriz", None, None, shift),
+        (None, None, None, "Nome", None, "Aplicador", "Orientador (a)", "Valor", None),
+    ]
+    for person in people:
+        name, amount, *role = person
+        advisor = 1 if role else None
+        rows.append((None, None, None, name, None, None if advisor else 1, advisor, amount, None))
+    return rows + [blank, *tail]
+
 
 # --- células ---------------------------------------------------------------
 
@@ -69,3 +91,53 @@ class ParseCellTests(SimpleTestCase):
         self.assertEqual(parse_role("VOLANTE"), "VOLANTE")
         self.assertEqual(parse_role("Aplicador de prova"), "APLICADOR")
         self.assertEqual(parse_role(""), "APLICADOR")
+
+
+# --- layout "Relatório de Atividade" ------------------------------------------
+
+
+class ParseActivitySheetTests(SimpleTestCase):
+    def test_reads_metadata_and_people(self):
+        sheet = parse_sheet("MANHÃ", activity_rows([("ANA SOUZA", 115, "orientador"), ("BRUNO LIMA", 102)]))
+
+        self.assertEqual(
+            (sheet.event_name, sheet.activity_date, sheet.shift, sheet.company_hint),
+            ("Simulado ENEM", date(2026, 9, 15), "MANHA", "Matriz"),
+        )
+        self.assertEqual(
+            [(row.name, row.role, row.net_amount, row.source_row) for row in sheet.rows],
+            [("ANA SOUZA", "ORIENTADOR", Decimal("115"), 5), ("BRUNO LIMA", "APLICADOR", Decimal("102"), 6)],
+        )
+        self.assertEqual(sheet.warnings, [])
+        self.assertFalse(sheet.needs_amount)
+
+    def test_sheet_without_the_header_is_not_this_layout(self):
+        self.assertIsNone(parse_sheet("Plan1", [("qualquer", "coisa")] * 10))
+
+    def test_missing_event_and_date_become_warnings(self):
+        sheet = parse_sheet("ABA", activity_rows([("ANA SOUZA", 102)], event=None, when="a definir"))
+
+        self.assertIn("Nome da atividade não encontrado; informe manualmente.", sheet.warnings)
+        self.assertIn("Data não reconhecida; informe manualmente.", sheet.warnings)
+
+    def test_row_without_amount_is_warned_and_skipped(self):
+        sheet = parse_sheet("ABA", activity_rows([("ANA SOUZA", None), ("BRUNO LIMA", 102)]))
+
+        self.assertEqual([row.name for row in sheet.rows], ["BRUNO LIMA"])
+        self.assertEqual(sheet.warnings, ["Linha 5: 'ANA SOUZA' sem valor válido, ignorada."])
+
+    def test_short_names_are_skipped_silently(self):
+        sheet = parse_sheet("ABA", activity_rows([("X", 102), ("BRUNO LIMA", 102)]))
+
+        self.assertEqual([row.name for row in sheet.rows], ["BRUNO LIMA"])
+        self.assertEqual(sheet.warnings, [])
+
+    def test_reading_stops_at_the_totals_formula_and_the_signature(self):
+        signature = (None, None, None, "ASSINATURA DO RESPONSÁVEL", None, None, None, None, None)
+        after = (None, None, None, "DEPOIS DA ASSINATURA", None, 1, None, 102, None)
+        total = (None, None, None, "=CONCAT(\"Total\")", None, None, None, "=SUM(H5:H5)", None)
+
+        for tail in ((signature, after), (total, after)):
+            with self.subTest(stop=tail[0][3]):
+                sheet = parse_sheet("ABA", activity_rows([("ANA SOUZA", 102)], tail=tail))
+                self.assertEqual([row.name for row in sheet.rows], ["ANA SOUZA"])
