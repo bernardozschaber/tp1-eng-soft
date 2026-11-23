@@ -1,6 +1,7 @@
 [tool.ruff]
 line-length = 120
 extend-exclude = ["*/migrations/*", ".claude"]
+
 [tool.ruff.lint]
 # F: pyflakes (variável não usada, import faltando) — pegou o return perdido
 # de fortnight_label. E/W: pycodestyle. I: ordem dos imports.
@@ -23,5 +24,6 @@ branch = true
 omit = ["*/migrations/*", "*/tests.py", "*/test_*.py", "*/apps.py", "*/admin.py"]
 
 [tool.coverage.report]
+fail_under = 80
 show_missing = true
 skip_empty = true
