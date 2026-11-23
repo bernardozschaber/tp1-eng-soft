@@ -7,10 +7,13 @@ montadas em memória, com nomes inventados.
 """
 from datetime import date, datetime
 from decimal import Decimal
+from io import BytesIO
 
 from django.test import SimpleTestCase
+from openpyxl import Workbook
 
 from apps.imports.parser import (
+    _hidden_cells,
     format_cpf,
     parse_amount,
     parse_date,
@@ -19,6 +22,7 @@ from apps.imports.parser import (
     parse_role,
     parse_sheet,
     parse_shift,
+    parse_workbook,
 )
 
 
@@ -215,3 +219,62 @@ class ParseFormsSheetTests(SimpleTestCase):
 
     def test_sheet_without_name_and_role_headers_is_not_this_layout(self):
         self.assertIsNone(parse_forms_sheet("Plan1", [("Nome", "CPF")], self.FILE))
+
+
+# --- a planilha inteira: o que está oculto não é lido --------------------------
+
+
+def workbook_bytes(build) -> bytes:
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+    build(workbook)
+    buffer = BytesIO()
+    workbook.save(buffer)
+    return buffer.getvalue()
+
+
+def add_activity_sheet(workbook, title, people, **options):
+    sheet = workbook.create_sheet(title)
+    for row in activity_rows(people, **options):
+        sheet.append(row)
+    return sheet
+
+
+class ParseWorkbookTests(SimpleTestCase):
+    def test_both_layouts_and_the_skipped_tabs_are_reported(self):
+        def build(workbook):
+            add_activity_sheet(workbook, "MANHÃ", [("ANA SOUZA", 102)])
+            forms = workbook.create_sheet("Respostas")
+            for row in forms_rows([("Bruno Lima", "", "11/09/2026", "Aplicador")]):
+                forms.append(row)
+            workbook.create_sheet("Instruções").append(("Leia antes de preencher",))
+            add_activity_sheet(workbook, "VAZIA", [])
+            add_activity_sheet(workbook, "MAIO", [("CAMILA NUNES", 102)]).sheet_state = "hidden"
+
+        parsed = parse_workbook("Prova 11-09 Tarde.xlsx", workbook_bytes(build))
+
+        self.assertEqual([sheet.layout for sheet in parsed.sheets], ["atividade", "forms"])
+        self.assertEqual(parsed.row_count, 2)
+        self.assertEqual(parsed.skipped_sheets, ["Instruções", "VAZIA (sem aplicadores)", "MAIO (oculta na planilha)"])
+
+    def test_hidden_row_is_dropped_but_keeps_the_excel_line_numbers(self):
+        def build(workbook):
+            sheet = add_activity_sheet(workbook, "MANHÃ", [("ANA SOUZA", 102), ("FALTOU", 102), ("BRUNO LIMA", None)])
+            sheet.row_dimensions[6].hidden = True
+
+        [sheet] = parse_workbook("lista.xlsx", workbook_bytes(build)).sheets
+
+        self.assertEqual([row.name for row in sheet.rows], ["ANA SOUZA"])
+        self.assertIn("Linha 7: 'BRUNO LIMA' sem valor válido, ignorada.", sheet.warnings)
+        self.assertIn("1 linha(s) oculta(s) na planilha, ignorada(s) na importação.", sheet.warnings)
+
+    def test_hidden_advisor_column_is_not_read(self):
+        def build(workbook):
+            add_activity_sheet(workbook, "MANHÃ", [("ANA SOUZA", 115, "orientador")]).column_dimensions["G"].hidden = True
+
+        [sheet] = parse_workbook("lista.xlsx", workbook_bytes(build)).sheets
+
+        self.assertEqual(sheet.rows[0].role, "APLICADOR")
+
+    def test_unreadable_zip_means_nothing_hidden(self):
+        self.assertEqual(_hidden_cells(b"isto nao e um zip"), {})
