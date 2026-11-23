@@ -15,11 +15,43 @@ from openpyxl import Workbook
 
 from apps.applicators.spreadsheets import (
     PAYMENTS_SHEET,
+    PROFILE_COLUMNS,
+    PROFILES_SHEET,
     _as_date,
     _split_bank_details,
     _text,
     read_payment_names,
+    read_profiles,
 )
+
+PROFILE_HEADER = list(PROFILE_COLUMNS.values())
+
+
+def profile_row(name, **overrides) -> list:
+    """Uma linha da ficha na ordem de PROFILE_HEADER, com valores inventados."""
+    values = {
+        "nome": name,
+        "phone": "31 99999-0000",
+        "cpf": "123.456.789-09",
+        "identity_document": "MG-12.345.678",
+        "birth_date": datetime(2001, 3, 14),
+        "gender": "Feminino",
+        "neighborhood": "Savassi",
+        "vse": "",
+        "email": "pessoa@email.com",
+        "course": "Medicina",
+        "course_period": "Manhã",
+        "institution": "UFMG",
+        "bank_details": "3824 / 01090861-6",
+        "bank_name": "Itaú",
+        "account_type": "Corrente",
+        "pix_type": "CPF",
+        "pix_key": "123.456.789-09",
+        "pis_nit": "123.45678.90-1",
+        "referral": "Instagram",
+    }
+    values.update(overrides)
+    return [values[key] for key in PROFILE_COLUMNS]
 
 
 class SpreadsheetDir:
@@ -43,6 +75,18 @@ class SpreadsheetDir:
                 worksheet.append(["15/09/2026", name, 102])
             worksheet.append(["", "TOTAL", 102 * len(block)])
         path = self.make_dir() / "RPAS.xlsx"
+        workbook.save(path)
+        return str(path)
+
+    def profiles_workbook(self, rows, *, header=None, sheet=PROFILES_SHEET) -> str:
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = sheet
+        worksheet.append(["Cadastro de aplicadores"])
+        worksheet.append(header if header is not None else PROFILE_HEADER)
+        for row in rows:
+            worksheet.append(row)
+        path = self.make_dir() / "Agendamento.xlsx"
         workbook.save(path)
         return str(path)
 
@@ -113,3 +157,56 @@ class ReadPaymentNamesTests(SpreadsheetDir, SimpleTestCase):
 
         with self.assertRaises(KeyError):
             read_payment_names(path)
+
+
+class ReadProfilesTests(SpreadsheetDir, SimpleTestCase):
+    def test_maps_every_column_to_the_model_field(self):
+        path = self.profiles_workbook([profile_row("Ana Souza", vse="x")])
+
+        [profile] = read_profiles(path)
+
+        self.assertEqual(profile.name, "Ana Souza")
+        self.assertEqual(profile.fields["cpf"], "123.456.789-09")
+        self.assertEqual(profile.fields["birth_date"], date(2001, 3, 14))
+        self.assertEqual(profile.fields["bank_branch"], "3824")
+        self.assertEqual(profile.fields["bank_account"], "01090861-6")
+        self.assertTrue(profile.fields["vse"])
+        self.assertNotIn("bank_details", profile.fields)
+        self.assertNotIn("nome", profile.fields)
+
+    def test_vse_is_false_unless_marked_with_x(self):
+        path = self.profiles_workbook([profile_row("Ana Souza", vse=""), profile_row("Bruno Lima", vse="não")])
+
+        self.assertEqual([profile.fields["vse"] for profile in read_profiles(path)], [False, False])
+
+    def test_rows_without_a_name_are_skipped(self):
+        path = self.profiles_workbook([profile_row("Ana Souza"), profile_row(None), profile_row("Bruno Lima")])
+
+        self.assertEqual([profile.name for profile in read_profiles(path)], ["Ana Souza", "Bruno Lima"])
+
+    def test_short_rows_fill_missing_cells_with_blank(self):
+        path = self.profiles_workbook([["Ana Souza", "31 99999-0000"]])
+
+        [profile] = read_profiles(path)
+
+        self.assertEqual(profile.fields["phone"], "31 99999-0000")
+        self.assertEqual(profile.fields["cpf"], "")
+        self.assertIsNone(profile.fields["birth_date"])
+
+    def test_birth_date_typed_as_text_is_parsed(self):
+        path = self.profiles_workbook([profile_row("Ana Souza", birth_date="14/03/2001")])
+
+        self.assertEqual(read_profiles(path)[0].fields["birth_date"], date(2001, 3, 14))
+
+    def test_sheet_without_the_header_row_is_refused(self):
+        path = self.profiles_workbook([profile_row("Ana Souza")], header=["Coluna A", "Coluna B"])
+
+        with self.assertRaisesMessage(ValueError, "cabeçalho"):
+            read_profiles(path)
+
+    def test_header_missing_a_column_is_refused_naming_it(self):
+        header = [label for label in PROFILE_HEADER if label != "PIX"]
+        path = self.profiles_workbook([], header=header)
+
+        with self.assertRaisesMessage(ValueError, "pix_key"):
+            read_profiles(path)
