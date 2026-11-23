@@ -595,8 +595,9 @@ an `aria-label` so nothing loses its accessible name. There is no drawer, no ove
 per-viewport layout preference in `localStorage` — the rail is always present, just narrower.
 
 **Motion.** Near-zero: a 150ms background fade on buttons and the dropzone, a 200ms chevron
-rotation, the 220ms drawer slide. Under `prefers-reduced-motion` the drawer animation and
-chevron rotation are removed while colour transitions are kept, so state feedback survives.
+rotation, a 180ms icon cross-fade on the theme toggle. Under `prefers-reduced-motion` the
+chevron rotation is removed while colour and opacity transitions are kept, so state feedback
+survives.
 
 ### Named Rules
 **The Card-Is-The-Page Rule.** The scroll container is the main card, not the document. New
@@ -616,13 +617,16 @@ than 1px at rest, and nothing lifts on hover; hover changes background tone only
 
 ### Shadow Vocabulary
 - **Edge** (`box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06), 0 0 0 1px rgba(11,11,11,0.05)`): the
-  default card treatment. Main card, content cards, metric tiles.
+  main card only — the single shell that sits directly on page grey. Content cards and metric
+  tiles nest inside that shell, so they take a hairline border instead of repeating its shadow;
+  see the Fill-Not-Text-style rule under Shapes.
 - **Edge, larger** (`box-shadow: 0 1px 6px 0 rgba(11,11,11,0.06), 0 0 0 1px rgba(11,11,11,0.05)`):
   the login card only — the one surface that floats alone on grey.
 - **Control** (`box-shadow: 0 1px 2px 0 rgba(11,11,11,0.06)`): secondary buttons, form fields
-  and the active nav icon tile, giving them just enough presence to read as interactive.
-- **Drawer** (`box-shadow: 0 4px 8px -2px rgba(11,11,11,0.06)`): the mobile sidebar overlay,
-  the only genuinely floating element in the product.
+  and the active nav item's tile, giving them just enough presence to read as interactive.
+- **Overlay** (`box-shadow: 0 4px 8px -2px rgba(11,11,11,0.06)`, stacked with a deeper ambient
+  shadow): the merge-confirmation modal and the import sheet-detail card — the two genuinely
+  floating elements in the product, both dialogs over a scrim, neither a drawer.
 
 ### Named Rules
 **The Edge-Not-Lift Rule.** Shadows draw edges, not altitude. A surface may gain a hairline ring;
@@ -638,7 +642,7 @@ it is not a brand surface.
 ## Shapes
 
 Softly rounded rectangles throughout, at three used steps: 8px for small controls and
-interactive chrome (icon buttons, nav icon tiles, sidebar rows, fields, selects, small buttons),
+interactive chrome (icon buttons, nav item tiles, fields, selects, small buttons),
 10px for buttons, metric tiles and alerts, 12px for cards, the main column card, table frames,
 sheets and the dropzone. Badges and weight-bar segments are full pills (999px); avatars and
 legend dots are circles.
@@ -697,18 +701,18 @@ The logomark is not system geometry and is specified under **Identity**, above.
   brand — an 18px control needs the contrast).
 
 ### Navigation
-- **Icon rail (84px):** the logomark, then a vertical list of items, each a 32px rounded icon
-  tile with an 11px weight-500 label beneath. Inactive is secondary ink on transparent; hover
-  tints the tile; active gets a white tile with the control shadow, full ink, and a **verde
-  Bernoulli** indicator bar at the rail edge — the single strongest brand placement in the
-  chrome, and the only place the 500 step touches the shell. The rail's footer pins a help
-  button and a circular initials avatar that submits logout.
-- **Sidebar (280px):** two action links, then per-unit rows showing unit name, paying company
-  in 11px secondary ink, and a right-aligned tabular total over a mono entry count. Rows tint
-  on hover; nothing is boxed.
-- **Topbar:** a `›`-separated breadcrumb in secondary ink with the current page in full ink,
-  preceded by the sidebar toggle icon button.
-- **Mobile:** below 1024px the sidebar becomes the overlay drawer described in Layout.
+- **Rail (240px, 200px below 1024px, 64px icon-only below 480px):** the logomark and wordtext,
+  then a vertical list of items, each an 18px icon and an inline label sharing one row (icon
+  above label only disappears — the label does, not the row — at the narrowest, icon-only
+  width). Inactive is secondary ink on transparent; hover tints the tile; active gets a white
+  tile with the control shadow, full ink, and a 3px **verde Bernoulli** bar flush with the
+  rail's own edge — the single strongest brand placement in the chrome, and the only place the
+  500 step touches the shell. Every link keeps an `aria-label` matching its visible text, so the
+  icon-only width loses no accessible name. The rail's footer pins the account row (avatar,
+  name, role) above settings, theme toggle and logout icon buttons.
+- **Topbar:** a `›`-separated breadcrumb in secondary ink with the current page in full ink.
+- **Mobile:** the rail never leaves the flow — there is no drawer or overlay. It narrows in
+  place at 1024px and 480px, per Layout.
 
 ### Data Table
 The product's densest and most characteristic surface. Column headers are 11px uppercase
@@ -761,6 +765,8 @@ disappearing — the operator must be able to see what they chose to skip.
 - **Do** keep the global focus outline intact; if a composite control needs one ring, put it on
   the wrapper and suppress the inner one.
 - **Do** grow touch targets at the 1024px breakpoint rather than letting padding collapse.
+- **Do** define a new colour for both themes together, in the same edit: the light value under
+  `:root` and its re-verified (≥4.5:1) dark equivalent under `[data-theme="dark"]`.
 
 ### Don't:
 - **Don't** set `--color-brand-500` as a text colour on any light surface. It is 3.34:1.
@@ -769,8 +775,8 @@ disappearing — the operator must be able to see what they chose to skip.
 - **Don't** redraw, re-letter or re-proportion the logomark, and don't force the horizontal
   lockup into a square container. It is supplied artwork; the only permitted transforms are
   uniform scaling and the transparent padding used for the favicon.
-- **Don't** introduce a dark theme or a second colour scheme; `color-scheme: light` is declared
-  and no dark tokens exist.
+- **Don't** branch a component on `[data-theme]` directly or hard-code a dark-mode-only value;
+  reference the same semantic token both themes already re-point (see Dark theme, under Colors).
 - **Don't** fill a button with brand, red, yellow or blue. Status colour is text-on-tint only.
 - **Don't** reintroduce decorative hues. Violet, cyan, pink, orange, fuchsia and indigo were
   deleted from the token layer as dead port residue; they are not a reserve palette.
@@ -779,7 +785,7 @@ disappearing — the operator must be able to see what they chose to skip.
 - **Don't** add font weights above 500 or a third font family. Emphasis is weight 500 or darker ink.
 - **Don't** use uppercase letter-spaced type anywhere but table column headers — in particular,
   not as a kicker or eyebrow above a heading.
-- **Don't** lift surfaces on hover or add a shadow heavier than the Drawer step; hover changes
+- **Don't** lift surfaces on hover or add a shadow heavier than the Overlay step; hover changes
   background tone.
 - **Don't** replace the focus outline with a box-shadow or a border-colour change; that treatment
   was already removed once by audit for failing contrast.
