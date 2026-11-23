@@ -76,6 +76,30 @@ SAMPLE_FILES = {
 }
 
 
+def write_sheet(sheet, event_name, date_text, shift, names) -> None:
+    """Uma aba no layout "Relatório de Atividade", como o parser a espera."""
+    sheet["D1"] = "Relatório de Atividade"
+    sheet["D2"], sheet["F2"], sheet["G2"], sheet["H2"] = "Segmento da Atividade:", event_name, "Data:", date_text
+    sheet["D3"], sheet["F3"], sheet["I3"] = "Empresa:", "Matriz", f"Horário: {shift}"
+    sheet["D4"], sheet["F4"], sheet["G4"], sheet["H4"] = "Nome", "Aplicador", "Orientador (a)", "Valor"
+    for index, name in enumerate(names, start=5):
+        is_advisor = index == 5  # o primeiro da lista é o orientador do turno
+        sheet[f"D{index}"] = name.upper()
+        sheet[f"G{index}" if is_advisor else f"F{index}"] = 1
+        sheet[f"H{index}"] = 115 if is_advisor else 102
+    total_row = 5 + len(names)
+    sheet[f"D{total_row + 2}"] = "ASSINATURA DO RESPONSÁVEL PELA CONTRATAÇÃO:"
+
+
+def build_workbook(sheets) -> bytes:
+    workbook = Workbook()
+    workbook.remove(workbook.active)
+    for title, event_name, date_text, shift, names in sheets:
+        write_sheet(workbook.create_sheet(title), event_name, date_text, shift, names)
+    buffer = BytesIO()
+    workbook.save(buffer)
+    return buffer.getvalue()
+
 
 class FakeSession(dict):
     """A sessão só precisa guardar e devolver a prévia."""
@@ -83,12 +107,6 @@ class FakeSession(dict):
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="bernoullipay-tests-"))
 class ImportDoesNotDuplicateTests(TestCase):
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        if not SAMPLES.is_dir():
-            raise cls.failureException(f"planilhas de exemplo não encontradas em {SAMPLES}")
-
     @classmethod
     def tearDownClass(cls):
         from django.conf import settings
@@ -132,7 +150,7 @@ class ImportDoesNotDuplicateTests(TestCase):
 
     def _import(self, *file_names) -> dict:
         uploads = [
-            SimpleUploadedFile(name, (SAMPLES / name).read_bytes(),
+            SimpleUploadedFile(name, build_workbook(SAMPLE_FILES[name]),
                                content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
             for name in file_names
         ]
@@ -188,7 +206,29 @@ class ImportDoesNotDuplicateTests(TestCase):
 
     def test_nobody_is_paid_twice_for_the_same_shift_across_the_whole_folder(self):
         """A pasta inteira, na ordem em que a operação a enviaria."""
-        for name in sorted(path.name for path in SAMPLES.glob("*.xlsx")):
+        for name in sorted(SAMPLE_FILES):
             self._import(name)
         self.assertEqual(self._duplicate_count(), 0)
         self.assertGreater(ServiceEntry.objects.count(), 100)
+
+
+class NoiseCellTests(TestCase):
+    """O dump da planilha original some com o que é ruído do template, não dado."""
+
+    def test_phone_cpf_pair_is_noise(self):
+        self.assertTrue(_is_noise_cell("32922299 / 03788016899"))
+
+    def test_signature_line_is_noise(self):
+        self.assertTrue(_is_noise_cell("ASSINATURA DO RESPONSÁVEL PELA CONTRATAÇÃO:"))
+
+    def test_broken_cell_reference_is_noise(self):
+        for text in ("!E", "!F", "!G"):
+            self.assertTrue(_is_noise_cell(text), text)
+
+    def test_real_data_is_not_noise(self):
+        for text in ("Segmento da Atividade:", "Empresa:", "Maria Silva", "Nome"):
+            self.assertFalse(_is_noise_cell(text), text)
+
+    def test_cell_text_collapses_internal_whitespace(self):
+        padded = "ASSINATURA:" + " " * 40 + "\nOUTRA LINHA"
+        self.assertEqual(_cell_text(padded), "ASSINATURA: OUTRA LINHA")
