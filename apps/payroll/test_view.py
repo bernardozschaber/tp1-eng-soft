@@ -1,9 +1,11 @@
 """As telas de lançamento: lista, formulário, exclusão, resumo e exportação."""
 from datetime import date
 from decimal import Decimal
+from io import BytesIO
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from openpyxl import load_workbook
 
 from apps.applicators.models import Applicator
 from apps.catalog.models import PayingCompany, Sector, Unit
@@ -106,3 +108,27 @@ class EntryViewsTests(TestCase):
         response = self.client.post(f"/lancamentos/{self.entry.pk}/excluir/")
 
         self.assertRedirects(response, "/lancamentos/", fetch_redirect_response=False)
+
+    # --- resumo e exportação ---------------------------------------------
+
+    def test_summary_groups_the_payment_run(self):
+        response = self.client.get("/lancamentos/resumo/", {"payment_date": f"{self.entry.payment_date:%Y-%m-%d}"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["totals"]["net"], Decimal("102"))
+
+    def test_summary_inconsistent_only_drops_empty_groups(self):
+        response = self.client.get(
+            "/lancamentos/resumo/",
+            {"payment_date": f"{self.entry.payment_date:%Y-%m-%d}", "inconsistent": "1"},
+        )
+
+        self.assertEqual(response.context["groups"], [])
+
+    def test_export_is_an_xlsx_named_after_the_payment_date(self):
+        response = self.client.get("/lancamentos/exportar/", {"payment_date": f"{self.entry.payment_date:%Y-%m-%d}"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(f'BernoulliPay_pgto_{self.entry.payment_date:%Y-%m-%d}.xlsx', response["Content-Disposition"])
+        workbook = load_workbook(BytesIO(response.content))
+        self.assertGreaterEqual(len(workbook.sheetnames), 2)
