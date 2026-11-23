@@ -35,7 +35,10 @@ jobs:
         with:
           python-version: "3.13"
           cache: pip
-      - run: pip install -r requirements.txt
+          cache-dependency-path: requirements*.txt
+      - run: pip install -r requirements-dev.txt
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
-      - run: python manage.py test
+      # pytest-django roda os mesmos TestCase do `manage.py test`, e o
+      # pyproject.toml liga a cobertura: abaixo de 80% o job falha.
+      - run: pytest
