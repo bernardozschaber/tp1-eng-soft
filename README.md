@@ -181,9 +181,9 @@ para 6,4s/24 MB, e o custo de ambos deixou de crescer com o histórico acumulado
 |Ajuste de −R$0,01 da planilha antiga|**Não aplicado**, por decisão do setor|
 |Data de pagamento|atividade até o dia 15 → dia 5 do mês seguinte; após o dia 15 → dia 20 do mês seguinte (`apps/payroll/schedule.py`)|
 |Empresa pagadora|derivada da unidade (Lourdes → RRPM Matriz, Cidade Jardim → RRPM CJ, Santo Antônio → RRPM GO, Vale do Sereno → RRPM VSE)|
-|Consistência|`|
+|Consistência|recalcula o líquido a partir do bruto e dos descontos gravados; sinaliza quando diverge do líquido lançado em mais de R$1,00 (`ServiceEntry.is_consistent`)|
 |Resumo por aplicador|agrupa por (data de pagamento, aplicador, empresa pagadora), como a aba RESUMO DE PGTO POR APLICADOR|
-|Importação|dois formatos: **"Relatório de Atividade"** (Lourdes), com o valor na planilha; e **exportação de formulário** (Cidade Jardim e Vale do Sereno), com nome completo, CPF e função por resposta — nesse caso a prova, o dia e o turno saem do nome do arquivo ("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na pré-visualização. Casa o aplicador por CPF e, na falta dele, por nome; cria desconhecidos marcados como *cadastro incompleto*; sinaliza possíveis duplicatas|
+|Importação|dois formatos: **"Relatório de Atividade"** (Lourdes), com o valor na planilha; e **exportação de formulário** (Cidade Jardim e Vale do Sereno), com nome completo, CPF e função por resposta — nesse caso a prova, o dia e o turno saem do nome do arquivo ("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na pré-visualização. Casa o aplicador por CPF e, na falta dele, por nome; para cada nome desconhecido, pergunta na pré-visualização se cria um *cadastro novo* (primeiro pagamento) ou deixa as linhas de fora; sinaliza possíveis duplicatas|
 
 ## Arquitetura
 
@@ -194,16 +194,24 @@ reutilizá-las nas páginas HTML, na API REST e no comando de seed.
 ```
 config/            settings, urls, wsgi
 apps/
-  core/            layout base, dashboard, login, template tags (ícones, moeda)
+  core/            layout base, dashboard, login, controle de acesso por cargo, template tags (ícones, moeda)
   catalog/         unidades, empresas pagadoras, setores, alíquotas (+ comando seed)
   applicators/     cadastro de aplicadores e normalização de nomes
   payroll/         lançamentos, calculadora RPA, calendário de pagamento, resumo, exportação
   imports/         parser das listas de pagamento e fluxo upload → prévia → confirmação
   api/             serializers e viewsets DRF (/api/)
 templates/         páginas por app
-static/            tokens de design (Geist, paleta), CSS de componentes, JS sem frameworks
+static/            tokens de design (IBM Plex, verde Bernoulli), CSS de componentes, JS sem frameworks
 docs/samples/      lista de pagamento de exemplo, só como referência do parser
 ```
+
+Os quatro diagramas a seguir são a documentação UML preliminar do sistema, em
+Mermaid: **classes** (o domínio), **estados** (a situação do cadastro do
+aplicador), **sequência** (a importação de listas) e **componentes** (como as
+camadas se encaixam). O primeiro rascunho de cada um foi gerado por IA e depois
+conferido contra o código — foi nessa revisão que saíram, por exemplo, a
+dependência invertida entre a calculadora e as alíquotas e a ordem errada das
+chamadas na importação.
 
 ### Diagrama de classes (domínio)
 
@@ -214,31 +222,56 @@ classDiagram
     }
     class Unit {
         +name
-        +is\\\_default
+        +is_default
+        +short_name() str
     }
     class Sector {
         +name
-        +is\\\_default
+        +is_default
     }
     class TaxSettings {
-        +inss\\\_rate
-        +iss\\\_rate
-        +ir\\\_rate
-        +current()$
+        <<singleton>>
+        +inss_rate
+        +iss_rate
+        +ir_rate
+        +current()$ TaxSettings
+    }
+    class RegistrationStatus {
+        <<enumeration>>
+        NOVO
+        ATIVO
     }
     class Applicator {
-        +full\\\_name
-        +normalized\\\_name
+        +full_name
+        +normalized_name
         +cpf
-        +bank\\\_account
-        +pix\\\_key
-        +needs\\\_review
-        +find\\\_by\\\_name(raw)$
+        +phone
+        +bank_account
+        +pix_key
+        +registration_status
+        +is_active
+        +find_by_name(raw)$ Applicator
+        +find_by_cpf(cpf)$ Applicator
+        +promote_if_recurring() bool
+    }
+    class ServiceRole {
+        <<enumeration>>
+        APLICADOR
+        ORIENTADOR
+        VOLANTE
+    }
+    class Shift {
+        <<enumeration>>
+        MANHA
+        TARDE
+        NOITE
     }
     class ServiceEntry {
         +role
-        +activity\\\_date
-        +event\\\_name
+        +activity_date
+        +event_name
+        +event_key
+        +segment
         +shift
         +payment\\\_date
         +net\\\_amount
