@@ -17,9 +17,11 @@ from apps.applicators.spreadsheets import (
     PAYMENTS_SHEET,
     PROFILE_COLUMNS,
     PROFILES_SHEET,
+    Profile,
     _as_date,
     _split_bank_details,
     _text,
+    match_profiles,
     read_payment_names,
     read_profiles,
 )
@@ -210,3 +212,34 @@ class ReadProfilesTests(SpreadsheetDir, SimpleTestCase):
 
         with self.assertRaisesMessage(ValueError, "pix_key"):
             read_profiles(path)
+
+
+class MatchProfilesTests(SimpleTestCase):
+    def test_exact_match_ignores_accents_and_case(self):
+        profile = Profile("Gislaine Sousa Gusmão")
+
+        matched, ambiguous = match_profiles(["GISLAINE SOUSA GUSMAO"], [profile])
+
+        self.assertEqual(matched, {"GISLAINE SOUSA GUSMAO": profile})
+        self.assertEqual(ambiguous, {})
+
+    def test_shorter_spelling_matches_the_single_longer_profile(self):
+        profile = Profile("Isadora Godinho Andrade")
+
+        matched, _ = match_profiles(["Isadora Godinho"], [profile, Profile("Bruno Lima")])
+
+        self.assertEqual(matched["ISADORA GODINHO"], profile)
+
+    def test_name_matching_two_profiles_is_ambiguous_not_matched(self):
+        # Escolher a primeira escreveria o CPF de uma pessoa na ficha de outra.
+        profiles = [Profile("Ana Maria Souza"), Profile("Ana Clara Souza")]
+
+        matched, ambiguous = match_profiles(["Ana Souza"], profiles)
+
+        self.assertEqual(matched, {})
+        self.assertEqual(ambiguous, {"ANA SOUZA": profiles})
+
+    def test_name_without_profile_is_neither(self):
+        matched, ambiguous = match_profiles(["Bruno Lima"], [Profile("Ana Souza")])
+
+        self.assertEqual((matched, ambiguous), ({}, {}))
