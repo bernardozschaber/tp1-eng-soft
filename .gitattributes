@@ -1,0 +1,4 @@
+# Todo arquivo de texto entra no repositório e sai no checkout com LF, em
+# qualquer sistema. Sem isto, editores no Windows gravavam CRLF e um commit que
+# mudava uma linha aparecia como o arquivo inteiro reescrito.
+* text=auto eol=lf
