@@ -7,8 +7,9 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 
 from apps.catalog.models import PayingCompany, Sector, Unit
-from apps.imports.services import SESSION_KEY
+from apps.imports.services import SESSION_KEY, all_questions, load_preview
 from apps.imports.tests import build_workbook
+from apps.payroll.models import ServiceEntry
 
 LIST = [("MANHÃ", "Simulado ENEM", "15 de Setembro de 2026", "Manhã", ["Ana Souza", "Bruno Lima"])]
 
@@ -38,6 +39,22 @@ class ImportViewsTests(TestCase):
     def xlsx(self, name="15-09 Simulado.xlsx", sheets=LIST):
         return SimpleUploadedFile(name, build_workbook(sheets))
 
+    def confirm_payload(self, **fields) -> dict:
+        """O POST da prévia com tudo marcado e toda pergunta respondida com "sim"."""
+        workbooks = load_preview(self.client.session)
+        data = {question["id"]: "sim" for question in all_questions(workbooks)}
+        for item in workbooks[0]["sheets"]:
+            prefix = "sheet-0-0"
+            data.update({
+                f"{prefix}-include": "on", f"{prefix}-event_name": item["event_name"],
+                f"{prefix}-activity_date": item["activity_date"], f"{prefix}-shift": item["shift"],
+                f"{prefix}-unit": self.unit.pk, f"{prefix}-sector": self.sector.pk,
+            })
+            for index, _ in enumerate(item["rows"]):
+                data[f"{prefix}-row-{index}-include"] = "on"
+        data.update(fields)
+        return data
+
     # --- envio e prévia ---------------------------------------------------
 
     def test_upload_without_spreadsheets_is_refused(self):
@@ -64,3 +81,37 @@ class ImportViewsTests(TestCase):
 
         self.assertRedirects(self.client.post("/importar/descartar/"), "/importar/")
         self.assertNotIn(SESSION_KEY, self.client.session)
+
+    # --- confirmação ---------------------------------------------------------
+
+    def test_confirm_posts_the_entries_and_says_what_happened(self):
+        self.upload(self.xlsx())
+
+        response = self.client.post("/importar/confirmar/", self.confirm_payload(**{"sheet-0-0-row-1-include": ""}), follow=True)
+
+        self.assertRedirects(response, "/lancamentos/")
+        self.assertEqual(ServiceEntry.objects.count(), 1)
+        self.assertIn(
+            "1 lançamento(s) importado(s), 1 cadastro(s) novo(s) criado(s) (primeiro pagamento), 1 linha(s) ignorada(s).",
+            messages_of(response),
+        )
+        self.assertNotIn(SESSION_KEY, self.client.session)
+
+    def test_reimporting_warns_about_the_rows_already_posted(self):
+        self.upload(self.xlsx())
+        self.client.post("/importar/confirmar/", self.confirm_payload())
+        self.upload(self.xlsx())
+
+        response = self.client.post("/importar/confirmar/", self.confirm_payload(), follow=True)
+
+        self.assertEqual(ServiceEntry.objects.count(), 2)
+        self.assertTrue(any("2 linha(s) já estavam lançadas" in message for message in messages_of(response)))
+
+    def test_confirm_error_returns_to_the_preview_with_the_reason(self):
+        self.upload(self.xlsx())
+
+        response = self.client.post("/importar/confirmar/", self.confirm_payload(**{"sheet-0-0-event_name": ""}), follow=True)
+
+        self.assertRedirects(response, "/importar/previa/")
+        self.assertTrue(any("informe nome da atividade e data" in message for message in messages_of(response)))
+        self.assertFalse(ServiceEntry.objects.exists())
