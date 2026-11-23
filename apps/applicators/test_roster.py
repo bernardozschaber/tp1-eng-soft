@@ -8,11 +8,16 @@ cabeçalho na linha 2 — e nomes, CPFs e contas inventados.
 import shutil
 import tempfile
 from datetime import date, datetime
+from io import StringIO
 from pathlib import Path
+from unittest import mock
 
-from django.test import SimpleTestCase
+from django.core.management import call_command
+from django.core.management.base import CommandError
+from django.test import SimpleTestCase, TestCase
 from openpyxl import Workbook
 
+from apps.applicators.models import Applicator, RegistrationStatus
 from apps.applicators.spreadsheets import (
     PAYMENTS_SHEET,
     PROFILE_COLUMNS,
@@ -243,3 +248,75 @@ class MatchProfilesTests(SimpleTestCase):
         matched, ambiguous = match_profiles(["Bruno Lima"], [Profile("Ana Souza")])
 
         self.assertEqual((matched, ambiguous), ({}, {}))
+
+
+# --- o comando ---------------------------------------------------------------
+
+
+def run_roster(*args, **options) -> str:
+    out = StringIO()
+    call_command("roster", *args, stdout=out, **options)
+    return out.getvalue()
+
+
+class RosterArgumentTests(TestCase):
+    def test_requires_a_source(self):
+        with self.assertRaisesMessage(CommandError, "OU --payments"):
+            run_roster()
+
+    def test_refuses_names_file_and_payments_together(self):
+        with self.assertRaisesMessage(CommandError, "OU --payments"):
+            run_roster("nomes.txt", payments="RPAS.xlsx")
+
+    def test_profiles_requires_payments(self):
+        with self.assertRaisesMessage(CommandError, "--profiles só faz sentido"):
+            run_roster("nomes.txt", profiles="Agendamento.xlsx")
+
+
+class RosterFromNamesFileTests(SpreadsheetDir, TestCase):
+    def write_names(self, text: str) -> str:
+        path = self.make_dir() / "nomes.txt"
+        path.write_text(text, encoding="utf-8")
+        return str(path)
+
+    def test_creates_active_applicators_with_display_names(self):
+        path = self.write_names("ANA LUISA DE SOUZA\nbruno   lima\n")
+
+        output = run_roster(path)
+
+        self.assertEqual(
+            sorted(Applicator.objects.values_list("full_name", flat=True)),
+            ["Ana Luisa de Souza", "Bruno Lima"],
+        )
+        self.assertFalse(Applicator.objects.exclude(registration_status=RegistrationStatus.ACTIVE).exists())
+        self.assertIn("2 cadastro(s) criado(s), 0 atualizado(s).", output)
+
+    def test_skips_blank_lines_comments_and_repeated_spellings(self):
+        path = self.write_names("# lista conferida em 09/2026\n\nGislaine Sousa Gusmão\nGISLAINE SOUSA GUSMAO\n")
+
+        run_roster(path)
+
+        self.assertEqual(list(Applicator.objects.values_list("full_name", flat=True)), ["Gislaine Sousa Gusmão"])
+
+    def test_reads_from_stdin_with_dash(self):
+        with mock.patch("sys.stdin", StringIO("Ana Souza\nBruno Lima\n")):
+            run_roster("-")
+
+        self.assertEqual(Applicator.objects.count(), 2)
+
+    def test_empty_input_is_an_error(self):
+        path = self.write_names("# nada aqui\n\n")
+
+        with self.assertRaisesMessage(CommandError, "Nenhum nome"):
+            run_roster(path)
+
+    def test_existing_new_applicator_is_promoted_to_active(self):
+        Applicator.objects.create(full_name="ANA SOUZA", registration_status=RegistrationStatus.NEW)
+        path = self.write_names("Ana Souza\n")
+
+        output = run_roster(path)
+
+        applicator = Applicator.objects.get()
+        self.assertEqual(applicator.full_name, "Ana Souza")
+        self.assertEqual(applicator.registration_status, RegistrationStatus.ACTIVE)
+        self.assertIn("0 cadastro(s) criado(s), 1 atualizado(s).", output)
