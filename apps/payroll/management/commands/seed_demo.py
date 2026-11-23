@@ -103,3 +103,111 @@ def cpf_check_digits(base: str) -> str:
 def format_cpf(base: str) -> str:
     full = base + cpf_check_digits(base)
     return f"{full[:3]}.{full[3:6]}.{full[6:9]}-{full[9:]}"
+
+
+def fortnight_ranges(today: date, months: int) -> list[tuple[date, date, str]]:
+    """As quinzenas fechadas dos últimos `months` meses, da mais antiga para a mais nova.
+
+    Uma quinzena só entra quando terminou: a demo não inventa atividade em dia
+    que ainda não aconteceu, para o "Último pagamento" do painel bater com o
+    que a lista mostra.
+    """
+    ranges: list[tuple[date, date, str]] = []
+    month_index = today.year * 12 + (today.month - 1)
+    for offset in range(months, -1, -1):
+        year, month = divmod(month_index - offset, 12)
+        month += 1
+        last_day = (date(year + month // 12, month % 12 + 1, 1) - timedelta(days=1)).day
+        for start, end, half in ((1, 15, "1ª"), (16, last_day, "2ª")):
+            first, final = date(year, month, start), date(year, month, end)
+            if final < today:
+                ranges.append((first, final, f"{half} quinzena {month:02d}-{year}"))
+    return ranges
+
+
+def weighted(rng: random.Random, options: list[tuple]) -> tuple:
+    """Sorteia uma das opções `(valor, peso, ...)` respeitando os pesos."""
+    return rng.choices(options, weights=[option[1] for option in options])[0]
+
+
+class Command(BaseCommand):
+    help = "Popula o banco com aplicadores e lançamentos fictícios, para explorar o sistema."
+
+    def add_arguments(self, parser):
+        parser.add_argument(
+            "--reset",
+            action="store_true",
+            help="apaga lançamentos, lotes de importação e aplicadores antes de criar os novos",
+        )
+        parser.add_argument(
+            "--applicators", type=int, default=32, help="quantos aplicadores criar (padrão: 32)"
+        )
+
+    def handle(self, *args, **options):
+        units = {unit.name: unit for unit in Unit.objects.all()}
+        sectors = {sector.name: sector for sector in Sector.objects.all()}
+        if not units or not sectors:
+            raise CommandError("Rode `python manage.py seed` antes: faltam unidades ou setores.")
+
+        if options["reset"]:
+            deleted, _ = ServiceEntry.objects.all().delete()
+            ImportBatch.objects.all().delete()
+            Applicator.objects.all().delete()
+            self.stdout.write(f"{deleted} registros antigos apagados.")
+        elif ServiceEntry.objects.exists() or Applicator.objects.exists():
+            raise CommandError(
+                "Já há aplicadores ou lançamentos no banco. Use --reset para substituí-los."
+            )
+
+        rng = random.Random(SEED)
+        with transaction.atomic():
+            applicators = self.create_applicators(rng, options["applicators"])
+            entries = self.create_entries(rng, applicators, units, sectors)
+
+        self.report(applicators, entries)
+
+    # -- cadastros ------------------------------------------------------
+
+    def create_applicators(self, rng: random.Random, wanted: int) -> list[Applicator]:
+        """Cria os cadastros com ficha completa, menos alguns deixados pela metade.
+
+        Uns poucos ficam sem banco e sem PIX de propósito: é assim que a lista
+        real chega ao financeiro, e é o que dá o que conferir na ficha.
+        """
+        names: list[str] = []
+        while len(names) < wanted:
+            name = f"{rng.choice(FIRST_NAMES)} {rng.choice(LAST_NAMES)} {rng.choice(LAST_NAMES)}"
+            if name not in names:
+                names.append(name)
+
+        applicators = []
+        for index, name in enumerate(sorted(names)):
+            course, institution = rng.choice(COURSES)
+            incomplete = index % 9 == 0  # ~1 em 9 chega sem dados bancários
+            first_name = name.split()[0].lower().replace(" ", "")
+            applicator = Applicator(
+                full_name=name,
+                cpf=format_cpf(f"{rng.randrange(100_000_000, 999_999_999):09d}"),
+                email=f"{first_name}.{name.split()[-1].lower()}@email.com",
+                phone=f"31 9{rng.randrange(1000, 9999)}-{rng.randrange(1000, 9999)}",
+                identity_document=f"MG-{rng.randrange(10, 99)}.{rng.randrange(100, 999)}.{rng.randrange(100, 999)}",
+                birth_date=date(rng.randrange(1996, 2006), rng.randrange(1, 13), rng.randrange(1, 29)),
+                gender=rng.choice(["Feminino", "Masculino"]),
+                neighborhood=rng.choice(NEIGHBORHOODS),
+                vse=rng.random() < 0.3,
+                course=course,
+                course_period=rng.choice(PERIODS),
+                institution=institution,
+                bank_name="" if incomplete else rng.choice(BANKS),
+                bank_branch="" if incomplete else f"{rng.randrange(1000, 9999)}",
+                bank_account="" if incomplete else f"{rng.randrange(10000, 99999)}-{rng.randrange(0, 9)}",
+                account_type="" if incomplete else rng.choice(["Corrente", "Poupança"]),
+                pix_type="" if incomplete else rng.choice(["CPF", "E-mail", "Celular"]),
+                pix_key="" if incomplete else f"{first_name}.{name.split()[-1].lower()}@email.com",
+                pis_nit="" if incomplete else f"{rng.randrange(100, 999)}.{rng.randrange(10000, 99999)}.{rng.randrange(10, 99)}-{rng.randrange(0, 9)}",
+                referral=rng.choice(["", "", "Indicação de colega", "Site do colégio", "Instagram"]),
+                notes="Cadastro incompleto: falta banco e PIX." if incomplete else "",
+            )
+            applicator.save()
+            applicators.append(applicator)
+        return applicators
