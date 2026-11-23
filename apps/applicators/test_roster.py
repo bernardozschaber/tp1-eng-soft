@@ -30,6 +30,8 @@ from apps.applicators.spreadsheets import (
     read_payment_names,
     read_profiles,
 )
+from apps.catalog.models import PayingCompany, Sector, Unit
+from apps.payroll.models import ServiceEntry, ServiceRole, Shift
 
 PROFILE_HEADER = list(PROFILE_COLUMNS.values())
 
@@ -320,3 +322,86 @@ class RosterFromNamesFileTests(SpreadsheetDir, TestCase):
         self.assertEqual(applicator.full_name, "Ana Souza")
         self.assertEqual(applicator.registration_status, RegistrationStatus.ACTIVE)
         self.assertIn("0 cadastro(s) criado(s), 1 atualizado(s).", output)
+
+
+class RosterReplaceTests(SpreadsheetDir, TestCase):
+    def setUp(self):
+        self.names = self.make_dir() / "nomes.txt"
+        self.names.write_text("Bruno Lima\n", encoding="utf-8")
+
+    def test_replace_deletes_the_old_roster_first(self):
+        Applicator.objects.create(full_name="Pessoa Antiga")
+
+        output = run_roster(str(self.names), replace=True)
+
+        self.assertEqual(list(Applicator.objects.values_list("full_name", flat=True)), ["Bruno Lima"])
+        self.assertIn("1 cadastro(s) antigo(s) removido(s).", output)
+
+    def test_replace_refuses_while_entries_exist_and_changes_nothing(self):
+        company = PayingCompany.objects.create(name="RRPM Teste")
+        unit = Unit.objects.create(name="Unidade Teste", paying_company=company)
+        sector = Sector.objects.create(name="SETOR TESTE")
+        old = Applicator.objects.create(full_name="Pessoa Antiga")
+        ServiceEntry.objects.create(
+            applicator=old, role=ServiceRole.APPLICATOR, activity_date=date(2026, 9, 15),
+            event_name="Simulado", shift=Shift.MORNING, sector=sector, unit=unit, net_amount=102,
+        )
+
+        with self.assertRaisesMessage(CommandError, "1 lançamento(s)"):
+            run_roster(str(self.names), replace=True)
+
+        self.assertEqual(list(Applicator.objects.values_list("full_name", flat=True)), ["Pessoa Antiga"])
+
+
+class RosterFromSpreadsheetsTests(SpreadsheetDir, TestCase):
+    def test_payments_alone_creates_bare_applicators(self):
+        payments = self.payments_workbook([["ANA SOUZA", "BRUNO LIMA"], ["ANA SOUZA"]])
+
+        output = run_roster(payments=payments)
+
+        self.assertEqual(Applicator.objects.count(), 2)
+        self.assertEqual(Applicator.objects.get(full_name="Ana Souza").cpf, "")
+        self.assertNotIn("ficha", output)
+
+    def test_profiles_fill_the_matching_applicator(self):
+        payments = self.payments_workbook([["ANA SOUZA", "BRUNO LIMA"]])
+        profiles = self.profiles_workbook([profile_row("Ana Souza", cpf="111.222.333-44")])
+
+        output = run_roster(payments=payments, profiles=profiles)
+
+        ana = Applicator.objects.get(full_name="Ana Souza")
+        self.assertEqual(ana.cpf, "111.222.333-44")
+        self.assertEqual(ana.bank_branch, "3824")
+        self.assertEqual(ana.birth_date, date(2001, 3, 14))
+        self.assertEqual(Applicator.objects.get(full_name="Bruno Lima").cpf, "")
+        self.assertIn("1 cadastro(s) com ficha completa, de 1 ficha(s) lidas.", output)
+        self.assertIn("1 nome(s) sem ficha correspondente.", output)
+
+    def test_two_spellings_of_one_profile_become_one_applicator_named_by_the_profile(self):
+        payments = self.payments_workbook([["ISADORA GODINHO"], ["ISADORA GODINHO ANDRADE"]])
+        profiles = self.profiles_workbook([profile_row("Isadora Godinho Andrade")])
+
+        output = run_roster(payments=payments, profiles=profiles)
+
+        self.assertEqual(list(Applicator.objects.values_list("full_name", flat=True)), ["Isadora Godinho Andrade"])
+        self.assertIn("1 grafia(s) juntada(s)", output)
+
+    def test_ambiguous_name_gets_no_profile_and_is_reported(self):
+        payments = self.payments_workbook([["ANA SOUZA"]])
+        profiles = self.profiles_workbook([profile_row("Ana Maria Souza"), profile_row("Ana Clara Souza")])
+
+        output = run_roster(payments=payments, profiles=profiles)
+
+        ana = Applicator.objects.get()
+        self.assertEqual(ana.full_name, "Ana Souza")
+        self.assertEqual(ana.cpf, "")
+        self.assertIn("Ambíguo, ficha não aplicada: ANA SOUZA casa com Ana Maria Souza, Ana Clara Souza.", output)
+
+    def test_profile_without_payment_creates_nobody(self):
+        # A ficha só completa quem a planilha de pagamentos trouxe.
+        payments = self.payments_workbook([["BRUNO LIMA"]])
+        profiles = self.profiles_workbook([profile_row("Ana Souza")])
+
+        run_roster(payments=payments, profiles=profiles)
+
+        self.assertEqual(list(Applicator.objects.values_list("full_name", flat=True)), ["Bruno Lima"])
