@@ -76,3 +76,55 @@ class SeedCommandTests(TestCase):
         run_seed()
 
         self.assertEqual(Unit.objects.get(is_default=True).name, "Lourdes")
+
+
+class SettingsPageTests(TestCase):
+    def setUp(self):
+        run_seed()
+        self.client.force_login(get_user_model().objects.get(username="admin"))
+
+    def test_page_shows_the_breakdown_of_a_100_net_example(self):
+        response = self.client.get("/configuracoes/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["example"].net_amount, 100)
+
+    def test_saves_tax_rates(self):
+        response = self.client.post("/configuracoes/", {"form": "tax", "inss_rate": "11", "iss_rate": "5", "ir_rate": "0"})
+
+        self.assertRedirects(response, "/configuracoes/", fetch_redirect_response=False)
+        self.assertEqual(TaxSettings.current().inss_rate, 11)
+
+    def test_refuses_rates_adding_up_to_100(self):
+        response = self.client.post("/configuracoes/", {"form": "tax", "inss_rate": "60", "iss_rate": "40", "ir_rate": "0"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("menor que 100%", str(response.context["tax_form"].non_field_errors()))
+
+    def test_creates_a_unit_and_a_sector(self):
+        company = PayingCompany.objects.first()
+
+        self.client.post("/configuracoes/", {"form": "unit", "name": "Unidade Nova", "paying_company": company.pk})
+        self.client.post("/configuracoes/", {"form": "sector", "name": "SETOR NOVO"})
+
+        self.assertTrue(Unit.objects.filter(name="Unidade Nova", paying_company=company).exists())
+        self.assertTrue(Sector.objects.filter(name="SETOR NOVO").exists())
+
+    def test_invalid_unit_stays_on_the_page(self):
+        response = self.client.post("/configuracoes/", {"form": "unit", "name": ""})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["unit_form"].errors)
+
+    def test_set_default_leaves_exactly_one(self):
+        jardim = Unit.objects.get(name="Cidade Jardim")
+        adm = Sector.objects.get(name="ADM")
+
+        self.client.post(f"/configuracoes/padrao/unit/{jardim.pk}/")
+        self.client.post(f"/configuracoes/padrao/sector/{adm.pk}/")
+
+        self.assertEqual(list(Unit.objects.filter(is_default=True)), [jardim])
+        self.assertEqual(list(Sector.objects.filter(is_default=True)), [adm])
+
+    def test_set_default_of_unknown_pk_is_404(self):
+        self.assertEqual(self.client.post("/configuracoes/padrao/unit/999/").status_code, 404)

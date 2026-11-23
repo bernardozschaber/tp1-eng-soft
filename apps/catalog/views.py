@@ -42,6 +42,10 @@ def settings_page(request):
                 sector_form.save()
                 messages.success(request, "Setor cadastrado.")
                 return redirect("catalog:settings")
+    # O ModelForm escreve o POST na instância já no is_valid(), mesmo quando o
+    # recusa: com alíquotas somando 100% o exemplo abaixo estourava ValueError.
+    # A página mostra o que está gravado, e o formulário, o que foi digitado.
+    tax = TaxSettings.current()
     context = {
         "tax": tax,
         "tax_form": tax_form,
