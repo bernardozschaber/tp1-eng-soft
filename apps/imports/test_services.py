@@ -11,6 +11,8 @@ from datetime import date
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.test import SimpleTestCase, TestCase, override_settings
 
 from apps.applicators.models import Applicator, RegistrationStatus
@@ -26,7 +28,7 @@ from apps.imports.services import (
     merge_questions,
     read_answers,
 )
-from apps.payroll.models import ServiceEntry, ServiceRole, Shift
+from apps.payroll.models import ImportBatch, ServiceEntry, ServiceRole, Shift
 
 DAY = "2026-09-15"
 
@@ -244,3 +246,63 @@ class ConfirmImportTests(TestCase):
         self.assertEqual((maria.full_name, maria.registration_status), ("Maria Silva", RegistrationStatus.NEW))
         self.assertIn("Sufixo na lista: C.E. ONLINE", maria.notes)
         self.assertEqual(ServiceEntry.objects.get().notes, "C.E. ONLINE")
+
+    def test_cpf_matches_a_record_written_another_way_and_fills_a_missing_cpf(self):
+        # "A. Prado" não se parece com "Ana Souza Prado" para a heurística de
+        # nomes; quem casa os dois é só o CPF.
+        ana = Applicator.objects.create(full_name="Ana Souza Prado", cpf="529.982.247-25")
+        bruno = Applicator.objects.create(full_name="Bruno Lima")
+        workbooks = preview(sheet(row("A. PRADO", cpf="52998224725"), row("BRUNO LIMA", cpf="111.444.777-35")))
+
+        self.confirm(workbooks)
+
+        self.assertEqual(set(ServiceEntry.objects.values_list("applicator", flat=True)), {ana.pk, bruno.pk})
+        bruno.refresh_from_db()
+        self.assertEqual(bruno.cpf, "111.444.777-35")
+
+    def test_forms_list_uses_the_amount_typed_for_the_sheet(self):
+        workbooks = preview(sheet(row("BRUNO LIMA", amount="0")))
+
+        self.confirm(workbooks, **{"sheet-0-0-default_amount": "85,50"})
+
+        self.assertEqual(ServiceEntry.objects.get().net_amount, Decimal("85.50"))
+
+    def test_forms_list_without_any_amount_is_refused(self):
+        with self.assertRaisesMessage(ValueError, "informe o valor por pessoa"):
+            self.confirm(preview(sheet(row("BRUNO LIMA", amount="0"))))
+
+        self.assertFalse(ServiceEntry.objects.exists())
+
+    def test_sheet_without_event_or_date_is_refused(self):
+        with self.assertRaisesMessage(ValueError, "informe nome da atividade e data"):
+            self.confirm(preview(sheet(row("BRUNO LIMA"), day="")))
+
+    def test_unchecked_sheet_and_row_and_unknown_role(self):
+        workbooks = preview(sheet(row("BRUNO LIMA"), row("CAMILA NUNES")), sheet(row("DIEGO PRADO"), name="OUTRA"))
+
+        result = self.confirm(
+            workbooks, **{"sheet-0-1-include": "", "sheet-0-0-row-1-include": "", "sheet-0-0-row-0-role": "CHEFE"}
+        )
+
+        entry = ServiceEntry.objects.get()
+        self.assertEqual((entry.applicator.full_name, entry.role), ("Bruno Lima", ServiceRole.APPLICATOR))
+        self.assertEqual(result["skipped"], 1)
+
+    def test_batch_keeps_the_spreadsheet_under_its_original_name(self):
+        staged = default_storage.save("imports/_staging/abc.xlsx", ContentFile(b"planilha"))
+
+        self.confirm(preview(sheet(row("BRUNO LIMA")), file_name="08-09 Oficinas.xlsx", staged_path=staged))
+
+        # O storage troca espaço por "_", mas o nome é o que a operação enviou.
+        self.assertTrue(ImportBatch.objects.get().source_file.name.endswith("08-09_Oficinas.xlsx"))
+        self.assertFalse(default_storage.exists(staged))
+
+    def test_all_duplicates_leave_no_empty_batch_and_drop_the_staged_file(self):
+        self.confirm(preview(sheet(row("BRUNO LIMA"))))
+        staged = default_storage.save("imports/_staging/again.xlsx", ContentFile(b"planilha"))
+
+        result = self.confirm(preview(sheet(row("BRUNO LIMA")), staged_path=staged))
+
+        self.assertEqual((result["entries"], result["duplicates"]), (0, 1))
+        self.assertEqual(ImportBatch.objects.count(), 1)
+        self.assertFalse(default_storage.exists(staged))
