@@ -1,7 +1,6 @@
 [tool.ruff]
 line-length = 120
-extend-exclude = ["*/migrations/*"]
-
+extend-exclude = ["*/migrations/*", ".claude"]
 [tool.ruff.lint]
 # F: pyflakes (variável não usada, import faltando) — pegou o return perdido
 # de fortnight_label. E/W: pycodestyle. I: ordem dos imports.
