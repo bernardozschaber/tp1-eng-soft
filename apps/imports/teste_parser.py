@@ -14,6 +14,8 @@ from apps.imports.parser import (
     format_cpf,
     parse_amount,
     parse_date,
+    parse_file_name_meta,
+    parse_forms_sheet,
     parse_role,
     parse_sheet,
     parse_shift,
@@ -38,6 +40,17 @@ def activity_rows(people, *, event="Simulado ENEM", when="15 de Setembro de 2026
         advisor = 1 if role else None
         rows.append((None, None, None, name, None, None if advisor else 1, advisor, amount, None))
     return rows + [blank, *tail]
+
+
+FORMS_HEADER = ("Id", "Hora de início", "Email", "Nome", "Nome Completo", "CPF", "Data", "Função")
+
+
+def forms_rows(answers) -> list[tuple]:
+    """Exportação de formulário: (nome completo, cpf, data, função) por resposta."""
+    rows = [FORMS_HEADER]
+    for number, (name, cpf, when, role) in enumerate(answers, start=1):
+        rows.append((number, None, "x@email.com", name.split()[0], name, cpf, when, role))
+    return rows
 
 
 # --- células ---------------------------------------------------------------
@@ -141,3 +154,64 @@ class ParseActivitySheetTests(SimpleTestCase):
             with self.subTest(stop=tail[0][3]):
                 sheet = parse_sheet("ABA", activity_rows([("ANA SOUZA", 102)], tail=tail))
                 self.assertEqual([row.name for row in sheet.rows], ["ANA SOUZA"])
+
+
+# --- layout de formulário ------------------------------------------------------
+
+
+class ParseFileNameTests(SimpleTestCase):
+    def test_event_day_and_shift_from_the_file_name(self):
+        event, when, shift = parse_file_name_meta("Prova Regular 11-09 Tarde.xlsx")
+
+        self.assertEqual((event, when.day, when.month, shift), ("Prova Regular", 11, 9, "TARDE"))
+        self.assertEqual(when.year, date.today().year)
+
+    def test_two_digit_year_and_accented_shift(self):
+        self.assertEqual(
+            parse_file_name_meta("Simulado_05.10.26_Manhã.xlsx"), ("Simulado", date(2026, 10, 5), "MANHA")
+        )
+
+    def test_impossible_date_and_no_shift(self):
+        self.assertEqual(parse_file_name_meta("Oficina 31-02.xlsx"), ("Oficina", None, ""))
+
+
+class ParseFormsSheetTests(SimpleTestCase):
+    FILE = "Prova Regular 11-09 Tarde.xlsx"
+
+    def test_reads_one_answer_per_row_with_cpf_and_role(self):
+        rows = forms_rows([
+            ("Ana Souza", "52998224725", datetime(2025, 9, 11), "Aplicador"),
+            ("Bruno Lima", "", datetime(2025, 9, 11), "Orientador"),
+        ])
+
+        sheet = parse_forms_sheet("Form1", rows, self.FILE)
+
+        self.assertEqual((sheet.layout, sheet.needs_amount), ("forms", True))
+        self.assertEqual(
+            [(row.name, row.role, row.cpf, row.net_amount, row.source_row) for row in sheet.rows],
+            [("Ana Souza", "APLICADOR", "529.982.247-25", Decimal("0"), 2), ("Bruno Lima", "ORIENTADOR", "", Decimal("0"), 3)],
+        )
+
+    def test_year_comes_from_the_answers_because_the_file_name_lacks_it(self):
+        sheet = parse_forms_sheet("Form1", forms_rows([("Ana Souza", "", datetime(2025, 9, 11), "Aplicador")]), self.FILE)
+
+        self.assertEqual(sheet.activity_date, date(2025, 9, 11))
+
+    def test_date_column_fills_a_file_name_without_date(self):
+        sheet = parse_forms_sheet("Form1", forms_rows([("Ana Souza", "", "11/09/2026", "Aplicador")]), "Simulado.xlsx")
+
+        self.assertEqual(sheet.activity_date, date(2026, 9, 11))
+        self.assertIn("Turno não veio no nome do arquivo; informe manualmente.", sheet.warnings)
+
+    def test_without_name_shift_or_date_everything_is_warned(self):
+        rows = [("Nome Completo", "Função"), ("Ana Souza", "Aplicador"), ("", "Aplicador")]
+
+        sheet = parse_forms_sheet("Form1", rows, "31-02.xlsx")
+
+        self.assertEqual([row.name for row in sheet.rows], ["Ana Souza"])
+        self.assertEqual(sheet.rows[0].cpf, "")
+        self.assertTrue(any("Nome da prova" in warning for warning in sheet.warnings))
+        self.assertIn("Data não reconhecida; informe manualmente.", sheet.warnings)
+
+    def test_sheet_without_name_and_role_headers_is_not_this_layout(self):
+        self.assertIsNone(parse_forms_sheet("Plan1", [("Nome", "CPF")], self.FILE))
