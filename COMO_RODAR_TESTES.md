@@ -36,8 +36,9 @@ pytest apps -n auto
 ```
 
 - `-n auto` (pytest-xdist) divide os testes entre os núcleos da máquina: numa
-  máquina de 4 núcleos cai de ~3 min 30 s para ~1 min 20 s. Sem ele também
-  funciona, só demora mais.
+  máquina de 4 núcleos leva **de 1 min 20 s a 2 min 40 s**, conforme a carga da
+  máquina, contra 3 min 30 s ou mais sem ele. Sem ele também funciona, só
+  demora mais.
 - Ao final aparece a tabela de cobertura por arquivo (só os que **não** estão
   em 100%) e a linha que importa:
 
@@ -45,6 +46,9 @@ pytest apps -n auto
   Required test coverage of 80.0% reached. Total coverage: 96.16%
   261 passed, 58 subtests passed
   ```
+
+  A contagem de subtestes (`58 subtests passed`) às vezes não aparece na
+  linha final; eles rodam do mesmo jeito.
 
 - Abaixo de 80% o comando **falha**, igual ao CI (`fail_under` em
   `pyproject.toml`).
@@ -75,7 +79,7 @@ pytest e2e --no-cov
 ```
 
 ```
-4 passed in ~20s
+4 passed        # de 20 s a 1 min, conforme a máquina
 ```
 
 ### Ao vivo, com o navegador aberto
@@ -85,8 +89,8 @@ pytest e2e --no-cov --headed --slowmo 500
 ```
 
 - `--headed` abre a janela do Chromium; `--slowmo 500` espera meio segundo
-  entre uma ação e outra, para dar tempo de acompanhar. Os quatro levam ~1 min 30 s;
-  aumente o número para ir mais devagar.
+  entre uma ação e outra, para dar tempo de acompanhar. Os quatro levam de
+  1 min 30 s a 2 min; aumente o número para ir mais devagar.
 - **Não use `-n auto` aqui**: cada processo abriria a própria janela ao mesmo
   tempo.
 - `--no-cov` é obrigatório: os E2E sozinhos cobrem pouco do código e o limite
@@ -121,8 +125,8 @@ pytest -n auto
 ```
 
 `pytest` sem caminho roda `apps/` e `e2e/` juntos (os `testpaths` do
-`pyproject.toml`), com cobertura: **265 testes, 96%, ~1 min 30 s** em 4
-núcleos. O GitHub Actions faz exatamente isso a cada push na `main` e em todo
+`pyproject.toml`), com cobertura: **265 testes, 96%, de 1 min 30 s a 3 min** em 4
+núcleos, conforme a carga da máquina. O GitHub Actions faz exatamente isso a cada push na `main` e em todo
 pull request (`.github/workflows/ci.yml`), depois de instalar o Chromium.
 
 ---
@@ -136,7 +140,8 @@ pull request (`.github/workflows/ci.yml`), depois de instalar o Chromium.
 
 Antes da apresentação, rode os dois uma vez na máquina que vai ser usada: a
 primeira execução do Chromium demora mais, e é a hora de descobrir se falta o
-`playwright install`.
+`playwright install`. Feche os outros programas antes: com a máquina ocupada
+os tempos chegam a dobrar.
 
 ---
 

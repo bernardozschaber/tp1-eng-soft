@@ -560,7 +560,7 @@ está em [`COMO_RODAR_TESTES.md`](COMO_RODAR_TESTES.md). O resumo:
 ```bash
 pip install -r requirements-dev.txt  # pytest, pytest-django, pytest-cov, pytest-xdist, pytest-playwright, ruff
 python -m playwright install chromium  # o navegador dos E2E, uma vez por máquina
-pytest -n auto                       # a suíte inteira com cobertura, em paralelo, como no CI (~1 min 30 s)
+pytest -n auto                       # a suíte inteira com cobertura, em paralelo, como no CI (1 min 30 s a 3 min)
 pytest apps/imports                  # só a importação (planilhas geradas em memória)
 pytest apps/payroll/test_filters.py  # um arquivo
 pytest --no-cov -x                   # sem cobertura, parando no primeiro erro
