@@ -1,15 +1,19 @@
 """As telas da importação, pela borda de fora: envio, prévia, confirmação e lotes."""
 import shutil
 import tempfile
+from decimal import Decimal
+from io import BytesIO
 
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
+from openpyxl import Workbook
 
 from apps.catalog.models import PayingCompany, Sector, Unit
 from apps.imports.services import SESSION_KEY, all_questions, load_preview
 from apps.imports.tests import build_workbook
-from apps.payroll.models import ServiceEntry
+from apps.payroll.models import ImportBatch, ServiceEntry
 
 LIST = [("MANHÃ", "Simulado ENEM", "15 de Setembro de 2026", "Manhã", ["Ana Souza", "Bruno Lima"])]
 
@@ -115,3 +119,83 @@ class ImportViewsTests(TestCase):
         self.assertRedirects(response, "/importar/previa/")
         self.assertTrue(any("informe nome da atividade e data" in message for message in messages_of(response)))
         self.assertFalse(ServiceEntry.objects.exists())
+
+    # --- lotes -----------------------------------------------------------------
+
+    def imported_batch(self) -> ImportBatch:
+        self.upload(self.xlsx())
+        self.client.post("/importar/confirmar/", self.confirm_payload())
+        return ImportBatch.objects.order_by("-pk").first()
+
+    def test_upload_page_lists_recent_batches_with_totals(self):
+        self.imported_batch()
+
+        [batch] = self.client.get("/importar/").context["recent_batches"]
+
+        self.assertEqual((batch.entry_count, batch.net_total, batch.unit_codes), (2, Decimal("217"), ["LOURDES"]))
+
+    def test_batch_preview_shows_the_original_without_template_noise(self):
+        batch = self.imported_batch()
+
+        response = self.client.get(f"/importar/lote/{batch.pk}/")
+
+        [sheet] = response.context["sheets"]
+        cells = [cell for row in sheet["rows"] for cell in row]
+        self.assertIn("ANA SOUZA", cells)
+        self.assertFalse(any(cell.startswith("ASSINATURA") for cell in cells))
+        self.assertFalse(sheet["truncated"])
+
+    def test_batch_preview_truncates_long_sheets(self):
+        workbook = Workbook()
+        for number in range(250):
+            workbook.active.append([f"linha {number}"])
+        buffer = BytesIO()
+        workbook.save(buffer)
+        batch = ImportBatch.objects.create(file_name="longa.xlsx")
+        batch.source_file.save("longa.xlsx", ContentFile(buffer.getvalue()))
+
+        [sheet] = self.client.get(f"/importar/lote/{batch.pk}/").context["sheets"]
+
+        self.assertTrue(sheet["truncated"])
+        self.assertEqual(len(sheet["rows"]), 200)
+
+    def test_batch_without_original_or_with_missing_file(self):
+        old = ImportBatch.objects.create(file_name="antiga.xlsx")
+        response = self.client.get(f"/importar/lote/{old.pk}/", follow=True)
+        self.assertTrue(any("anterior ao arquivamento" in message for message in messages_of(response)))
+        self.assertEqual(self.client.get(f"/importar/lote/{old.pk}/arquivo/").status_code, 404)
+
+        gone = self.imported_batch()
+        gone.source_file.storage.delete(gone.source_file.name)
+        response = self.client.get(f"/importar/lote/{gone.pk}/", follow=True)
+        self.assertTrue(any("não está mais no servidor" in message for message in messages_of(response)))
+
+    def test_download_returns_the_original_under_its_name(self):
+        batch = self.imported_batch()
+
+        response = self.client.get(f"/importar/lote/{batch.pk}/arquivo/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('filename="15-09 Simulado.xlsx"', response["Content-Disposition"])
+        self.assertTrue(b"".join(response.streaming_content).startswith(b"PK"))
+
+    def test_deleting_a_batch_takes_its_entries_and_file(self):
+        batch = self.imported_batch()
+        storage, name = batch.source_file.storage, batch.source_file.name
+
+        response = self.client.post(f"/importar/lote/{batch.pk}/excluir/", follow=True)
+
+        self.assertFalse(ServiceEntry.objects.exists())
+        self.assertFalse(storage.exists(name))
+        self.assertIn("Importação “15-09 Simulado.xlsx” removida: 2 lançamento(s) excluído(s).", messages_of(response))
+
+    def test_bulk_delete_ignores_tampered_ids_and_needs_a_selection(self):
+        batch = self.imported_batch()
+
+        response = self.client.post("/importar/lotes/excluir/", {"batches": ["1 OR 1=1", "abc"]}, follow=True)
+        self.assertIn("Selecione ao menos uma importação para excluir.", messages_of(response))
+        self.assertTrue(ImportBatch.objects.exists())
+
+        response = self.client.post("/importar/lotes/excluir/", {"batches": [str(batch.pk), "x"]}, follow=True)
+        self.assertIn("1 importação(ões) removida(s): 2 lançamento(s) excluído(s).", messages_of(response))
+        self.assertFalse(ImportBatch.objects.exists())
