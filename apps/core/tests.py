@@ -128,7 +128,6 @@ class SeedTeamRenameTests(TestCase):
         self.assertEqual(get_user_model().objects.filter(username="fernanda.rezende").count(), 1)
 
 
-
 class SeedTeamAdminTests(TestCase):
     """O fim do `seed_team`: o perfil do admin, que só existe depois do `seed`."""
 
