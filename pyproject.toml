@@ -9,3 +9,20 @@ select = ["E", "F", "W", "I"]
 # O comprimento de linha fica para a revisão: impor agora reformataria ~50
 # linhas sem relação com nenhuma mudança.
 ignore = ["E501"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+# Os testes atuais seguem o padrão do Django (tests.py e test_*.py dentro de
+# cada app); o pytest-django roda as classes TestCase sem mudança.
+python_files = ["tests.py", "test_*.py"]
+testpaths = ["apps"]
+addopts = "--cov --cov-report=term-missing:skip-covered"
+
+[tool.coverage.run]
+source = ["apps"]
+branch = true
+omit = ["*/migrations/*", "*/tests.py", "*/test_*.py", "*/apps.py", "*/admin.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_empty = true
