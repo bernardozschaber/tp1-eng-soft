@@ -181,9 +181,9 @@ para 6,4s/24 MB, e o custo de ambos deixou de crescer com o histórico acumulado
 |Ajuste de −R$0,01 da planilha antiga|**Não aplicado**, por decisão do setor|
 |Data de pagamento|atividade até o dia 15 → dia 5 do mês seguinte; após o dia 15 → dia 20 do mês seguinte (`apps/payroll/schedule.py`)|
 |Empresa pagadora|derivada da unidade (Lourdes → RRPM Matriz, Cidade Jardim → RRPM CJ, Santo Antônio → RRPM GO, Vale do Sereno → RRPM VSE)|
-|Consistência|recalcula o líquido a partir do bruto e dos descontos gravados; sinaliza quando diverge do líquido lançado em mais de R$1,00 (`ServiceEntry.is_consistent`)|
+|Consistência|`|
 |Resumo por aplicador|agrupa por (data de pagamento, aplicador, empresa pagadora), como a aba RESUMO DE PGTO POR APLICADOR|
-|Importação|dois formatos: **"Relatório de Atividade"** (Lourdes), com o valor na planilha; e **exportação de formulário** (Cidade Jardim e Vale do Sereno), com nome completo, CPF e função por resposta — nesse caso a prova, o dia e o turno saem do nome do arquivo ("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na pré-visualização. Casa o aplicador por CPF e, na falta dele, por nome; para cada nome desconhecido, pergunta na pré-visualização se cria um *cadastro novo* (primeiro pagamento) ou deixa as linhas de fora; sinaliza possíveis duplicatas|
+|Importação|dois formatos: **"Relatório de Atividade"** (Lourdes), com o valor na planilha; e **exportação de formulário** (Cidade Jardim e Vale do Sereno), com nome completo, CPF e função por resposta — nesse caso a prova, o dia e o turno saem do nome do arquivo ("Prova Regular 11-09 Tarde.xlsx") e o valor por pessoa é informado na pré-visualização. Casa o aplicador por CPF e, na falta dele, por nome; cria desconhecidos marcados como *cadastro incompleto*; sinaliza possíveis duplicatas|
 
 ## Arquitetura
 
@@ -194,24 +194,16 @@ reutilizá-las nas páginas HTML, na API REST e no comando de seed.
 ```
 config/            settings, urls, wsgi
 apps/
-  core/            layout base, dashboard, login, controle de acesso por cargo, template tags (ícones, moeda)
+  core/            layout base, dashboard, login, template tags (ícones, moeda)
   catalog/         unidades, empresas pagadoras, setores, alíquotas (+ comando seed)
   applicators/     cadastro de aplicadores e normalização de nomes
   payroll/         lançamentos, calculadora RPA, calendário de pagamento, resumo, exportação
   imports/         parser das listas de pagamento e fluxo upload → prévia → confirmação
   api/             serializers e viewsets DRF (/api/)
 templates/         páginas por app
-static/            tokens de design (IBM Plex, verde Bernoulli), CSS de componentes, JS sem frameworks
+static/            tokens de design (Geist, paleta), CSS de componentes, JS sem frameworks
 docs/samples/      lista de pagamento de exemplo, só como referência do parser
 ```
-
-Os quatro diagramas a seguir são a documentação UML preliminar do sistema, em
-Mermaid: **classes** (o domínio), **estados** (a situação do cadastro do
-aplicador), **sequência** (a importação de listas) e **componentes** (como as
-camadas se encaixam). O primeiro rascunho de cada um foi gerado por IA e depois
-conferido contra o código — foi nessa revisão que saíram, por exemplo, a
-dependência invertida entre a calculadora e as alíquotas e a ordem errada das
-chamadas na importação.
 
 ### Diagrama de classes (domínio)
 
@@ -222,137 +214,65 @@ classDiagram
     }
     class Unit {
         +name
-        +is_default
-        +short_name() str
+        +is\\\_default
     }
     class Sector {
         +name
-        +is_default
+        +is\\\_default
     }
     class TaxSettings {
-        <<singleton>>
-        +inss_rate
-        +iss_rate
-        +ir_rate
-        +current()$ TaxSettings
-    }
-    class RegistrationStatus {
-        <<enumeration>>
-        NOVO
-        ATIVO
+        +inss\\\_rate
+        +iss\\\_rate
+        +ir\\\_rate
+        +current()$
     }
     class Applicator {
-        +full_name
-        +normalized_name
+        +full\\\_name
+        +normalized\\\_name
         +cpf
-        +phone
-        +bank_account
-        +pix_key
-        +registration_status
-        +is_active
-        +find_by_name(raw)$ Applicator
-        +find_by_cpf(cpf)$ Applicator
-        +promote_if_recurring() bool
-    }
-    class ServiceRole {
-        <<enumeration>>
-        APLICADOR
-        ORIENTADOR
-        VOLANTE
-    }
-    class Shift {
-        <<enumeration>>
-        MANHA
-        TARDE
-        NOITE
+        +bank\\\_account
+        +pix\\\_key
+        +needs\\\_review
+        +find\\\_by\\\_name(raw)$
     }
     class ServiceEntry {
         +role
-        +activity_date
-        +event_name
-        +event_key
-        +segment
+        +activity\\\_date
+        +event\\\_name
         +shift
-        +payment_date
-        +net_amount
-        +gross_amount
-        +inss_amount
-        +iss_amount
-        +ir_amount
-        +net_payable
-        +is_consistent
-        +apply_calculations()
-        +check_not_duplicate()
-        +find_duplicate(chave_do_servico)$ ServiceEntry
+        +payment\\\_date
+        +net\\\_amount
+        +gross\\\_amount
+        +inss\\\_amount
+        +iss\\\_amount
+        +ir\\\_amount
+        +net\\\_payable
+        +is\\\_consistent
+        +apply\\\_calculations()
     }
     class ImportBatch {
-        +file_name
-        +source_file
-        +imported_at
-    }
-    class Profile {
-        +role
-        +phone
-        +photo
-        +meta_line() str
-    }
-    class User {
-        <<django.contrib.auth>>
-        +username
-        +groups
+        +file\\\_name
+        +imported\\\_at
     }
     class PayrollCalculator {
         <<module>>
-        +compute_breakdown(net, rates) PayrollBreakdown
+        +compute\\\_breakdown(net, rates) PayrollBreakdown
     }
     class PaymentSchedule {
         <<module>>
-        +payment_date_for(activity_date) date
+        +payment\\\_date\\\_for(activity\\\_date) date
     }
 
-    Unit "*" --> "1" PayingCompany
-    Profile "1" --> "1" User
-    Profile "*" --> "0..1" Unit
-    Applicator ..> RegistrationStatus
-    ServiceEntry "*" --> "1" Applicator
-    ServiceEntry "*" --> "1" Unit
-    ServiceEntry "*" --> "1" Sector
-    ServiceEntry "*" --> "1" PayingCompany : snapshot
-    ServiceEntry "*" --> "0..1" ImportBatch
-    ServiceEntry "*" --> "0..1" User : created_by
-    ServiceEntry ..> ServiceRole
-    ServiceEntry ..> Shift
-    ImportBatch "*" --> "0..1" User : imported_by
+    Unit "\\\*" --> "1" PayingCompany
+    ServiceEntry "\\\*" --> "1" Applicator
+    ServiceEntry "\\\*" --> "1" Unit
+    ServiceEntry "\\\*" --> "1" Sector
+    ServiceEntry "\\\*" --> "1" PayingCompany : snapshot
+    ServiceEntry "\\\*" --> "0..1" ImportBatch
     ServiceEntry ..> PayrollCalculator : usa
     ServiceEntry ..> PaymentSchedule : usa
-    ServiceEntry ..> TaxSettings : lê alíquotas
+    PayrollCalculator ..> TaxSettings : lê alíquotas
 ```
-
-`ServiceEntry` é a classe central: nasce do líquido lançado e deriva sozinha o
-bruto, os três descontos e a data de pagamento (`apply_calculations`), guarda a
-empresa pagadora como cópia para o histórico sobreviver a uma edição no
-cadastro de unidades, e recusa gravar um serviço que já existe
-(`check_not_duplicate`, sobre a restrição `applicator + activity_date +
-event_key + shift + role + unit`).
-
-### Diagrama de estados (situação do cadastro)
-
-```mermaid
-stateDiagram-v2
-    [*] --> Novo : cadastro criado à mão ou confirmado numa importação
-    Novo --> Novo : mais lançamentos na mesma data de pagamento
-    Novo --> Ativo : lançamento numa segunda data de pagamento
-    Ativo --> Ativo : novo lançamento não devolve à fila de estreantes
-
-    note right of Novo
-        "cadastro novo: primeiro pagamento"
-        é nele que se confere documento,
-        banco e PIX pela primeira vez
-    end note
-```
-
-A transição é só de ida e acontece no momento em que o lançamento é salvo
-(`Applicator.promote_if_recurring`, chamado por `ServiceEntry.save`).
 
 ### Diagrama de sequência (importação de listas)
 
@@ -360,58 +280,40 @@ A transição é só de ida e acontece no momento em que o lançamento é salvo
 sequenceDiagram
     actor RH
     participant View as imports.views
-    participant Service as imports.services
     participant Parser as imports.parser
-    participant Media as media/imports/
+    participant Service as imports.services
     participant DB as Banco de dados
 
     RH->>View: POST /importar/ (arquivos .xlsx/.xlsm)
-    View->>Service: stage_uploads(sessão, arquivos)
     loop para cada arquivo
-        Service->>Parser: parse_workbook(nome, bytes)
-        Parser-->>Service: ParsedWorkbook (abas, evento, data, turno, linhas)
-        Service->>Media: guarda o arquivo original
+        View->>Parser: parse\\\_workbook(nome, bytes)
+        Parser-->>View: ParsedWorkbook (abas, evento, data, linhas)
     end
-    Service-->>View: erros por arquivo (vazio = tudo lido)
+    View->>Service: stage\\\_uploads → sessão
     View-->>RH: redirect /importar/previa/
-
     RH->>View: GET /importar/previa/
-    View->>Service: load_preview(sessão) + enrich_preview(abas)
-    Service->>DB: Applicator.find_by_cpf / find_by_name
-    Service->>DB: ServiceEntry.find_duplicate
-    Service-->>View: abas editáveis, perguntas de nome, avisos
-    View-->>RH: blocos por aba, com bruto calculado
-
-    RH->>View: POST /importar/confirmar/ (abas, linhas e respostas)
-    View->>Service: confirm_import(payload, abas, usuário)
-    Service->>DB: cria Applicator faltantes (situação "novo")
-    alt serviço já lançado
-        Service-->>Service: pula a linha e conta como duplicata
-    else serviço novo
-        Service->>DB: cria ImportBatch (na primeira linha gravada)
-        Service->>DB: cria ServiceEntry (bruto, INSS, ISS, IR, data pgto)
-    end
-    Service-->>View: contadores (lançamentos, cadastros, duplicatas)
+    View->>Service: enrich\\\_preview (casa nomes, detecta duplicatas, calcula bruto)
+    Service->>DB: Applicator.find\\\_by\\\_name / ServiceEntry.exists
+    View-->>RH: blocos por aba (editáveis, com avisos)
+    RH->>View: POST /importar/confirmar/ (abas e linhas marcadas)
+    View->>Service: confirm\\\_import(payload, sessão, usuário)
+    Service->>DB: cria Applicator faltantes (needs\\\_review)
+    Service->>DB: cria ImportBatch + ServiceEntry (bruto, INSS, ISS, IR, data pgto)
+    Service-->>View: contadores
     View-->>RH: redirect /lancamentos/ com mensagem de sucesso
 ```
-
-O `ImportBatch` só é criado quando há a primeira linha para gravar: uma lista
-em que tudo já estava lançado não deixa lote vazio para trás.
 
 ### Diagrama de componentes
 
 ```mermaid
 flowchart LR
-    Browser[Navegador<br/>HTML + CSS + JS] -->|sessão| Views[Views Django<br/>core · payroll · imports · applicators · catalog]
-    Browser -->|JSON| API[API REST<br/>Django REST Framework]
-    Views --> Access[Controle de acesso por cargo<br/>core.access · core.middleware]
-    Access --> Domain[Regras de domínio<br/>calculator · schedule · summary · parser · export]
-    Views --> Domain
+    Browser\\\[Navegador<br/>HTML + CSS + JS] -->|sessão| Views\\\[Views Django<br/>core · payroll · imports · applicators · catalog]
+    Browser -->|JSON| API\\\[API REST<br/>Django REST Framework]
+    Views --> Domain\\\[Regras de domínio<br/>calculator · schedule · summary · parser · export]
     API --> Domain
-    Domain --> ORM[Django ORM]
-    ORM --> DB[(SQLite)]
-    Excel[(Planilhas .xlsx/.xlsm)] -->|openpyxl| Domain
-    Domain -->|openpyxl| Export[(Planilha exportada)]
+    Domain --> ORM\\\[Django ORM]
+    ORM --> DB\\\[(PostgreSQL / SQLite)]
+    Excel\\\[(Planilhas .xlsx/.xlsm)] -->|openpyxl| Domain
 ```
 
 ## API REST
@@ -420,7 +322,7 @@ Autenticação por sessão (faça login na interface e acesse `/api/` no navegad
 
 |Endpoint|Descrição|
 |-|-|
-|`GET/POST /api/lancamentos/`|lista/cria lançamentos; filtros `q`, `unit`, `company`, `sector`, `applicator`, `payment_date`, `from`, `to`|
+|`GET/POST /api/lancamentos/`|lista/cria lançamentos; filtros `q`, `unit`, `company`, `sector`, `applicator`, `payment\\\_date`, `from`, `to`|
 |`GET /api/lancamentos/summary/`|resumo por data de pagamento › aplicador › empresa (mesmos filtros)|
 |`GET/POST/PUT/DELETE /api/aplicadores/`|cadastro de aplicadores (`?q=` busca por nome)|
 |`GET /api/unidades/`, `/api/setores/`, `/api/empresas/`|tabelas de referência|
@@ -428,7 +330,7 @@ Autenticação por sessão (faça login na interface e acesse `/api/` no navegad
 
 ## Convenções
 
-* Commits seguem [Conventional Commits](https://www.conventionalcommits.org/) e ficam abaixo de ~100 linhas (exceções justificadas na mensagem).
+* Commits seguem [Conventional Commits](https://www.conventionalcommits.org/) e ficam abaixo de \~100 linhas (exceções justificadas na mensagem).
 * Código, nomes de variáveis e comentários em inglês; interface em português.
-* Sistema de design próprio, em CSS puro (`static/css/tokens.css`): tipografia IBM Plex Sans/Mono e verde Bernoulli (`#009E8E`) como cor de identidade, com tema claro e escuro. Documentado em [`DESIGN.md`](DESIGN.md).
-* As planilhas reais do setor não são versionadas (`.gitignore`), pois contêm dados pessoais; use `docs/samples/lista_pagamento_exemplo.xlsx`.
+* Interface baseada no design system do [Maybe](https://github.com/maybe-finance/maybe) (fonte Geist, paleta e componentes), reescrito em CSS puro em `static/css/`.
+* As planilhas reais do setor não são versionadas (`.gitignore`), pois contêm dados pessoais; para conferir o parser há `docs/samples/lista\\\_pagamento\\\_exemplo.xlsx`, que nenhum comando carrega sozinho — o banco só recebe dado real, pela importação.
