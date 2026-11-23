@@ -20,6 +20,7 @@ from apps.imports.services import (
     creation_questions,
     enrich_preview,
     merge_questions,
+    read_answers,
 )
 from apps.payroll.models import ServiceEntry, ServiceRole, Shift
 
@@ -132,3 +133,29 @@ class QuestionTests(TestCase):
         questions = all_questions(preview(sheet(row("BRUNO LIMA"), row("CAMILA NUNES"))))
 
         self.assertEqual([(q["kind"], q["variant"]["normalized"]) for q in questions], [("create", "CAMILA NUNES")])
+
+
+class ReadAnswersTests(TestCase):
+    def setUp(self):
+        self.workbooks = preview(sheet(row("LARISSA MAIA"), row("LARISSA SALGADO MAIA"), row("CAMILA NUNES")))
+        self.merge_id = merge_questions(self.workbooks)[0]["id"]
+        self.create_id = creation_questions(self.workbooks)[0]["id"]
+
+    def test_unanswered_merge_stops_the_import(self):
+        with self.assertRaisesMessage(ValueError, "nomes parecidos"):
+            read_answers({self.create_id: "sim"}, self.workbooks)
+
+    def test_unanswered_creation_stops_the_import(self):
+        with self.assertRaisesMessage(ValueError, "cadastros novos"):
+            read_answers({self.merge_id: "nao"}, self.workbooks)
+
+    def test_declined_creation_and_confirmed_merge(self):
+        merges, declined = read_answers({self.merge_id: "sim", self.create_id: "nao"}, self.workbooks)
+
+        self.assertEqual(merges, {"LARISSA MAIA": "name:Larissa Salgado Maia"})
+        self.assertEqual(declined, {"CAMILA NUNES"})
+
+    def test_answer_pointing_to_a_deleted_record_stops_the_import(self):
+        for answer in ("applicator:999", "applicator:abc"):
+            with self.subTest(answer=answer), self.assertRaisesMessage(ValueError, "não existe mais"):
+                read_answers({self.merge_id: "nao", self.create_id: answer}, self.workbooks)
