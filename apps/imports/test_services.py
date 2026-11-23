@@ -13,11 +13,13 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import SimpleTestCase, TestCase, override_settings
 
 from apps.applicators.models import Applicator, RegistrationStatus
 from apps.catalog.models import PayingCompany, Sector, Unit
 from apps.imports.services import (
+    SESSION_KEY,
     _amount_from,
     _follow_chains,
     _short_date,
@@ -27,7 +29,9 @@ from apps.imports.services import (
     enrich_preview,
     merge_questions,
     read_answers,
+    stage_uploads,
 )
+from apps.imports.tests import build_workbook
 from apps.payroll.models import ImportBatch, ServiceEntry, ServiceRole, Shift
 
 DAY = "2026-09-15"
@@ -306,3 +310,39 @@ class ConfirmImportTests(TestCase):
         self.assertEqual((result["entries"], result["duplicates"]), (0, 1))
         self.assertEqual(ImportBatch.objects.count(), 1)
         self.assertFalse(default_storage.exists(staged))
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="bernoullipay-staging-"))
+class StageUploadsTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        from django.conf import settings
+
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
+
+    def upload(self, name, content):
+        return SimpleUploadedFile(name, content)
+
+    def test_unreadable_file_is_reported_and_the_rest_is_staged(self):
+        good = build_workbook([("MANHÃ", "Simulado", "15 de Setembro de 2026", "Manhã", ["Ana Souza"])])
+        session = {}
+
+        errors = stage_uploads(session, [self.upload("ruim.xlsx", b"nao e planilha"), self.upload("boa.xlsx", good)])
+
+        self.assertEqual([error["file_name"] for error in errors], ["ruim.xlsx"])
+        [workbook] = session[SESSION_KEY]
+        self.assertEqual((workbook["file_name"], workbook["row_count"]), ("boa.xlsx", 1))
+        self.assertEqual(workbook["sheets"][0]["activity_date"], DAY)
+        self.assertTrue(default_storage.exists(workbook["staged_path"]))
+
+    def test_a_new_preview_deletes_the_files_of_the_previous_one(self):
+        content = build_workbook([("MANHÃ", "Simulado", "15 de Setembro de 2026", "Manhã", ["Ana Souza"])])
+        session = {}
+        stage_uploads(session, [self.upload("primeira.xlsx", content)])
+        first = session[SESSION_KEY][0]["staged_path"]
+
+        stage_uploads(session, [self.upload("segunda.xlsx", content)])
+
+        self.assertFalse(default_storage.exists(first))
+        self.assertEqual(session[SESSION_KEY][0]["file_name"], "segunda.xlsx")
