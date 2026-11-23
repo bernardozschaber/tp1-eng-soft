@@ -5,10 +5,13 @@ pessoa ou duas; errar paga em dobro por outro caminho. Os testes montam a
 prévia direto no formato JSON que a sessão guarda, sem passar por planilha:
 o parser tem os próprios testes em `test_parser.py`.
 """
+import shutil
+import tempfile
 from datetime import date
 from decimal import Decimal
 
-from django.test import SimpleTestCase, TestCase
+from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from apps.applicators.models import Applicator, RegistrationStatus
 from apps.catalog.models import PayingCompany, Sector, Unit
@@ -17,6 +20,7 @@ from apps.imports.services import (
     _follow_chains,
     _short_date,
     all_questions,
+    confirm_import,
     creation_questions,
     enrich_preview,
     merge_questions,
@@ -159,3 +163,84 @@ class ReadAnswersTests(TestCase):
         for answer in ("applicator:999", "applicator:abc"):
             with self.subTest(answer=answer), self.assertRaisesMessage(ValueError, "não existe mais"):
                 read_answers({self.merge_id: "nao", self.create_id: answer}, self.workbooks)
+
+
+# --- confirmação -------------------------------------------------------------
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp(prefix="bernoullipay-services-"))
+class ConfirmImportTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        from django.conf import settings
+
+        shutil.rmtree(settings.MEDIA_ROOT, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        company = PayingCompany.objects.create(name="RRPM Matriz")
+        self.unit = Unit.objects.create(name="Lourdes", paying_company=company)
+        self.sector = Sector.objects.create(name="APL. DE PROVAS")
+        self.user = get_user_model().objects.create_user("rh")
+
+    def payload(self, workbooks, answers=None, **fields):
+        """O POST da prévia com tudo marcado; `fields` sobrescreve campo a campo."""
+        data = {}
+        for file_index, workbook in enumerate(workbooks):
+            for sheet_index, item in enumerate(workbook["sheets"]):
+                prefix = f"sheet-{file_index}-{sheet_index}"
+                data.update({
+                    f"{prefix}-include": "on", f"{prefix}-event_name": item["event_name"],
+                    f"{prefix}-activity_date": item["activity_date"], f"{prefix}-shift": item["shift"],
+                    f"{prefix}-unit": str(self.unit.pk), f"{prefix}-sector": str(self.sector.pk),
+                })
+                for row_index, _ in enumerate(item["rows"]):
+                    data[f"{prefix}-row-{row_index}-include"] = "on"
+        for question in all_questions(workbooks):
+            data[question["id"]] = (answers or {}).get(question["variant"]["normalized"], "sim")
+        data.update(fields)
+        return data
+
+    def confirm(self, workbooks, answers=None, **fields):
+        return confirm_import(self.payload(workbooks, answers, **fields), workbooks, self.user)
+
+    def test_confirmed_merge_puts_both_spellings_on_one_record(self):
+        workbooks = preview(
+            sheet(row("LARISSA MAIA")),
+            sheet(row("LARISSA SALGADO MAIA"), name="TARDE", shift="TARDE"),
+        )
+
+        result = self.confirm(workbooks)
+
+        self.assertEqual(list(Applicator.objects.values_list("full_name", flat=True)), ["Larissa Salgado Maia"])
+        self.assertEqual((result["entries"], result["merged"], result["applicators"]), (2, 1, 1))
+
+    def test_merge_into_an_existing_record_creates_nobody(self):
+        larissa = Applicator.objects.create(full_name="Larissa Salgado Maia")
+
+        result = self.confirm(preview(sheet(row("LARISSA MAIA"))))
+
+        self.assertEqual(result["applicators"], 0)
+        self.assertEqual(ServiceEntry.objects.get().applicator, larissa)
+
+    def test_declined_creation_leaves_the_rows_out(self):
+        result = self.confirm(preview(sheet(row("CAMILA NUNES"), row("BRUNO LIMA"))), {"CAMILA NUNES": "nao"})
+
+        self.assertEqual(list(Applicator.objects.values_list("full_name", flat=True)), ["Bruno Lima"])
+        self.assertEqual(result["skipped"], 1)
+
+    def test_creation_answered_with_another_record_posts_there(self):
+        bruno = Applicator.objects.create(full_name="Bruno Lima")
+
+        self.confirm(preview(sheet(row("CAMILA NUNES"))), {"CAMILA NUNES": f"applicator:{bruno.pk}"})
+
+        self.assertEqual(ServiceEntry.objects.get().applicator, bruno)
+        self.assertEqual(Applicator.objects.count(), 1)
+
+    def test_new_applicator_is_first_payment_and_keeps_the_suffix(self):
+        self.confirm(preview(sheet(row("MARIA SILVA (C.E. ONLINE)"))))
+
+        maria = Applicator.objects.get()
+        self.assertEqual((maria.full_name, maria.registration_status), ("Maria Silva", RegistrationStatus.NEW))
+        self.assertIn("Sufixo na lista: C.E. ONLINE", maria.notes)
+        self.assertEqual(ServiceEntry.objects.get().notes, "C.E. ONLINE")
