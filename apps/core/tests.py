@@ -126,3 +126,37 @@ class SeedTeamRenameTests(TestCase):
         call_command("seed_team", stdout=StringIO())
 
         self.assertEqual(get_user_model().objects.filter(username="fernanda.rezende").count(), 1)
+
+
+
+class SeedTeamAdminTests(TestCase):
+    """O fim do `seed_team`: o perfil do admin, que só existe depois do `seed`."""
+
+    def test_without_admin_warns_and_still_creates_the_team(self):
+        out = StringIO()
+        call_command("seed_team", stdout=out)
+
+        self.assertIn("admin não encontrado", out.getvalue())
+        self.assertTrue(get_user_model().objects.filter(username="fernanda.rezende").exists())
+
+    def test_completes_the_admin_profile_and_gives_full_access(self):
+        call_command("seed", stdout=StringIO())
+        out = StringIO()
+
+        call_command("seed_team", stdout=out)
+
+        admin = get_user_model().objects.get(username="admin")
+        self.assertEqual(admin.get_full_name(), "Bernardo Zschaber")
+        self.assertEqual(admin.profile.role, "Administrador do sistema")
+        self.assertEqual(list(admin.groups.values_list("name", flat=True)), [FULL_ACCESS_GROUP])
+        self.assertTrue(admin.check_password("admin"))
+        self.assertIn("Equipe pronta.", out.getvalue())
+
+    def test_rerun_keeps_a_single_admin_profile(self):
+        call_command("seed", stdout=StringIO())
+        call_command("seed_team", stdout=StringIO())
+        call_command("seed_team", stdout=StringIO())
+
+        admin = get_user_model().objects.get(username="admin")
+        self.assertEqual(admin.groups.count(), 1)
+        self.assertEqual(admin.profile.role, "Administrador do sistema")
