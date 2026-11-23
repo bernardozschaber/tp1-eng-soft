@@ -360,40 +360,58 @@ A transição é só de ida e acontece no momento em que o lançamento é salvo
 sequenceDiagram
     actor RH
     participant View as imports.views
-    participant Parser as imports.parser
     participant Service as imports.services
+    participant Parser as imports.parser
+    participant Media as media/imports/
     participant DB as Banco de dados
 
     RH->>View: POST /importar/ (arquivos .xlsx/.xlsm)
+    View->>Service: stage_uploads(sessão, arquivos)
     loop para cada arquivo
-        View->>Parser: parse\\\_workbook(nome, bytes)
-        Parser-->>View: ParsedWorkbook (abas, evento, data, linhas)
+        Service->>Parser: parse_workbook(nome, bytes)
+        Parser-->>Service: ParsedWorkbook (abas, evento, data, turno, linhas)
+        Service->>Media: guarda o arquivo original
     end
-    View->>Service: stage\\\_uploads → sessão
+    Service-->>View: erros por arquivo (vazio = tudo lido)
     View-->>RH: redirect /importar/previa/
+
     RH->>View: GET /importar/previa/
-    View->>Service: enrich\\\_preview (casa nomes, detecta duplicatas, calcula bruto)
-    Service->>DB: Applicator.find\\\_by\\\_name / ServiceEntry.exists
-    View-->>RH: blocos por aba (editáveis, com avisos)
-    RH->>View: POST /importar/confirmar/ (abas e linhas marcadas)
-    View->>Service: confirm\\\_import(payload, sessão, usuário)
-    Service->>DB: cria Applicator faltantes (needs\\\_review)
-    Service->>DB: cria ImportBatch + ServiceEntry (bruto, INSS, ISS, IR, data pgto)
-    Service-->>View: contadores
+    View->>Service: load_preview(sessão) + enrich_preview(abas)
+    Service->>DB: Applicator.find_by_cpf / find_by_name
+    Service->>DB: ServiceEntry.find_duplicate
+    Service-->>View: abas editáveis, perguntas de nome, avisos
+    View-->>RH: blocos por aba, com bruto calculado
+
+    RH->>View: POST /importar/confirmar/ (abas, linhas e respostas)
+    View->>Service: confirm_import(payload, abas, usuário)
+    Service->>DB: cria Applicator faltantes (situação "novo")
+    alt serviço já lançado
+        Service-->>Service: pula a linha e conta como duplicata
+    else serviço novo
+        Service->>DB: cria ImportBatch (na primeira linha gravada)
+        Service->>DB: cria ServiceEntry (bruto, INSS, ISS, IR, data pgto)
+    end
+    Service-->>View: contadores (lançamentos, cadastros, duplicatas)
     View-->>RH: redirect /lancamentos/ com mensagem de sucesso
 ```
+
+O `ImportBatch` só é criado quando há a primeira linha para gravar: uma lista
+em que tudo já estava lançado não deixa lote vazio para trás.
 
 ### Diagrama de componentes
 
 ```mermaid
 flowchart LR
-    Browser\\\[Navegador<br/>HTML + CSS + JS] -->|sessão| Views\\\[Views Django<br/>core · payroll · imports · applicators · catalog]
-    Browser -->|JSON| API\\\[API REST<br/>Django REST Framework]
-    Views --> Domain\\\[Regras de domínio<br/>calculator · schedule · summary · parser · export]
+    Browser[Navegador<br/>HTML + CSS + JS] -->|sessão| Views[Views Django<br/>core · payroll · imports · applicators · catalog]
+    Browser -->|JSON| API[API REST<br/>Django REST Framework]
+    Views --> Access[Controle de acesso por cargo<br/>core.access · core.middleware]
+    Access --> Domain[Regras de domínio<br/>calculator · schedule · summary · parser · export]
+    Views --> Domain
     API --> Domain
-    Domain --> ORM\\\[Django ORM]
-    ORM --> DB\\\[(PostgreSQL / SQLite)]
-    Excel\\\[(Planilhas .xlsx/.xlsm)] -->|openpyxl| Domain
+    Domain --> ORM[Django ORM]
+    ORM --> DB[(SQLite)]
+    Excel[(Planilhas .xlsx/.xlsm)] -->|openpyxl| Domain
+    Domain -->|openpyxl| Export[(Planilha exportada)]
 ```
 
 ## API REST
@@ -402,7 +420,7 @@ Autenticação por sessão (faça login na interface e acesse `/api/` no navegad
 
 |Endpoint|Descrição|
 |-|-|
-|`GET/POST /api/lancamentos/`|lista/cria lançamentos; filtros `q`, `unit`, `company`, `sector`, `applicator`, `payment\\\_date`, `from`, `to`|
+|`GET/POST /api/lancamentos/`|lista/cria lançamentos; filtros `q`, `unit`, `company`, `sector`, `applicator`, `payment_date`, `from`, `to`|
 |`GET /api/lancamentos/summary/`|resumo por data de pagamento › aplicador › empresa (mesmos filtros)|
 |`GET/POST/PUT/DELETE /api/aplicadores/`|cadastro de aplicadores (`?q=` busca por nome)|
 |`GET /api/unidades/`, `/api/setores/`, `/api/empresas/`|tabelas de referência|
@@ -410,7 +428,7 @@ Autenticação por sessão (faça login na interface e acesse `/api/` no navegad
 
 ## Convenções
 
-* Commits seguem [Conventional Commits](https://www.conventionalcommits.org/) e ficam abaixo de \~100 linhas (exceções justificadas na mensagem).
+* Commits seguem [Conventional Commits](https://www.conventionalcommits.org/) e ficam abaixo de ~100 linhas (exceções justificadas na mensagem).
 * Código, nomes de variáveis e comentários em inglês; interface em português.
-* Interface baseada no design system do [Maybe](https://github.com/maybe-finance/maybe) (fonte Geist, paleta e componentes), reescrito em CSS puro em `static/css/`.
-* As planilhas reais do setor não são versionadas (`.gitignore`), pois contêm dados pessoais; para conferir o parser há `docs/samples/lista\\\_pagamento\\\_exemplo.xlsx`, que nenhum comando carrega sozinho — o banco só recebe dado real, pela importação.
+* Sistema de design próprio, em CSS puro (`static/css/tokens.css`): tipografia IBM Plex Sans/Mono e verde Bernoulli (`#009E8E`) como cor de identidade, com tema claro e escuro. Documentado em [`DESIGN.md`](DESIGN.md).
+* As planilhas reais do setor não são versionadas (`.gitignore`), pois contêm dados pessoais; use `docs/samples/lista_pagamento_exemplo.xlsx`.
